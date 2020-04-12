@@ -11,3 +11,4 @@ pub mod status;
 pub mod guid;
 
 pub mod boot_services;
+pub mod protocols;
