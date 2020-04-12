@@ -8,5 +8,6 @@ pub mod common;
 
 pub mod types;
 pub mod status;
+pub mod guid;
 
 pub mod boot_services;
