@@ -33,8 +33,21 @@ impl EfiEventAndTimer {
 
 		let (notify_function, notify_context): (EfiEventNotifyCallback, VoidPtr) = {
 			match notify {
-				None => (unsafe { *(&0usize as *const usize as *const EfiEventNotifyCallback) }, 0 as VoidPtr),
-				Some((notify_function, notify_context)) => (notify_function, notify_context as *const T as VoidPtr)
+				None => (
+					unsafe {
+						*(&0usize as *const usize as *const EfiEventNotifyCallback)
+					},
+					0 as VoidPtr
+				),
+				Some(
+					(
+						notify_function,
+						notify_context
+					)
+				) => (
+					notify_function,
+					notify_context as *const T as VoidPtr
+				)
 			}
 		};
 		
