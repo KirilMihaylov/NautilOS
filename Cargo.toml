@@ -1,0 +1,7 @@
+[workspace]
+members = [
+	"nautilos",
+	"native",
+	"efi",
+	"acpi",
+]
