@@ -2,6 +2,7 @@
 #[derive(Clone,Copy)]
 #[non_exhaustive]
 pub enum EfiEventType {
+	#[allow(overflowing_literals)]
 	Timer = 0x80000000,
 	Runtime = 0x40000000,
 	NotifyWait = 0x100,
