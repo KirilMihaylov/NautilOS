@@ -23,7 +23,7 @@ impl EfiStatus {
 	}
 
 	pub fn is_error(&self) -> bool {
-		if EfiStatusRaw::from_le(self.0).leading_zeros() == 0 {
+		if self.0.leading_zeros() == 0 {
 			true /* Error */
 		} else {
 			false /* Success or Warning */
@@ -36,9 +36,9 @@ impl EfiStatus {
 		if self.is_success() {
 			Success(())
 		} else if self.is_warning() {
-			Warning(EfiStatusRaw::from_le(self.0), ())
+			Warning(self.0, ())
 		} else {
-			Error(EfiStatusRaw::from_le(self.0), ())
+			Error(self.0, ())
 		}
 	}
 
@@ -48,9 +48,9 @@ impl EfiStatus {
 		if self.is_success() {
 			Success(data)
 		} else if self.is_warning() {
-			Warning(EfiStatusRaw::from_le(self.0), data)
+			Warning(self.0, data)
 		} else {
-			Error(EfiStatusRaw::from_le(self.0), ())
+			Error(self.0, ())
 		}
 	}
 
@@ -60,9 +60,9 @@ impl EfiStatus {
 		if self.is_success() {
 			Success(data)
 		} else if self.is_warning() {
-			Warning(EfiStatusRaw::from_le(self.0), data)
+			Warning(self.0, data)
 		} else {
-			Error(EfiStatusRaw::from_le(self.0), error_data)
+			Error(self.0, error_data)
 		}
 	}
 }
@@ -77,13 +77,13 @@ impl Copy for EfiStatus {}
 
 impl From<EfiStatusRaw> for EfiStatus {
 	fn from(data: EfiStatusRaw) -> Self {
-		Self(EfiStatusRaw::to_le(data))
+		Self(data)
 	}
 }
 
 impl From<EfiStatus> for EfiStatusRaw {
 	fn from(data: EfiStatus) -> Self {
-		Self::from_le(data.0)
+		data.0
 	}
 }
 
