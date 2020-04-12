@@ -1,0 +1,43 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build (x86)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"build",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=i686-unknown-uefi"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
+			"label": "Build (x86_64)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"build",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=x86_64-unknown-uefi"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+		}
+	]
+}
