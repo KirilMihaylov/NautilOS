@@ -1,3 +1,6 @@
+mod layout;
+pub use layout::*;
+
 pub mod event_and_timer;
 pub mod image;
 pub mod memory;
