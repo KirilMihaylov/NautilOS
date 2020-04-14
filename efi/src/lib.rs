@@ -9,6 +9,7 @@ pub mod common;
 pub mod types;
 pub mod status;
 pub mod guid;
+mod table_header;
 
 pub mod boot_services;
 pub mod protocols;
