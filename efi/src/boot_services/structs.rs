@@ -5,8 +5,6 @@ use crate::{
 	boot_services::EfiBootServicesLayout,
 };
 
-use super::types::EfiBootServicesLatestLayout;
-
 #[repr(C)]
 pub struct EfiBootServices {
 	table_header: EfiTableHeader,
@@ -24,7 +22,7 @@ impl EfiBootServices {
 }
 
 impl Deref for EfiBootServices {
-	type Target = EfiBootServicesLatestLayout;
+	type Target = EfiBootServicesLayout;
 
 	fn deref(&self) -> &<Self as Deref>::Target {
 		&self.v1_0
