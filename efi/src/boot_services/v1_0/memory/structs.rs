@@ -1,4 +1,9 @@
 use core::marker::PhantomData;
+use core::iter::StepBy;
+use core::slice::{
+	IterMut,
+	from_raw_parts_mut,
+};
 
 use crate::types::{
 	EfiPhysicalAddress,
@@ -48,19 +53,29 @@ impl EfiMemory {
 			mut descriptor_version
 		): (usize, usize, usize, usize) = (memory_map.len(), 0, 0, 0);
 
-		(self.get_memory_map)(
+		let result: EfiStatus = (self.get_memory_map)(
 			&mut allocation_size,
 			memory_map.as_mut_ptr() as *mut EfiMemoryDescriptor,
 			&mut memory_map_key,
 			&mut descriptor_size,
 			&mut descriptor_version,
-		).into_enum_data_error(
+		);
+
+		/* Skip heavy contruction procedures when error is returned */
+		if result.is_error() {
+			return EfiStatusEnum::Error(result.into(), allocation_size);
+		}
+		
+		result.into_enum_data_error(
 			(
 				EfiMemoryDescriptorIterator {
-					descriptor: memory_map.as_mut_ptr() as *mut EfiMemoryDescriptor,
-					descriptor_size: descriptor_size,
-					count_left: allocation_size / descriptor_size,
-					_phantomdata: PhantomData
+					descriptor_iterator: unsafe {
+						from_raw_parts_mut(
+							memory_map.as_ptr() as *mut u8,
+							allocation_size - (allocation_size % descriptor_size),
+						).iter_mut().step_by(descriptor_size)
+					},
+					_phantom_data: PhantomData,
 				},
 				allocation_size,
 				memory_map_key,
@@ -98,29 +113,23 @@ pub struct EfiMemoryDescriptor {
 }
 
 pub struct EfiMemoryDescriptorIterator<'a> {
-	descriptor: *mut EfiMemoryDescriptor,
-	descriptor_size: usize,
-	count_left: usize,
-	_phantomdata: PhantomData<&'a EfiMemoryDescriptor>,
+	descriptor_iterator: StepBy<IterMut<'a, u8>>,
+	_phantom_data: PhantomData<&'a EfiMemoryDescriptor>,
 }
 
 impl<'a> Iterator for EfiMemoryDescriptorIterator<'a> {
 	type Item = &'a mut EfiMemoryDescriptor;
 
 	fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-		if self.count_left == 0 {
-			None
-		} else {
-			let result: Option<Self::Item> = Some(
-				unsafe {
-					&mut *self.descriptor
-				}
-			);
-
-			self.descriptor = (self.descriptor as usize + self.descriptor_size) as *mut EfiMemoryDescriptor;
-			self.count_left -= 1;
-
-			result
+		match self.descriptor_iterator.next() {
+			None => None,
+			Some(descriptor) => {
+				Some(
+					unsafe {
+						&mut *(descriptor as *mut u8 as *mut <Self as Iterator>::Item)
+					}
+				)
+			}
 		}
 	}
 }
