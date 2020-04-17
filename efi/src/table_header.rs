@@ -143,7 +143,9 @@ impl EfiTableHeader {
 		return !crc;
 	}
 
-	pub fn update_crc32(&mut self) {
-		self.crc32 = self.calculate_crc32();
+	pub fn update_crc32(&self) {
+		unsafe {
+			*(&self.crc32 as *const u32 as *mut u32) = self.calculate_crc32();
+		}
 	}
 }
