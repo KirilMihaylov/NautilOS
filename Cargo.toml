@@ -3,5 +3,6 @@ members = [
 	"nautilos",
 	"native",
 	"efi",
+	"efi_interops",
 	"acpi",
 ]

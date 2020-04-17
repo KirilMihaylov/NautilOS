@@ -3,13 +3,20 @@
 [[package]]
 name = "acpi"
 version = "0.1.0"
+dependencies = [
+ "efi_interops",
+]
 
 [[package]]
 name = "efi"
 version = "0.1.0"
 dependencies = [
- "acpi",
+ "efi_interops",
 ]
+
+[[package]]
+name = "efi_interops"
+version = "0.1.0"
 
 [[package]]
 name = "native"
