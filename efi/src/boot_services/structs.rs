@@ -19,6 +19,10 @@ impl EfiBootServices {
 	pub fn header<'a>(&'a self) -> &'a EfiTableHeader {
 		&self.table_header
 	}
+
+	pub fn revision(&self) -> u32 {
+		self.table_header.revision()
+	}
 }
 
 impl Deref for EfiBootServices {
