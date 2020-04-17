@@ -18,7 +18,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 				match path.path_subtype {
 					1 => EndOfDevicePathInstance,
 					0xFF => EndOfDevicePath,
-					_ => unreachable!(),
+					_ => unreachable!("Undefined state!"),
 				}
 			},
 			_ => Undefined,
