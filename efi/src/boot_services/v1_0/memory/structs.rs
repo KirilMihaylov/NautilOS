@@ -20,6 +20,7 @@ use super::enums::{
 	EfiMemoryType,
 };
 
+#[repr(C)]
 pub struct EfiMemory {
 	allocate_pages: extern "efiapi" fn(allocation_type: EfiAllocateType, memory_type: EfiMemoryType, number_of_pages: usize, physical_address: *mut EfiPhysicalAddress) -> EfiStatus,
 	free_pages: extern "efiapi" fn(physical_address: EfiPhysicalAddress, number_of_pages: usize) -> EfiStatus,
