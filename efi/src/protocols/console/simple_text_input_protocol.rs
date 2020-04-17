@@ -37,8 +37,8 @@ impl EfiSimpleTextInputProtocol {
 		self.wait_for_key
 	}
 
-	pub fn wait_for_key_mut(&mut self) -> &mut EfiEvent {
-		&mut self.wait_for_key
+	pub fn wait_for_key_mut(&self) -> &mut EfiEvent {
+		&mut*(&self.wait_for_key as *const EfiEvent as *mut EfiEvent)
 	}
 }
 
