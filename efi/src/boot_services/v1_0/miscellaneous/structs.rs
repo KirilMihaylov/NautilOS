@@ -5,9 +5,9 @@ use crate::status::{
 
 #[repr(C)]
 pub struct EfiMiscellaneous {
-	get_next_monotonic_count: extern "efiapi" fn(count: *mut u64) -> EfiStatus,
-	stall: extern "efiapi" fn(microseconds: usize) -> EfiStatus,
-	set_watchdog_timer: extern "efiapi" fn(timeout: usize, watchdog_code: u64, data_size: usize, watchdog_data: *const u16) -> EfiStatus,
+	get_next_monotonic_count: extern "efiapi" fn(*mut u64) -> EfiStatus,
+	stall: extern "efiapi" fn(usize) -> EfiStatus,
+	set_watchdog_timer: extern "efiapi" fn(usize, u64, usize, *const u16) -> EfiStatus,
 }
 
 impl EfiMiscellaneous {

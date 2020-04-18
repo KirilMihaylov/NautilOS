@@ -1,15 +1,17 @@
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
+	types::Void,
 };
-use crate::types::Void;
 
 use super::types::EfiTaskPriorityLevel;
 
 #[repr(C)]
 pub struct EfiTaskPriority {
-	raise_tpl: extern "efiapi" fn(new_tpl: EfiTaskPriorityLevel) -> EfiStatus,
-	restore_tpl: extern "efiapi" fn(old_tpl: EfiTaskPriorityLevel) -> Void,
+	raise_tpl: extern "efiapi" fn(EfiTaskPriorityLevel) -> EfiStatus,
+	restore_tpl: extern "efiapi" fn(EfiTaskPriorityLevel) -> Void,
 }
 
 impl EfiTaskPriority {

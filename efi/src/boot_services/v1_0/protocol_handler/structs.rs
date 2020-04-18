@@ -1,19 +1,23 @@
-use core::mem::size_of;
-use core::slice::from_raw_parts;
+use core::{
+	mem::size_of,
+	slice::from_raw_parts
+};
 
-use crate::types::{
-	EfiEvent,
-	EfiHandle,
-	VoidPtr,
-};
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
-};
-use crate::guid::EfiGuid;
-use crate::protocols::{
-	EfiProtocol,
-	device_path::EfiDevicePathProcotol
+use crate::{
+	types::{
+		EfiEvent,
+		EfiHandle,
+		VoidPtr,
+	},
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
+	guid::EfiGuid,
+	protocols::{
+		EfiProtocol,
+		device_path::EfiDevicePathProcotol,
+	},
 };
 
 use super::enums::{
@@ -23,15 +27,15 @@ use super::enums::{
 
 #[repr(C)]
 pub struct EfiProtocolHandler {
-	install_protocol_interface: extern "efiapi" fn(handle: *mut EfiHandle, protocol_guid: *const EfiGuid, interface_type: EfiInterfaceType, interface: VoidPtr) -> EfiStatus,
-	reinstall_protocol_interface: extern "efiapi" fn(handle: *mut EfiHandle, protocol_guid: *const EfiGuid, old_interface: VoidPtr, new_interface: VoidPtr) -> EfiStatus,
-	uninstall_protocol_interface: extern "efiapi" fn(handle: *mut EfiHandle, protocol_guid: *const EfiGuid, interface: VoidPtr) -> EfiStatus,
-	handle_protocol: extern "efiapi" fn(handle: EfiHandle, protocol_guid: *const EfiGuid, interface: *mut VoidPtr) -> EfiStatus,
-	_reserved: *const (),
-	register_protocol_notify: extern "efiapi" fn(protocol_guid: &EfiGuid, event: EfiEvent, registration: *mut VoidPtr) -> EfiStatus,
-	locate_handle: extern "efiapi" fn(search_type: EfiLocateSearchType, protocol_guid: *const EfiGuid, search_key: VoidPtr, buffer_size: *mut usize, buffer: *mut EfiHandle) -> EfiStatus,
-	locate_device_path: extern "efiapi" fn(protocol_guid: *const EfiGuid, *mut *const EfiDevicePathProcotol, *mut EfiHandle) -> EfiStatus,
-	install_configuration_table: extern "efiapi" fn() -> EfiStatus,
+	install_protocol_interface: extern "efiapi" fn(*mut EfiHandle, *const EfiGuid, EfiInterfaceType, VoidPtr) -> EfiStatus,
+	reinstall_protocol_interface: extern "efiapi" fn(*mut EfiHandle, *const EfiGuid, VoidPtr, VoidPtr) -> EfiStatus,
+	uninstall_protocol_interface: extern "efiapi" fn(*mut EfiHandle, *const EfiGuid, VoidPtr) -> EfiStatus,
+	handle_protocol: extern "efiapi" fn(EfiHandle, *const EfiGuid, *mut VoidPtr) -> EfiStatus,
+	_reserved: VoidPtr,
+	register_protocol_notify: extern "efiapi" fn(&EfiGuid, EfiEvent, *mut VoidPtr) -> EfiStatus,
+	locate_handle: extern "efiapi" fn(EfiLocateSearchType, *const EfiGuid, VoidPtr, *mut usize, *mut EfiHandle) -> EfiStatus,
+	locate_device_path: extern "efiapi" fn(*const EfiGuid, *mut *const EfiDevicePathProcotol, *mut EfiHandle) -> EfiStatus,
+	install_configuration_table: extern "efiapi" fn(*const EfiGuid, VoidPtr) -> EfiStatus,
 }
 
 impl EfiProtocolHandler {

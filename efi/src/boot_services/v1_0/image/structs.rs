@@ -1,22 +1,24 @@
 use core::slice::from_raw_parts;
 
-use crate::types::{
-	EfiHandle,
-	VoidPtr,
-};
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	types::{
+		EfiHandle,
+		VoidPtr,
+	},
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	}
 };
 use crate::protocols::device_path::EfiDevicePathProcotol;
 
 #[repr(C)]
 pub struct EfiImage {
-	load_image: extern "efiapi" fn(boot_policy: bool, parent_image_handle: EfiHandle, device_path: *const EfiDevicePathProcotol, source_buffer: VoidPtr, source_size: usize, image_handle: *const EfiHandle) -> EfiStatus,
-	start_image: extern "efiapi" fn(image_handle: EfiHandle, exit_data_size: *mut usize, exit_data: *mut *const u16) -> EfiStatus,
-	exit: extern "efiapi" fn(image_handle: EfiHandle, exit_status: EfiStatus, exit_data_size: usize, exit_data: *const u16) -> EfiStatus,
-	unload_image: extern "efiapi" fn(image_handle: EfiHandle) -> EfiStatus,
-	exit_boot_services: extern "efiapi" fn(image_handle: EfiHandle, memory_map_key: usize) -> EfiStatus,
+	load_image: extern "efiapi" fn(bool, EfiHandle, *const EfiDevicePathProcotol, VoidPtr, usize, *const EfiHandle) -> EfiStatus,
+	start_image: extern "efiapi" fn(EfiHandle, *mut usize, *mut *const u16) -> EfiStatus,
+	exit: extern "efiapi" fn(EfiHandle, EfiStatus, usize, *const u16) -> EfiStatus,
+	unload_image: extern "efiapi" fn(EfiHandle) -> EfiStatus,
+	exit_boot_services: extern "efiapi" fn(EfiHandle, usize) -> EfiStatus,
 }
 
 impl EfiImage {

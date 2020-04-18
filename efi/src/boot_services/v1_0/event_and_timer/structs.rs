@@ -1,10 +1,11 @@
-use crate::types::{
-	EfiEvent,
-	VoidPtr,
-};
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	types::{
+		EfiEvent,
+		VoidPtr,
+	},status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
 };
 
 use super::{
@@ -19,12 +20,12 @@ use crate::boot_services::v1_0::task_priority::types::EfiTaskPriorityLevel;
 
 #[repr(C)]
 pub struct EfiEventAndTimer {
-	create_event: extern "efiapi" fn(event_type: EfiEventType, tpl: EfiTaskPriorityLevel, notify_function: EfiEventNotifyCallback, notify_context: VoidPtr, event: *mut EfiEvent) -> EfiStatus,
-	set_timer: extern "efiapi" fn(event: EfiEvent, timer_type: EfiTimerDelay, trigger_time: u64) -> EfiStatus,
-	wait_for_event: extern "efiapi" fn(number_of_entries: usize, *const EfiEvent, *mut usize) -> EfiStatus,
-	signal_event: extern "efiapi" fn(event: EfiEvent) -> EfiStatus,
-	close_event: extern "efiapi" fn(event: EfiEvent) -> EfiStatus,
-	check_event: extern "efiapi" fn(event: EfiEvent) -> EfiStatus,
+	create_event: extern "efiapi" fn(EfiEventType, EfiTaskPriorityLevel, EfiEventNotifyCallback, VoidPtr, *mut EfiEvent) -> EfiStatus,
+	set_timer: extern "efiapi" fn(EfiEvent, EfiTimerDelay, u64) -> EfiStatus,
+	wait_for_event: extern "efiapi" fn(usize, *const EfiEvent, *mut usize) -> EfiStatus,
+	signal_event: extern "efiapi" fn(EfiEvent) -> EfiStatus,
+	close_event: extern "efiapi" fn(EfiEvent) -> EfiStatus,
+	check_event: extern "efiapi" fn(EfiEvent) -> EfiStatus,
 }
 
 impl EfiEventAndTimer {

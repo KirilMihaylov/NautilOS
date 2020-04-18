@@ -3,4 +3,4 @@ use crate::types::{
 	VoidPtr,
 };
 
-pub type EfiEventNotifyCallback = extern "efiapi" fn(event: EfiEvent, context: VoidPtr);
+pub type EfiEventNotifyCallback = extern "efiapi" fn(EfiEvent, VoidPtr);

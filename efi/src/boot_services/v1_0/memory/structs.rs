@@ -1,18 +1,22 @@
-use core::marker::PhantomData;
-use core::iter::StepBy;
-use core::slice::{
-	IterMut,
-	from_raw_parts_mut,
+use core::{
+	marker::PhantomData,
+	iter::StepBy,
+	slice::{
+		IterMut,
+		from_raw_parts_mut,
+	},
 };
 
-use crate::types::{
-	EfiPhysicalAddress,
-	EfiVirtualAddress,
-	VoidPtr,
-};
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	types::{
+		EfiPhysicalAddress,
+		EfiVirtualAddress,
+		VoidPtr,
+	},
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
 };
 
 use super::enums::{
@@ -22,10 +26,10 @@ use super::enums::{
 
 #[repr(C)]
 pub struct EfiMemory {
-	allocate_pages: extern "efiapi" fn(allocation_type: EfiAllocateType, memory_type: EfiMemoryType, number_of_pages: usize, physical_address: *mut EfiPhysicalAddress) -> EfiStatus,
-	free_pages: extern "efiapi" fn(physical_address: EfiPhysicalAddress, number_of_pages: usize) -> EfiStatus,
-	get_memory_map: extern "efiapi" fn(allocation_size: *mut usize, memory_map: *mut EfiMemoryDescriptor, memory_map_key: *mut usize, descriptor_size: *mut usize, descriptor_version: *mut usize) -> EfiStatus,
-	allocate_pool: extern "efiapi" fn(pool_type: EfiMemoryType, pool_size: usize, buffer: *mut VoidPtr) -> EfiStatus,
+	allocate_pages: extern "efiapi" fn(EfiAllocateType, EfiMemoryType, usize, *mut EfiPhysicalAddress) -> EfiStatus,
+	free_pages: extern "efiapi" fn(EfiPhysicalAddress, usize) -> EfiStatus,
+	get_memory_map: extern "efiapi" fn(*mut usize, *mut EfiMemoryDescriptor, *mut usize, *mut usize, *mut usize) -> EfiStatus,
+	allocate_pool: extern "efiapi" fn(EfiMemoryType, usize, *mut VoidPtr) -> EfiStatus,
 	free_pool: extern "efiapi" fn(VoidPtr) -> EfiStatus,
 }
 
