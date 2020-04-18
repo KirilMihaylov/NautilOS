@@ -6,6 +6,8 @@
 
 pub mod common;
 
+pub mod utilities;
+
 pub mod types;
 pub mod status;
 pub mod guid;
