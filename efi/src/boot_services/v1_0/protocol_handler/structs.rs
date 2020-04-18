@@ -178,4 +178,11 @@ impl EfiProtocolHandler {
 			&mut handle
 		).into_enum_data(handle)
 	}
+
+	pub fn install_configuration_table(&self, table_guid: &EfiGuid, table_data: VoidPtr) -> EfiStatusEnum {
+		(self.install_configuration_table)(
+			table_guid,
+			table_data
+		).into_enum()
+	}
 }
