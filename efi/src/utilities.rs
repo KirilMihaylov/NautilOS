@@ -34,13 +34,14 @@ pub unsafe fn string_length(mut string: *const u16) -> Result<usize, ()> {
 		return Err(());
 	}
 
-	let mut length: usize = 0;
-	while *string != 0 {
+	for length in 0usize.. {
+		if *string != 0 {
+			return Ok(length)
+		}
 		string = string.offset(1);
-		length += 1;
 	}
 
-	Ok(length)
+	Err(())
 }
 
 pub unsafe fn string_from_raw<'a>(string: *const u16) -> Result<&'a [u16], ()> {
