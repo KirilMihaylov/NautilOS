@@ -1,6 +1,9 @@
 use core::slice::from_raw_parts;
 
-use efi_interops::traits;
+use efi_interops::{
+	types,
+	traits,
+};
 
 use crate::types::VoidPtr;
 use crate::guid::EfiGuid;
@@ -74,13 +77,84 @@ impl EfiConfigurationTableEntry {
 		} else {
 			None
 		}
+	}
+}
 
-		/* GUID CONSTANTS */
-		// const ACPI_V1_0_TABLE: EfiGuidTuple = (0xeb9d2d30, 0x2d88, 0x11d3, [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d]);
-		// const ACPI_V2_0_TABLE: EfiGuidTuple = (0x8868e871, 0xe4f1, 0x11d3, [0xbc, 0x22, 0x00, 0x80, 0xc7, 0x3c, 0x88, 0x81]);
-		// const SAL_SYSTEM_TABLE: EfiGuidTuple = (0xeb9d2d32, 0x2d88, 0x11d3, [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d]);
-		// const SMBIOS_TABLE: EfiGuidTuple = (0xeb9d2d31, 0x2d88, 0x11d3, [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d]);
-		// const SMBIOS_3_TABLE: EfiGuidTuple = (0xf2fd1544, 0x9794, 0x4a2c, [0x99, 0x2e, 0xe5, 0xbb, 0xcf, 0x20, 0xe3, 0x94]);
-		// const MPS_TABLE: EfiGuidTuple = (0xeb9d2d2f, 0x2d88, 0x11d3, [0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d]);
+#[repr(C)]
+pub struct EfiRTPropertiesTable {
+	version: u16,
+	length: u16,
+	runtime_services_supported: u32,
+}
+
+impl EfiRTPropertiesTable {
+	pub fn version(&self) -> u16 {
+		self.version
+	}
+
+	pub fn length(&self) -> u16 {
+		self.length
+	}
+
+	pub fn get_time_supported(&self) -> bool {
+		self.runtime_services_supported & 1 == 1
+	}
+
+	pub fn set_time_supported(&self) -> bool {
+		self.runtime_services_supported & 2 == 2
+	}
+
+	pub fn get_wakeup_time_supported(&self) -> bool {
+		self.runtime_services_supported & 4 == 4
+	}
+
+	pub fn set_wakeup_time_supported(&self) -> bool {
+		self.runtime_services_supported & 8 == 8
+	}
+
+	pub fn get_variable_supported(&self) -> bool {
+		self.runtime_services_supported & 0x10 == 0x10
+	}
+
+	pub fn get_next_variable_supported(&self) -> bool {
+		self.runtime_services_supported & 0x20 == 0x20
+	}
+
+	pub fn set_variable_supported(&self) -> bool {
+		self.runtime_services_supported & 0x40 == 0x40
+	}
+
+	pub fn set_virtual_address_map_supported(&self) -> bool {
+		self.runtime_services_supported & 0x80 == 0x80
+	}
+
+	pub fn convert_pointer_supported(&self) -> bool {
+		self.runtime_services_supported & 0x100 == 0x100
+	}
+
+	pub fn get_next_high_monotonic_count_supported(&self) -> bool {
+		self.runtime_services_supported & 0x200 == 0x200
+	}
+
+	pub fn reset_system_supported(&self) -> bool {
+		self.runtime_services_supported & 0x400 == 0x400
+	}
+
+	pub fn update_capsule_supported(&self) -> bool {
+		self.runtime_services_supported & 0x800 == 0x800
+	}
+
+	pub fn query_capsule_capabilities_supported(&self) -> bool {
+		self.runtime_services_supported & 0x1000 == 0x1000
+	}
+
+	pub fn query_variable_info_supported(&self) -> bool {
+		self.runtime_services_supported & 0x2000 == 0x2000
+	}
+}
+
+unsafe impl traits::EfiConfigurationTable for EfiRTPropertiesTable {
+	fn guid() -> types::EfiGuid {
+		(0xeb66918a, 0x7eef, 0x402a, [0x84, 0x2e, 0x93, 0x1d, 0x21, 0xc3, 0x8a, 0xe9])
 	}
 }
