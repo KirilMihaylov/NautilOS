@@ -1,0 +1,161 @@
+use core::{
+	borrow::{
+		Borrow,
+		BorrowMut,
+	},
+	ops::{
+		Deref,
+		DerefMut,
+	},
+};
+
+use crate::{
+	utilities::validate_string,
+	guid::EfiGuid,
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
+	types::{
+		VoidPtr,
+		VoidMutPtr,
+	},
+};
+
+#[repr(C)]
+pub struct EfiVariable {
+	get_variable: extern "efiapi" fn(*const u16, *const EfiGuid, *mut u32, *mut usize, VoidMutPtr) -> EfiStatus,
+	get_next_variable_name: extern "efiapi" fn(*mut usize, *mut u16, *mut EfiGuid) -> EfiStatus,
+	set_variable: extern "efiapi" fn(*const u16, *const EfiGuid, *const u32, usize, VoidPtr) -> EfiStatus,
+}
+
+impl EfiVariable {
+	pub fn get_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, data: Option<&mut [u8]>) -> EfiStatusEnum<(usize, EfiVariableAttributes), (usize, EfiVariableAttributes)> {
+		let (variable_name_ptr, data_ptr, mut data_len, mut attributes): (*const u16, VoidMutPtr, usize, EfiVariableAttributes);
+
+		if let Ok(_) = validate_string(variable_name) {
+			variable_name_ptr = variable_name.as_ptr();
+		} else {
+			variable_name_ptr = 0 as *const u16;
+		}
+
+		if let Some(data) = data {
+			data_len = data.len();
+			data_ptr = data.as_mut_ptr() as VoidMutPtr;
+		} else {
+			data_len = 0;
+			data_ptr = 0 as VoidMutPtr;
+		}
+
+		attributes = EfiVariableAttributes {
+			attributes: 0,
+		};
+
+		(self.get_variable)(
+			variable_name_ptr,
+			vendor_guid,
+			&mut attributes.attributes as *mut u32,
+			&mut data_len,
+			data_ptr,
+		).into_enum_data_error(
+			(data_len, attributes),
+			(data_len, attributes)
+		)
+	}
+
+	pub fn get_next_variable_name(&self, variable_name: &mut [u16], vendor_guid: &mut EfiGuid) -> EfiStatusEnum<(), usize> {
+		let mut variable_name_len: usize = variable_name.len();
+
+		(self.get_next_variable_name)(
+			&mut variable_name_len,
+			variable_name.as_mut_ptr(),
+			vendor_guid
+		).into_enum_data_error(
+			(),
+			variable_name_len,
+		)
+	}
+
+	pub fn set_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, attributes: &EfiVariableAttributes, data: &[u8]) -> EfiStatusEnum {
+		let variable_name_ptr: *const u16 = match validate_string(variable_name) {
+			Ok(_) => variable_name.as_ptr(),
+			Err(_) => 0 as *const u16,
+		};
+
+		(self.set_variable)(
+			variable_name_ptr,
+			vendor_guid,
+			attributes.borrow(),
+			data.len(),
+			data.as_ptr() as VoidPtr
+		).into_enum()
+	}
+}
+
+#[repr(transparent)]
+#[derive(Clone,Copy)]
+pub struct EfiVariableAttributes {
+	attributes: u32,
+}
+
+impl EfiVariableAttributes {
+	pub fn non_volatile(&self) -> bool {
+		self.attributes & 1 == 1
+	}
+
+	pub fn boot_service_access(&self) -> bool {
+		self.attributes & 2 == 2
+	}
+
+	pub fn runtime_access(&self) -> bool {
+		self.attributes & 4 == 4
+	}
+
+	pub fn hardware_error_record(&self) -> bool {
+		self.attributes & 8 == 8
+	}
+
+	/* Deprecated by specification; Should be considered reserved */
+	#[deprecated]
+	pub fn authenticated_write_access(&self) -> bool {
+		self.attributes & 0x10 == 0x10
+	}
+
+	pub fn time_based_authenticated_write_access(&self) -> bool {
+		self.attributes & 0x20 == 0x20
+	}
+
+	pub fn apppend_write(&self) -> bool {
+		self.attributes & 0x40 == 0x40
+	}
+
+	pub fn enhanced_authenticated_access(&self) -> bool {
+		self.attributes & 0x80 == 0x80
+	}
+}
+
+impl Deref for EfiVariableAttributes {
+	type Target = u32;
+
+	fn deref(&self) -> &<Self as Deref>::Target {
+		&self.attributes
+	}
+}
+
+impl DerefMut for EfiVariableAttributes {
+	fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
+		&mut self.attributes
+	}
+}
+
+impl Borrow<<Self as Deref>::Target> for EfiVariableAttributes {
+	fn borrow(&self) -> &<Self as Deref>::Target {
+		&self.attributes
+	}
+}
+
+impl BorrowMut<<Self as Deref>::Target> for EfiVariableAttributes {
+	fn borrow_mut(&mut self) -> &mut <Self as Deref>::Target {
+		&mut self.attributes
+	}
+}
