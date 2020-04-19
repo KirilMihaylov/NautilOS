@@ -14,14 +14,12 @@ pub struct EfiConfigurationTable<'a> {
 }
 
 impl<'a> EfiConfigurationTable<'a> {
-	pub(crate) fn new(configuration_table: *const EfiConfigurationTableEntry, configuration_table_size: usize) -> Self {
+	pub(crate) unsafe fn new(configuration_table: *const EfiConfigurationTableEntry, configuration_table_size: usize) -> Self {
 		Self {
-			entries: unsafe {
-				from_raw_parts(
-					configuration_table,
-					configuration_table_size,
-				)
-			},
+			entries: from_raw_parts(
+				configuration_table,
+				configuration_table_size,
+			),
 		}
 	}
 
