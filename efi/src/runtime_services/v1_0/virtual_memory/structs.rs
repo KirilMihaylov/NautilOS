@@ -32,6 +32,13 @@ impl EfiVirtualMemory {
 			pointer as *mut &T as VoidMutPtrPtr
 		).into_enum()
 	}
+
+	pub fn convert_raw_pointer<T>(&self, pointer: &mut *const T, flags_builder: EfiConvertPointerFlagsBuilder) -> EfiStatusEnum {
+		(self.convert_pointer)(
+			flags_builder.finish(),
+			pointer as *mut *const T as VoidMutPtrPtr
+		).into_enum()
+	}
 }
 
 #[repr(transparent)]
