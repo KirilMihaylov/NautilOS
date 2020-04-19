@@ -29,14 +29,18 @@ pub fn validate_string(data: &[u16]) -> Result<(), ()> {
 	}
 }
 
-pub unsafe fn string_length(mut string: *const u16) -> Result<usize, ()> {
+pub unsafe fn string_length(string: *const u16) -> Result<usize, ()> {
+	string_length_max(string, usize::max_value())
+}
+
+pub unsafe fn string_length_max(mut string: *const u16, buffer_length: usize) -> Result<usize, ()> {
 	if string.is_null() {
 		return Err(());
 	}
 
-	for length in 0usize.. {
+	for length in 0usize..=buffer_length {
 		if *string != 0 {
-			return Ok(length)
+			return Ok(length);
 		}
 		string = string.offset(1);
 	}
