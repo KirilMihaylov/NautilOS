@@ -28,7 +28,7 @@ use super::enums::{
 pub struct EfiMemory {
 	allocate_pages: extern "efiapi" fn(EfiAllocateType, EfiMemoryType, usize, *mut EfiPhysicalAddress) -> EfiStatus,
 	free_pages: extern "efiapi" fn(EfiPhysicalAddress, usize) -> EfiStatus,
-	get_memory_map: extern "efiapi" fn(*mut usize, *mut EfiMemoryDescriptor, *mut usize, *mut usize, *mut usize) -> EfiStatus,
+	get_memory_map: extern "efiapi" fn(*mut usize, *mut EfiMemoryDescriptor, *mut usize, *mut usize, *mut u32) -> EfiStatus,
 	allocate_pool: extern "efiapi" fn(EfiMemoryType, usize, *mut VoidPtr) -> EfiStatus,
 	free_pool: extern "efiapi" fn(VoidPtr) -> EfiStatus,
 }
@@ -50,13 +50,13 @@ impl EfiMemory {
 		).into_enum()
 	}
 
-	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, usize, usize, usize), usize> {
+	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, usize, usize, u32), usize> {
 		let (
 			mut allocation_size,
 			mut memory_map_key,
 			mut descriptor_size,
 			mut descriptor_version
-		): (usize, usize, usize, usize) = (memory_map.len(), 0, 0, 0);
+		): (usize, usize, usize, u32) = (memory_map.len(), 0, 0, 0);
 
 		let result: EfiStatus = (self.get_memory_map)(
 			&mut allocation_size,
