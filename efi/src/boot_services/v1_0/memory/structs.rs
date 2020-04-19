@@ -50,7 +50,7 @@ impl EfiMemory {
 		).into_enum()
 	}
 
-	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, usize, usize, u32), usize> {
+	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, EfiMemoryDescriptorMetadata), usize> {
 		let (
 			mut allocation_size,
 			mut memory_map_key,
@@ -82,9 +82,12 @@ impl EfiMemory {
 					},
 					_phantom_data: PhantomData,
 				},
-				allocation_size,
-				memory_map_key,
-				descriptor_version
+				EfiMemoryDescriptorMetadata { 
+					memory_map_size: allocation_size,
+					descriptor_size: descriptor_size,
+					descriptor_version: descriptor_version,
+					descriptors_array: memory_map.as_ptr() as *const EfiMemoryDescriptor,
+				}
 			),
 			allocation_size
 		)
@@ -115,6 +118,32 @@ pub struct EfiMemoryDescriptor {
 	virtual_start: EfiVirtualAddress,
 	number_of_pages: u64,
 	attribute: u64,
+}
+
+#[derive(Clone,Copy)]
+pub struct EfiMemoryDescriptorMetadata {
+	memory_map_size: usize,
+	descriptor_size: usize,
+	descriptor_version: u32,
+	descriptors_array: *const EfiMemoryDescriptor,
+}
+
+impl EfiMemoryDescriptorMetadata {
+	pub fn memory_map_size(&self) -> usize {
+		self.memory_map_size
+	}
+
+	pub fn descriptor_size(&self) -> usize {
+		self.descriptor_size
+	}
+
+	pub fn descriptor_version(&self) -> u32 {
+		self.descriptor_version
+	}
+
+	pub(crate) fn descriptors_array(&self) -> *const EfiMemoryDescriptor {
+		self.descriptors_array
+	}
 }
 
 pub struct EfiMemoryDescriptorIterator<'a> {
