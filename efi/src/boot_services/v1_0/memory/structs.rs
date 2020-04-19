@@ -50,7 +50,7 @@ impl EfiMemory {
 		).into_enum()
 	}
 
-	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, EfiMemoryDescriptorMetadata), usize> {
+	pub fn get_memory_map<'a>(&self, memory_map: &'a mut [u8]) -> EfiStatusEnum<(EfiMemoryDescriptorIterator<'a>, EfiMemoryMapMetadata), usize> {
 		let (
 			mut allocation_size,
 			mut memory_map_key,
@@ -82,7 +82,7 @@ impl EfiMemory {
 					},
 					_phantom_data: PhantomData,
 				},
-				EfiMemoryDescriptorMetadata { 
+				EfiMemoryMapMetadata { 
 					memory_map_size: allocation_size,
 					descriptor_size: descriptor_size,
 					descriptor_version: descriptor_version,
@@ -121,14 +121,14 @@ pub struct EfiMemoryDescriptor {
 }
 
 #[derive(Clone,Copy)]
-pub struct EfiMemoryDescriptorMetadata {
+pub struct EfiMemoryMapMetadata {
 	memory_map_size: usize,
 	descriptor_size: usize,
 	descriptor_version: u32,
 	descriptors_array: *const EfiMemoryDescriptor,
 }
 
-impl EfiMemoryDescriptorMetadata {
+impl EfiMemoryMapMetadata {
 	pub fn memory_map_size(&self) -> usize {
 		self.memory_map_size
 	}
