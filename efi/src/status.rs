@@ -4,6 +4,18 @@ use crate::types::EfiStatusRaw;
 pub struct EfiStatus(EfiStatusRaw);
 
 impl EfiStatus {
+	pub fn success() -> Self {
+		Self(0)
+	}
+
+	pub fn warning(code: EfiStatusRaw) -> Self {
+		Self((code << 1) >> 1)
+	}
+
+	pub fn error(code: EfiStatusRaw) -> Self {
+		Self(1usize.rotate_right(1) | code)
+	}
+
 	pub fn is_success(&self) -> bool {
 		if self.0 == 0 {
 			true /* Success */
