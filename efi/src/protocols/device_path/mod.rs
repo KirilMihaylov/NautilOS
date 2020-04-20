@@ -1,4 +1,4 @@
-use crate::common::EfiGuid;
+use crate::guid::EfiGuid;
 use crate::protocols::EfiProtocol;
 
 pub mod acpi;
