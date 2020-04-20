@@ -1,10 +1,14 @@
 use crate::common::EfiGuid;
 use crate::protocols::EfiProtocol;
 
+pub mod hardware;
+
 #[non_exhaustive]
 pub enum EfiDevicePathType<'a> {
 	Undefined,
 
+	HardwarePath(EfiHardwareDevicePathSubtype<'a>),
+	
 	EndOfDevicePathInstance,
 	EndOfDevicePath,
 }
@@ -14,6 +18,8 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 		use EfiDevicePathType::*;
 	
 		match path.path_type {
+			1 => HardwarePath(EfiHardwareDevicePathSubtype::from(path)),
+			
 			0x7F => {
 				match path.path_subtype {
 					1 => EndOfDevicePathInstance,
@@ -21,6 +27,35 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 					_ => unreachable!("Undefined state!"),
 				}
 			},
+			_ => Undefined,
+		}
+	}
+}
+
+#[non_exhaustive]
+pub enum EfiHardwareDevicePathSubtype<'a> {
+	Undefined,
+
+	Pci(&'a hardware::EfiPciDevicePath),
+	PcCard(&'a hardware::EfiPcCardDevicePath),
+	MemoryMapped(&'a hardware::EfiMemoryMappedDevicePath),
+	VendorDefined(&'a hardware::EfiVendorDefinedDevicePath),
+	Controller(&'a hardware::EfiControllerDevicePath),
+	BaseboardManagementController(&'a hardware::EfiBaseboardManagementControllerDevicePath),
+}
+
+impl<'a> From<&'a EfiDevicePathProcotol> for EfiHardwareDevicePathSubtype<'a> {
+	fn from(path: &'a EfiDevicePathProcotol) -> Self {
+		use EfiHardwareDevicePathSubtype::*;
+		use hardware::*;
+	
+		match path.path_subtype {
+			1 if path.len() == 6 => Pci(EfiPciDevicePath::new(path)),
+			2 if path.len() == 5 => PcCard(EfiPcCardDevicePath::new(path)),
+			3 if path.len() == 24 => MemoryMapped(EfiMemoryMappedDevicePath::new(path)),
+			4 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
+			5 if path.len() == 8 => Controller(EfiControllerDevicePath::new(path)),
+			6 if path.len() == 13 => BaseboardManagementController(EfiBaseboardManagementControllerDevicePath::new(path)),
 			_ => Undefined,
 		}
 	}
