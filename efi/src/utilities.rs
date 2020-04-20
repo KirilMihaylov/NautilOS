@@ -39,7 +39,7 @@ pub unsafe fn string_length_max(mut string: *const u16, buffer_length: usize) ->
 	}
 
 	for length in 0usize..=buffer_length {
-		if *string != 0 {
+		if *string == 0 {
 			return Ok(length);
 		}
 		string = string.offset(1);
