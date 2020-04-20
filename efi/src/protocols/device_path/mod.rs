@@ -1,6 +1,7 @@
 use crate::common::EfiGuid;
 use crate::protocols::EfiProtocol;
 
+pub mod acpi;
 pub mod hardware;
 
 #[non_exhaustive]
@@ -8,6 +9,7 @@ pub enum EfiDevicePathType<'a> {
 	Undefined,
 
 	HardwarePath(EfiHardwareDevicePathSubtype<'a>),
+	AcpiPath(EfiAcpiDevicePathSubtype<'a>),
 	
 	EndOfDevicePathInstance,
 	EndOfDevicePath,
@@ -19,6 +21,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 	
 		match path.path_type {
 			1 => HardwarePath(EfiHardwareDevicePathSubtype::from(path)),
+			2 => AcpiPath(EfiAcpiDevicePathSubtype::from(path)),
 			
 			0x7F => {
 				match path.path_subtype {
@@ -56,6 +59,31 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiHardwareDevicePathSubtype<'a> {
 			4 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
 			5 if path.len() == 8 => Controller(EfiControllerDevicePath::new(path)),
 			6 if path.len() == 13 => BaseboardManagementController(EfiBaseboardManagementControllerDevicePath::new(path)),
+			_ => Undefined,
+		}
+	}
+}
+
+#[non_exhaustive]
+pub enum EfiAcpiDevicePathSubtype<'a> {
+	Undefined,
+
+	Acpi(&'a acpi::EfiAcpiDevicePath),
+	ExtendedAcpi(&'a acpi::EfiExtendedAcpiDevicePath),
+	Address(&'a acpi::EfiAddressDevicePath),
+	NVDIMM(&'a acpi::EfiNVDIMMDevicePath),
+}
+
+impl<'a> From<&'a EfiDevicePathProcotol> for EfiAcpiDevicePathSubtype<'a> {
+	fn from(path: &'a EfiDevicePathProcotol) -> Self {
+		use EfiAcpiDevicePathSubtype::*;
+		use self::acpi::*;
+	
+		match path.path_subtype {
+			1 if path.len() == 12 => Acpi(EfiAcpiDevicePath::new(path)),
+			2 if path.len() >= 19 => ExtendedAcpi(EfiExtendedAcpiDevicePath::new(path)),
+			3 if path.len() >= 8 && path.len() % 4 == 0 => Address(EfiAddressDevicePath::new(path)),
+			4 if path.len() == 8 => NVDIMM(EfiNVDIMMDevicePath::new(path)),
 			_ => Undefined,
 		}
 	}
