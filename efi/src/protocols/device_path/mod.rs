@@ -1,5 +1,7 @@
-use crate::guid::EfiGuid;
-use crate::protocols::EfiProtocol;
+use crate::{
+	guid::EfiGuid,
+	protocols::EfiProtocol,
+};
 
 pub mod acpi;
 pub mod hardware;
