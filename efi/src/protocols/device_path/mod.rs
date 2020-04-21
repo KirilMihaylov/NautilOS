@@ -55,12 +55,30 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiHardwareDevicePathSubtype<'a> {
 		use hardware::*;
 	
 		match path.path_subtype {
-			1 if path.len() == 6 => Pci(EfiPciDevicePath::new(path)),
-			2 if path.len() == 5 => PcCard(EfiPcCardDevicePath::new(path)),
-			3 if path.len() == 24 => MemoryMapped(EfiMemoryMappedDevicePath::new(path)),
-			4 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
-			5 if path.len() == 8 => Controller(EfiControllerDevicePath::new(path)),
-			6 if path.len() == 13 => BaseboardManagementController(EfiBaseboardManagementControllerDevicePath::new(path)),
+			1 => match path.len() {
+				6 => Pci(EfiPciDevicePath::new(path)),
+				_ => Undefined,
+			},
+			2 => match path.len() {
+				5 => PcCard(EfiPcCardDevicePath::new(path)),
+				_ => Undefined,
+			},
+			3 => match path.len() {
+				24 => MemoryMapped(EfiMemoryMappedDevicePath::new(path)),
+				_ => Undefined,
+			},
+			4 => match path.len()  {
+				x if x >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
+				_ => Undefined,
+			},
+			5 => match path.len() {
+				8 => Controller(EfiControllerDevicePath::new(path)),
+				_ => Undefined,
+			},
+			6 => match path.len() {
+				13 => BaseboardManagementController(EfiBaseboardManagementControllerDevicePath::new(path)),
+				_ => Undefined,
+			},
 			_ => Undefined,
 		}
 	}
@@ -82,10 +100,22 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiAcpiDevicePathSubtype<'a> {
 		use self::acpi::*;
 	
 		match path.path_subtype {
-			1 if path.len() == 12 => Acpi(EfiAcpiDevicePath::new(path)),
-			2 if path.len() >= 19 => ExtendedAcpi(EfiExtendedAcpiDevicePath::new(path)),
-			3 if path.len() >= 8 && path.len() % 4 == 0 => Address(EfiAddressDevicePath::new(path)),
-			4 if path.len() == 8 => NVDIMM(EfiNVDIMMDevicePath::new(path)),
+			1 => match path.len() {
+				12 => Acpi(EfiAcpiDevicePath::new(path)),
+				_ => Undefined,
+			},
+			2 => match path.len() {
+				x if x >= 19 => ExtendedAcpi(EfiExtendedAcpiDevicePath::new(path)),
+				_ => Undefined,
+			},
+			3 => match path.len() {
+				x if x >= 8 && x % 4 == 0 => Address(EfiAddressDevicePath::new(path)),
+				_ => Undefined,
+			},
+			4 => match path.len() {
+				8 => NVDIMM(EfiNVDIMMDevicePath::new(path)),
+				_ => Undefined,
+			},
 			_ => Undefined,
 		}
 	}
