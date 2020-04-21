@@ -22,6 +22,32 @@ impl EfiGuid {
 			data_4: data.3,
 		}
 	}
+
+	pub fn from_buffer(data: &[u8]) -> Option<Self> {
+		if data.len() < 16 {
+			None
+		} else {
+			unsafe {
+				Some(
+					Self {
+						data_1: (data.as_ptr() as *const u32).read_unaligned(),
+						data_2: (data.as_ptr().offset(4) as *const u16).read_unaligned(),
+						data_3: (data.as_ptr().offset(6) as *const u16).read_unaligned(),
+						data_4: (data.as_ptr().offset(8) as *const [u8; 8]).read_unaligned(),
+					}
+				)
+			}
+		}
+	}
+
+	pub unsafe fn from_raw(data: *const u8) -> Self {
+		Self {
+			data_1: (data as *const u32).read_unaligned(),
+			data_2: (data.offset(4) as *const u16).read_unaligned(),
+			data_3: (data.offset(6) as *const u16).read_unaligned(),
+			data_4: (data.offset(8) as *const [u8; 8]).read_unaligned(),
+		}
+	}
 }
 
 impl PartialEq<&EfiGuid> for EfiGuid {
