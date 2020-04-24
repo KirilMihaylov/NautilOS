@@ -1,10 +1,14 @@
+use core::mem::size_of;
+
 use crate::{
 	guid::EfiGuid,
 	protocols::EfiProtocol,
+	protocols::network::common::structs::EfiIPAddressRaw,
 };
 
 pub mod acpi;
 pub mod hardware;
+pub mod messaging;
 
 #[non_exhaustive]
 pub enum EfiDevicePathType<'a> {
@@ -12,6 +16,7 @@ pub enum EfiDevicePathType<'a> {
 
 	HardwarePath(EfiHardwareDevicePathSubtype<'a>),
 	AcpiPath(EfiAcpiDevicePathSubtype<'a>),
+	Messaging(EfiMessagingDevicePathSubtype<'a>),
 	
 	EndOfDevicePathInstance,
 	EndOfDevicePath,
@@ -24,6 +29,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 		match path.path_type {
 			1 => HardwarePath(EfiHardwareDevicePathSubtype::from(path)),
 			2 => AcpiPath(EfiAcpiDevicePathSubtype::from(path)),
+			3 => Messaging(EfiMessagingDevicePathSubtype::from(path)),
 			
 			0x7F => {
 				match path.path_subtype {
@@ -114,6 +120,185 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiAcpiDevicePathSubtype<'a> {
 			},
 			4 => match path.len() {
 				8 => NVDIMM(EfiNVDIMMDevicePath::new(path)),
+				_ => Undefined,
+			},
+			_ => Undefined,
+		}
+	}
+}
+
+#[non_exhaustive]
+#[allow(non_camel_case_types)]
+pub enum EfiMessagingDevicePathSubtype<'a> {
+	Undefined,
+
+	ATAPacketInterface(&'a messaging::EfiAtapiDevicePath),
+	SCSI(&'a messaging::EfiScsiDevicePath),
+	FibreChannel(&'a messaging::EfiFibreChannelDevicePath),
+	Firewire(&'a messaging::EfiFirewireDevicePath),
+	UniversalSerialBus(&'a messaging::EfiUsbDevicePath),
+	I2O(&'a messaging::EfiI2ODevicePath),
+	Sata(&'a messaging::EfiSataDevicePath),
+	InfiniBand(&'a messaging::EfiInfiniBandDevicePath),
+	UARTFlowControl(&'a messaging::EfiUartFlowControlDevicePath),
+	SerialAttachedSCSI(&'a messaging::EfiSerialAttachedScsiDevicePath),
+	VendorDefined(&'a messaging::EfiVendorDefinedDevicePath),
+	MAC_Address(&'a messaging::EfiMacAddressDevicePath),
+	IPv4(&'a messaging::EfiIPv4DevicePath),
+	IPv6(&'a messaging::EfiIPv6DevicePath),
+	UART(&'a messaging::EfiUartDevicePath),
+	UniversalSerialBusClass(&'a messaging::EfiUsbClassDevicePath),
+	UniversalSerialBusWWID(&'a messaging::EfiUsbWwidDevicePath),
+	LogicalUnit(&'a messaging::EfiLogicalUnitDevicePath),
+	iSCSI(&'a messaging::EfiiScsiDevicePath),
+	VLAN(&'a messaging::EfiVlanDevicePath),
+	FibreChannel_Ex(&'a messaging::EfiFibreChannelExDevicePath),
+	SerialAttachedSCSI_Ex(&'a messaging::EfiSerialAttachedScsiExDevicePath),
+	NVMExpressNamespace(&'a messaging::EfiNvmExpressDevicePath),
+	UniversalResourceIdentifier(&'a messaging::EfiUniversalResourceIdentifierDevicePath),
+	UniversalFlashStorage(&'a messaging::EfiUniversalResourceIdentifierDevicePath),
+	SecureDigital(&'a messaging::EfiSecureDigitalDevicePath),
+	Bluetooth(&'a messaging::EfiBluetoothDevicePath),
+	Wireless(&'a messaging::EfiWirelessDevicePath),
+	EmbeddedMultiMediaCard(&'a messaging::EfiEmbeddedMultiMediaCardDevicePath),
+	BluetoothLE(&'a messaging::EfiBluetoothLEDevicePath),
+	DomainNameService(&'a messaging::EfiDomainNameServiceDevicePath),
+	NVDIMM_Namespace(&'a messaging::EfiNvdimmNamespaceDevicePath),
+	REST_Service(&'a messaging::EfiRestServiceDevicePath),
+}
+
+impl<'a> From<&'a EfiDevicePathProcotol> for EfiMessagingDevicePathSubtype<'a> {
+	fn from(path: &'a EfiDevicePathProcotol) -> Self {
+		use EfiMessagingDevicePathSubtype::*;
+		use messaging::*;
+	
+		match path.path_subtype {
+			1 => match path.len() {
+				8 => ATAPacketInterface(EfiAtapiDevicePath::new(path)),
+				_ => Undefined,
+			},
+			2 => match path.len() {
+				8 => SCSI(EfiScsiDevicePath::new(path)),
+				_ => Undefined,
+			},
+			3 => match path.len() {
+				24 => FibreChannel(EfiFibreChannelDevicePath::new(path)),
+				_ => Undefined,
+			},
+			4 => match path.len() {
+				16 => Firewire(EfiFirewireDevicePath::new(path)),
+				_ => Undefined,
+			},
+			5 => match path.len(){
+				6 => UniversalSerialBus(EfiUsbDevicePath::new(path)),
+				_ => Undefined,
+			},
+			6 => match path.len() {
+				8 => I2O(EfiI2ODevicePath::new(path)),
+				10 => Sata(EfiSataDevicePath::new(path)),
+				_ => Undefined,
+			},
+			9 => match path.len() {
+				48 => InfiniBand(EfiInfiniBandDevicePath::new(path)),
+				_ => Undefined,
+			},
+			10 => match path.len() {
+				x if x >= 20 => {
+					let guid: EfiGuid = unsafe {
+						EfiGuid::from_raw(&path.path_data as *const () as *const u8)
+					};
+
+					match guid.as_tuple() {
+						(0x37499a9d, 0x542f, 0x4c89, [0xa0, 0x26, 0x35, 0xda, 0x14, 0x20, 0x94, 0xe4]) => UARTFlowControl(EfiUartFlowControlDevicePath::new(path)),
+						(0xd487ddb4, 0x008b, 0x11d9, [0xaf, 0xdc, 0x00, 0x10, 0x83, 0xff, 0xca, 0x4d]) => SerialAttachedSCSI(EfiSerialAttachedScsiDevicePath::new(path)),
+						_ => VendorDefined(EfiVendorDefinedDevicePath::new(path)), /* Generic Vendor Defined */
+					}
+				},
+				_ => Undefined,
+			},
+			11 => match path.len() {
+				37 => MAC_Address(EfiMacAddressDevicePath::new(path)),
+				_ => Undefined,
+			},
+			12 => match path.len() {
+				x if x == 19 || x == 27 => IPv4(EfiIPv4DevicePath::new(path)),
+				_ => Undefined,
+			},
+			13 => match path.len() {
+				60 => IPv6(EfiIPv6DevicePath::new(path)),
+				_ => Undefined,
+			},
+			14 => match path.len() {
+				19 => UART(EfiUartDevicePath::new(path)),
+				_ => Undefined,
+			},
+			15 => match path.len() {
+				11 => UniversalSerialBusClass(EfiUsbClassDevicePath::new(path)),
+				_ => Undefined,
+			},
+			16 => match path.len() {
+				x if x >= 10 => UniversalSerialBusWWID(EfiUsbWwidDevicePath::new(path)),
+				_ => Undefined,
+			},
+			17 => match path.len() {
+				5 => LogicalUnit(EfiLogicalUnitDevicePath::new(path)),
+				_ => Undefined,
+			},
+			19 => match path.len() {
+				x if x >= 18 => iSCSI(EfiiScsiDevicePath::new(path)),
+				_ => Undefined,
+			},
+			20 => match path.len() {
+				6 => VLAN(EfiVlanDevicePath::new(path)),
+				_ => Undefined,
+			},
+			21 => match path.len() {
+				20 => FibreChannel_Ex(EfiFibreChannelExDevicePath::new(path)),
+				_ => Undefined,
+			},
+			22 => match path.len() {
+				32 => SerialAttachedSCSI_Ex(EfiSerialAttachedScsiExDevicePath::new(path)),
+				_ => Undefined,
+			},
+			23 => match path.len() {
+				16 => NVMExpressNamespace(EfiNvmExpressDevicePath::new(path)),
+				_ => Undefined,
+			},
+			24 => match path.len() {
+				x if x >= 4 => UniversalResourceIdentifier(EfiUniversalResourceIdentifierDevicePath::new(path)),
+				_ => Undefined,
+			},
+			25 => match path.len() {
+				6 => UniversalFlashStorage(EfiUniversalResourceIdentifierDevicePath::new(path)),
+				_ => Undefined,
+			},
+			26 => match path.len() {
+				5 => SecureDigital(EfiSecureDigitalDevicePath::new(path)),
+				_ => Undefined,
+			},
+			27 => match path.len() {
+				10 => Bluetooth(EfiBluetoothDevicePath::new(path)),
+				_ => Undefined,
+			},
+			28 => match path.len() {
+				36 => Wireless(EfiWirelessDevicePath::new(path)),
+				_ => Undefined,
+			},
+			29 => match path.len() {
+				5 => EmbeddedMultiMediaCard(EfiEmbeddedMultiMediaCardDevicePath::new(path)),
+				_ => Undefined,
+			},
+			30 => match path.len() {
+				11 => BluetoothLE(EfiBluetoothLEDevicePath::new(path)),
+				_ => Undefined,
+			},
+			31 => match path.len() {
+				x if (x as usize - 5) % size_of::<EfiIPAddressRaw>() == 0 => DomainNameService(EfiDomainNameServiceDevicePath::new(path)),
+				_ => Undefined,
+			},
+			32 => match path.len() {
+				20 => NVDIMM_Namespace(EfiNvdimmNamespaceDevicePath::new(path)),
+				x if x == 6 || x >= 21 => REST_Service(EfiRestServiceDevicePath::new(path)),
 				_ => Undefined,
 			},
 			_ => Undefined,
