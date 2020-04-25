@@ -1,5 +1,5 @@
 use crate::EfiObject;
 
-pub unsafe trait EfiToAcpiObject: Sized {
+pub unsafe trait FromEfiObject: Sized {
 	fn convert(efi_object: EfiObject) -> Option<Self>;
 }
