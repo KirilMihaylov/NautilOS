@@ -8,6 +8,9 @@ edition = "2018"
 
 [dependencies.native]
 path = "../native"
+features = [
+	"memory_c",
+]
 
 [dependencies.acpi]
 path = "../acpi"
