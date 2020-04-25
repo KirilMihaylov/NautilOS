@@ -7,39 +7,35 @@ macro_rules! supported_targets {
 	};
 }
 
-macro_rules! any_target_arch {
-	([$target:literal] $block:block) => {
-		#[cfg(target_arch=$target)]
-		$block
-	};
-	([$($targets:literal);+, $target:literal] $block:block) => {
-		#[cfg(any(target_arch=$target,$(target_arch=$targets),+))]
-		$block
+macro_rules! target_arch {
+	($([$($targets:literal),+] $block:block),+) => {
+		$(
+			#[cfg(any($(target_arch=$targets),+))]
+			$block
+		)+
 	};
 }
 
-macro_rules! any_target_arch_else_unimplemented {
-	([$target:literal] $block:block) => {
-		#[cfg(target_arch=$target)]
-		$block
-		
-		if_not_target_unimplemented!($target);
+macro_rules! not_target_arch {
+	($([$($targets:literal),+] $block:block),+) => {
+		$(
+			#[cfg(not(any($(target_arch=$targets),+)))]
+			$block
+		)+
 	};
-	([$($targets:literal);+, $target:literal] $block:block) => {
-		#[cfg(any(target_arch=$target,$(target_arch=$targets),+))]
-		$block
-		
-		if_not_target_unimplemented!($target,$($targets),+);
+}
+
+macro_rules! target_arch_else_unimplemented {
+	($([$($targets:literal),+] $block:block),+) => {
+		$(
+			target_arch!([$($targets),+] $block);
+		)+
+		if_not_target_unimplemented!($($($targets),+),+);
 	};
 }
 
 macro_rules! if_not_target_unimplemented {
-	(target:literal) => {
-		#[cfg(target_arch=$target)]
-		unimplemented!();
-	};
-	($($targets:literal);+, $target:literal) => {
-		#[cfg(not(any(target_arch=$target,$(target_arch=$targets),+)))]
-		unimplemented!();
+	($($targets:literal),+) => {
+		not_target_arch!([$($targets),+] { unimplemented!(); });
 	};
 }
