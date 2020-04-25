@@ -19,3 +19,5 @@ supported_targets!{
 
 #[cfg(feature="memory_c")]
 mod memory_c;
+
+pub mod features;
