@@ -2,4 +2,4 @@
 #![allow(dead_code)]
 
 /* For platform-specific operations */
-#![feature(asm)]
+#![feature(llvm_asm)]
