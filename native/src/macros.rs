@@ -23,13 +23,22 @@ macro_rules! any_target_arch_else_unimplemented {
 		#[cfg(target_arch=$target)]
 		$block
 		
-		#[cfg(not(target_arch=$target))]
-		unimplemented!();
+		if_not_target_unimplemented!($target);
 	};
 	([$($targets:literal);+, $target:literal] $block:block) => {
 		#[cfg(any(target_arch=$target,$(target_arch=$targets),+))]
 		$block
 		
+		if_not_target_unimplemented!($target,$($targets),+);
+	};
+}
+
+macro_rules! if_not_target_unimplemented {
+	(target:literal) => {
+		#[cfg(target_arch=$target)]
+		unimplemented!();
+	};
+	($($targets:literal);+, $target:literal) => {
 		#[cfg(not(any(target_arch=$target,$(target_arch=$targets),+)))]
 		unimplemented!();
 	};
