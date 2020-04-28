@@ -27,7 +27,7 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
-	pub fn output_string_raw(&self, string: *const u16) -> EfiStatusEnum {
+	pub unsafe fn output_string_raw(&self, string: *const u16) -> EfiStatusEnum {
 		(self.output_string)(
 			self,
 			string
@@ -41,7 +41,7 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
-	pub fn test_string_raw(&self, string: *const u16) -> EfiStatusEnum {
+	pub unsafe fn test_string_raw(&self, string: *const u16) -> EfiStatusEnum {
 		(self.test_string)(
 			self,
 			string
