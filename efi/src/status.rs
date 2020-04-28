@@ -171,6 +171,32 @@ pub enum EfiStatusEnum<T = (), E = ()> {
 	Error(EfiStatusRaw, E),
 }
 
+impl EfiStatusEnum {
+	pub fn is_success(&self) -> bool {
+		if let Self::Success(_) = self {
+			true
+		} else {
+			false
+		}
+	}
+
+	pub fn is_warning(&self) -> bool {
+		if let Self::Warning(_, _) = self {
+			true
+		} else {
+			false
+		}
+	}
+
+	pub fn is_error(&self) -> bool {
+		if let Self::Error(_, _) = self {
+			true
+		} else {
+			false
+		}
+	}
+}
+
 #[non_exhaustive]
 pub enum EfiStatusWarning {
 	NoWarning,
