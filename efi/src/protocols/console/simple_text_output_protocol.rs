@@ -1,9 +1,11 @@
-use crate::guid::EfiGuid;
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	guid::EfiGuid,
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
+	protocols::EfiProtocol,
 };
-use crate::protocols::EfiProtocol;
 
 #[repr(C)]
 pub struct EfiSimpleTextOutputProtocol {
@@ -41,6 +43,50 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
+	/* Splits string into parts and executes the function until the first error (and returns it) or until the string is finished (and returns the last returned status) */
+	pub fn output_string(&self, mut string: &str) -> EfiStatusEnum {
+		let mut status: EfiStatus;
+
+		loop {
+			let mut buffer: [u16; 32] = [0; 32];
+
+			let mut index: usize = 0;
+
+			for ch in string.chars() {
+				if (buffer.len() - index) < 2 {
+					break;
+				}
+				
+				ch.encode_utf16(&mut buffer[index..]);
+
+				index += 1;
+				
+				if index != buffer.len() {
+					if buffer[index] != 0 {
+						index += 1;
+					}
+				}
+			}
+
+			status = (self.output_string)(
+				self,
+				buffer.as_ptr()
+			);
+
+			if status.is_error() {
+				return status.into_enum();
+			}
+
+			string = string.split_at(index).1;
+
+			if string.len() == 0 {
+				break;
+			}
+		}
+
+		status.into_enum()
+	}
+
 	pub unsafe fn test_string_raw(&self, string: *const u16) -> EfiStatusEnum {
 		(self.test_string)(
 			self,
@@ -53,6 +99,50 @@ impl EfiSimpleTextOutputProtocol {
 			self,
 			string.as_ptr()
 		).into_enum()
+	}
+
+	/* Splits string into parts and executes the function until the first error (and returns it) or until the string is finished (and returns the last returned status) */
+	pub fn test_string(&self, mut string: &str) -> EfiStatusEnum {
+		let mut status: EfiStatus;
+
+		loop {
+			let mut buffer: [u16; 33] = [0; 33];
+
+			let mut index: usize = 0;
+
+			for ch in string.chars() {
+				if (buffer.len() - index) < 2 {
+					break;
+				}
+				
+				ch.encode_utf16(&mut buffer[index..]);
+
+				index += 1;
+				
+				if index != buffer.len() - 1 {
+					if buffer[index] != 0 {
+						index += 1;
+					}
+				}
+			}
+
+			status = (self.test_string)(
+				self,
+				buffer.as_ptr()
+			);
+
+			if status.is_error() {
+				return status.into_enum();
+			}
+
+			string = string.split_at(index).1;
+
+			if string.len() == 0 {
+				break;
+			}
+		}
+
+		status.into_enum()
 	}
 
 	pub fn query_mode(&self, mode: usize, columns: &mut usize, rows: &mut usize) -> EfiStatusEnum {
