@@ -1,3 +1,8 @@
+use core::fmt::{
+	Error,
+	Write,
+};
+
 use crate::{
 	guid::EfiGuid,
 	status::{
@@ -201,6 +206,16 @@ impl EfiProtocol for EfiSimpleTextOutputProtocol {
 
 	fn guid() -> EfiGuid {
 		EfiGuid::from_tuple((0x387477c2, 0x69c7, 0x11d2, [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b]))
+	}
+}
+
+impl Write for EfiSimpleTextOutputProtocol {
+	fn write_str(&mut self, s: &str) -> Result<(), Error> {
+		if self.output_string(s).is_error() {
+			Err(Error)
+		} else {
+			Ok(())
+		}
 	}
 }
 
