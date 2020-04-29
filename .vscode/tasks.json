@@ -22,6 +22,41 @@
 			],
 		},
 		{
+			"label": "Build Docs (x86)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"doc",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=i686-unknown-uefi"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
+			"label": "Open Docs (x86)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"doc",
+				"--open",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=i686-unknown-uefi"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
 			"label": "Build (x86_64)",
 			"type": "process",
 			"command": "cargo",
@@ -35,6 +70,41 @@
 				"--target=x86_64-unknown-uefi"
 			],
 			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
+			"label": "Build Docs (x86_64)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"doc",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=x86_64-unknown-uefi"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
+			"label": "Open Docs (x86_64)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"doc",
+				"--open",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--release",
+				"--target=x86_64-unknown-uefi"
+			],
 			"problemMatcher": [
 				"$rustc"
 			],
