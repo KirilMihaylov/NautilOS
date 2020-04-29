@@ -3,6 +3,8 @@
 #![no_std]
 #![no_main]
 
+#![feature(panic_info_message)]
+
 mod panic;
 
 use efi::types::EfiHandle;
