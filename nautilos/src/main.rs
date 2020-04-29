@@ -1,3 +1,5 @@
+#![cfg_attr(doc, allow(unused_attributes))]
+
 #![no_std]
 #![no_main]
 
