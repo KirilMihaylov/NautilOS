@@ -1,4 +1,3 @@
-#[cfg_attr(test, allow(unused_imports))]
 use core::sync::atomic::{
 	AtomicPtr,
 	Ordering::Relaxed,
@@ -8,8 +7,8 @@ use efi::protocols::console::simple_text_output_protocol::EfiSimpleTextOutputPro
 
 pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as _);
 
-#[cfg(not(test))]
-#[panic_handler]
+#[cfg_attr(not(test), panic_handler)]
+#[cfg_attr(test, allow(dead_code))]
 fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 	let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Relaxed);
 	
