@@ -1,3 +1,5 @@
+#![cfg(not(test))]
+
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
