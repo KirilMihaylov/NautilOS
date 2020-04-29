@@ -1,7 +1,5 @@
-#![cfg_attr(doc, allow(unused_attributes))]
-
 #![no_std]
-#![no_main]
+#![cfg_attr(not(doc), no_main)]
 
 #![feature(panic_info_message)]
 
