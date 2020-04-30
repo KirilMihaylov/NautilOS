@@ -1,3 +1,5 @@
+#![cfg(not(test))]
+
 #[no_mangle]
 unsafe extern "C" fn memcmp(ptr1: *const i8, ptr2: *const i8, length: usize) -> isize {
 	for _ in 0..length {
