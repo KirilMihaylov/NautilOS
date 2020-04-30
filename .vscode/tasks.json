@@ -4,7 +4,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Build (x86)",
+			"label": "Build Loader (x86)",
 			"type": "process",
 			"command": "cargo",
 			"args": [
@@ -13,6 +13,8 @@
 				"unstable-options",
 				"-Z",
 				"build-std=core,alloc",
+				"--package",
+				"nautilos-loader",
 				"--release",
 				"--target=i686-unknown-uefi"
 			],
@@ -57,7 +59,7 @@
 			],
 		},
 		{
-			"label": "Build (x86_64)",
+			"label": "Build Loader (x86_64)",
 			"type": "process",
 			"command": "cargo",
 			"args": [
@@ -66,6 +68,8 @@
 				"unstable-options",
 				"-Z",
 				"build-std=core,alloc",
+				"--package",
+				"nautilos-loader",
 				"--release",
 				"--target=x86_64-unknown-uefi"
 			],
