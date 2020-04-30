@@ -23,7 +23,7 @@ name = "native"
 version = "0.1.0"
 
 [[package]]
-name = "nautilos"
+name = "nautilos-loader"
 version = "0.1.0"
 dependencies = [
  "acpi",

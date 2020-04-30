@@ -1,6 +1,6 @@
 [workspace]
 members = [
-	"nautilos",
+	"nautilos-loader",
 	"native",
 	"efi",
 	"efi_interops",

@@ -1,3 +1,5 @@
+//! This crate represents the kernel loader.
+
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 
