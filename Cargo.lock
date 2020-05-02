@@ -30,7 +30,3 @@ dependencies = [
  "efi",
  "native",
 ]
-
-[[package]]
-name = "tests"
-version = "0.1.0"

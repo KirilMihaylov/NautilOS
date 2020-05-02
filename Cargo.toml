@@ -5,5 +5,4 @@ members = [
 	"efi",
 	"efi_interops",
 	"acpi",
-	"tests",
 ]
