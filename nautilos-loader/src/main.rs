@@ -2,6 +2,7 @@
 
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
+#![doc(html_no_source)]
 
 #![feature(panic_info_message)]
 
