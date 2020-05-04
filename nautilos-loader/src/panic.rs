@@ -1,6 +1,9 @@
-use core::sync::atomic::{
-	AtomicPtr,
-	Ordering::Relaxed,
+use core::{
+	sync::atomic::{
+		AtomicPtr,
+		Ordering::Relaxed,
+	},
+	mem::align_of,
 };
 
 use efi::protocols::console::simple_text_output_protocol::EfiSimpleTextOutputProtocol;
@@ -12,7 +15,7 @@ pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as
 fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 	let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Relaxed);
 	
-	if !con_out.is_null() {
+	if !con_out.is_null() && (con_out as usize) % align_of::<EfiSimpleTextOutputProtocol>() == 0 {
 		use core::fmt::write;
 
 		let con_out: &mut EfiSimpleTextOutputProtocol = unsafe { &mut *con_out };
