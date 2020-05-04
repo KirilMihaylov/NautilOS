@@ -1,5 +1,5 @@
 pub fn detection_mechanism_present() -> bool {
-	target_arch_else_unimplemented!{
+	target_arch_else_unimplemented_error!{
 		["x86", "x86_64"] {
 			let flags: usize;
 
