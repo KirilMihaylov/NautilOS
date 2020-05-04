@@ -1,3 +1,5 @@
+//! This module defines a basic UEFI-compatible panic handler.
+
 use core::{
 	sync::atomic::{
 		AtomicPtr,
@@ -8,8 +10,17 @@ use core::{
 
 use efi::protocols::console::simple_text_output_protocol::EfiSimpleTextOutputProtocol;
 
+/// Stores pointer to UEFI's console output protocol interface.
 pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as _);
 
+/// Panic handler's implementation.
+///
+/// It uses directly [`CON_OUT`] to retrieve a pointer to console output protocol's interface.
+/// It checks whether the pointer is valid (non-null & properly aligned).
+/// 
+/// **Warning**: Dangling pointers **cannot** be checked, so resetting to a null pointer before doing any memory map changes is recommended.
+/// 
+/// ['CON_OUT']: panic/static.CON_OUT.html
 #[cfg_attr(not(test), panic_handler)]
 #[cfg_attr(test, allow(dead_code))]
 fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
