@@ -29,7 +29,7 @@ pub fn detection_mechanism_present() -> bool {
 				);
 			}
 
-			return ((flags ^ updated_flags) >> 21) & 1 == 1;
+			return ((flags ^ updated_flags) >> 21) & 1 == 1
 		}
-	};
+	}
 }
