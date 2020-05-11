@@ -18,7 +18,16 @@ supported_targets!{
 	[target_arch="x86_64"]
 }
 
-#[cfg(feature="memory_c")]
+#[cfg(all(feature="memory_c",not(doc)))]
 mod memory_c;
 
+mod result;
+
+#[doc(inline)]
+pub use result::{
+	Error,
+	Result,
+};
+
 pub mod features;
+pub mod input_output;
