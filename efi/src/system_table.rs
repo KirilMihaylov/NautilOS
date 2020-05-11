@@ -23,15 +23,15 @@ pub struct EfiSystemTable {
 	firmware_vendor: *const u16,
 	firmware_revision: u32,
 	console_in_handle: EfiHandle,
-	con_in: *const EfiSimpleTextInputProtocol,
+	con_in: *mut EfiSimpleTextInputProtocol,
 	console_out_handle: EfiHandle,
-	con_out: *const EfiSimpleTextOutputProtocol,
+	con_out: *mut EfiSimpleTextOutputProtocol,
 	standart_error_handle: EfiHandle,
-	std_err: *const EfiSimpleTextOutputProtocol,
-	runtime_services: *const EfiRuntimeServices,
-	boot_services: *const EfiBootServices,
+	std_err: *mut EfiSimpleTextOutputProtocol,
+	runtime_services: *mut EfiRuntimeServices,
+	boot_services: *mut EfiBootServices,
 	configuration_tables_count: usize,
-	configuration_tables: *const EfiConfigurationTableEntry,
+	configuration_tables: *mut EfiConfigurationTableEntry,
 }
 
 impl EfiSystemTable {
@@ -61,9 +61,9 @@ impl EfiSystemTable {
 		self.console_in_handle
 	}
 
-	pub fn con_in<'a>(&'a self) -> &'a EfiSimpleTextInputProtocol {
+	pub fn con_in<'a>(&'a self) -> &'a mut EfiSimpleTextInputProtocol {
 		unsafe {
-			&*self.con_in
+			&mut *self.con_in
 		}
 	}
 
@@ -71,9 +71,9 @@ impl EfiSystemTable {
 		self.console_out_handle
 	}
 
-	pub fn con_out<'a>(&'a self) -> &'a EfiSimpleTextOutputProtocol {
+	pub fn con_out<'a>(&'a self) -> &'a mut EfiSimpleTextOutputProtocol {
 		unsafe {
-			&*self.con_out
+			&mut *self.con_out
 		}
 	}
 
@@ -81,21 +81,21 @@ impl EfiSystemTable {
 		self.standart_error_handle
 	}
 
-	pub fn std_err<'a>(&'a self) -> &'a EfiSimpleTextOutputProtocol {
+	pub fn std_err<'a>(&'a self) -> &'a mut EfiSimpleTextOutputProtocol {
 		unsafe {
-			&*self.std_err
+			&mut *self.std_err
 		}
 	}
 
-	pub fn runtime_services<'a>(&'a self) -> &'a EfiRuntimeServices {
+	pub fn runtime_services<'a>(&'a self) -> &'a mut EfiRuntimeServices {
 		unsafe {
-			&*self.runtime_services
+			&mut *self.runtime_services
 		}
 	}
 
-	pub fn boot_services<'a>(&'a self) -> &'a EfiBootServices {
+	pub fn boot_services<'a>(&'a self) -> &'a mut EfiBootServices {
 		unsafe {
-			&*self.boot_services
+			&mut *self.boot_services
 		}
 	}
 
@@ -105,10 +105,13 @@ impl EfiSystemTable {
 		}
 	}
 
-	/* Reference for Runtime Services' "convert_pointer" */
-	pub fn configuration_tables_pointer(&self) -> &Void {
+	/// Returns a [`&mut &Void`] that can be passed to [`convert_pointer`].
+	/// 
+	/// [`&mut &Void`]: types/type.Void.html
+	/// [`convert_pointer`]: runtime_services/virtual_memory/structs/struct.EfiVirtualMemory.html#method.convert_pointer
+	pub fn configuration_tables_pointer(&self) -> &mut &Void {
 		unsafe {
-			&*(self.configuration_tables as *const Void)
+			&mut*(&self.configuration_tables as *const *mut EfiConfigurationTableEntry as *mut &Void)
 		}
 	}
 }
