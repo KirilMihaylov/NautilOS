@@ -36,7 +36,7 @@ pub struct EfiSystemTable {
 
 impl EfiSystemTable {
 	pub fn verify_table(&self) -> bool {
-		self.table_header.verify_table()
+		self.table_header.verify_table() && self.boot_services().verify_table() && self.runtime_services().verify_table()
 	}
 
 	pub fn header<'a>(&'a self) -> &'a EfiTableHeader {
