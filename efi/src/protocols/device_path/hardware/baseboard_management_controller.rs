@@ -1,7 +1,7 @@
 use core::mem::size_of;
 
 use crate::protocols::device_path::{ EfiDevicePathProcotol, EfiDevicePathInto };
-use crate::common::EfiPhysicalAddress;
+use crate::types::EfiPhysicalAddress;
 
 #[repr(C)]
 pub struct EfiBaseboardManagementControllerDevicePath {
