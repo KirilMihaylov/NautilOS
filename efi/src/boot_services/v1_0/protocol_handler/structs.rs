@@ -8,6 +8,7 @@ use crate::{
 		EfiEvent,
 		EfiHandle,
 		VoidPtr,
+		VoidMutPtr,
 	},
 	status::{
 		EfiStatus,
@@ -91,18 +92,18 @@ impl EfiProtocolHandler {
 		).into_enum()
 	}
 
-	pub fn handle_protocol_raw(&self, handle: EfiHandle, protocol_guid: &EfiGuid) -> EfiStatusEnum<VoidPtr> {
-		let mut interface: VoidPtr = 0 as _;
+	pub fn handle_protocol_raw(&self, handle: EfiHandle, protocol_guid: &EfiGuid) -> EfiStatusEnum<VoidMutPtr> {
+		let mut interface: VoidMutPtr = 0 as _;
 		
 		(self.handle_protocol)(
 			handle,
 			protocol_guid,
-			&mut interface
+			&mut interface as *mut _ as _
 		).into_enum_data(interface)
 	}
 
-	pub fn handle_protocol<T: Sized + EfiProtocol>(&self, handle: EfiHandle) -> EfiStatusEnum<&<T as EfiProtocol>::Interface> {
-		let mut interface: *const <T as EfiProtocol>::Interface = 0 as _;
+	pub fn handle_protocol<T: Sized + EfiProtocol>(&self, handle: EfiHandle) -> EfiStatusEnum<&mut T> {
+		let mut interface: *mut T = 0 as _;
 		
 		(self.handle_protocol)(
 			handle,
@@ -110,7 +111,7 @@ impl EfiProtocolHandler {
 			&mut interface as *mut _ as _
 		).into_enum_data(
 			unsafe {
-				&*interface
+				&mut *interface
 			}
 		)
 	}
