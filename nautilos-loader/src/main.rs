@@ -27,6 +27,7 @@ use efi::{
 /// 1. Setting desired (stated in the configuration) video mode (resolution, color map, etc.).
 /// 1. Finding and loading suitable kernel binaries (kernel, core/generic drivers, etc.).
 /// 1. Taking the ownership over the EFI firmware.
+/// 1. Building memory map using EFI's one.
 /// 1. Transfering control to the kernel initializer.
 #[no_mangle]
 fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiStatus {
