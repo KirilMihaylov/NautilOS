@@ -6,7 +6,5 @@ pub mod media;
 pub mod network;
 
 pub trait EfiProtocol {
-	type Interface;
-
 	fn guid() -> EfiGuid;
 }
