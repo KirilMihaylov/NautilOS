@@ -8,9 +8,11 @@
 
 mod panic;
 
-use efi::types::EfiHandle;
-use efi::status::EfiStatus;
-use efi::system_table::EfiSystemTable;
+use efi::{
+	EfiHandle,
+	EfiStatus,
+	EfiSystemTable,
+};
 
 /// Loader's main function.
 /// 
