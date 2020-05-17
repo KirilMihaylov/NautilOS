@@ -11,7 +11,7 @@ use crate::{
 	},
 	boot_services::structs::EfiBootServices,
 	runtime_services::structs::EfiRuntimeServices,
-	configuration_table::structs::{
+	configuration_table::{
 		EfiConfigurationTable,
 		EfiConfigurationTableEntry,
 	},

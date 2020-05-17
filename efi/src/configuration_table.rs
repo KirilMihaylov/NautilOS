@@ -5,8 +5,10 @@ use efi_interops::{
 	traits,
 };
 
-use crate::types::VoidPtr;
-use crate::guid::EfiGuid;
+use crate::{
+	types::VoidPtr,
+	guid::EfiGuid,
+};
 
 #[repr(transparent)]
 pub struct EfiConfigurationTable<'a> {
