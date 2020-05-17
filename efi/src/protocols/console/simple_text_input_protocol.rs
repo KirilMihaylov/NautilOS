@@ -1,10 +1,12 @@
-use crate::types::EfiEvent;
-use crate::guid::EfiGuid;
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
+use crate::{
+	types::EfiEvent,
+	guid::EfiGuid,
+	status::{
+		EfiStatus,
+		EfiStatusEnum,
+	},
+	protocols::EfiProtocol,
 };
-use crate::protocols::EfiProtocol;
 
 #[repr(C)]
 pub struct EfiSimpleTextInputProtocol {
