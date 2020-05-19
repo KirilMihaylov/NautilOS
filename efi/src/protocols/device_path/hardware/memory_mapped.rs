@@ -6,7 +6,7 @@ use crate::{
 		EfiDevicePathInto
 	},
 	types::EfiPhysicalAddress,
-	boot_services::memory::enums::EfiMemoryType,
+	boot_services::memory::EfiMemoryType,
 };
 
 #[repr(C)]
