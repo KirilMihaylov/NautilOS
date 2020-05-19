@@ -1,19 +1,14 @@
 use core::slice::from_raw_parts;
 
-use crate::{
-	types::{
-		EfiHandle,
-		VoidPtr,
-	},
-	status::{
-		EfiStatus,
-		EfiStatusEnum,
-	}
-};
+use crate::*;
+
 use crate::protocols::device_path::EfiDevicePathProcotol;
 
+use super::memory::EfiMemoryDescriptors;
+
 #[repr(C)]
-pub struct EfiImage {
+#[derive(Clone,Copy)]
+pub(super) struct EfiImageRaw {
 	load_image: extern "efiapi" fn(bool, EfiHandle, *const EfiDevicePathProcotol, VoidPtr, usize, *const EfiHandle) -> EfiStatus,
 	start_image: extern "efiapi" fn(EfiHandle, *mut usize, *mut *const u16) -> EfiStatus,
 	exit: extern "efiapi" fn(EfiHandle, EfiStatus, usize, *const u16) -> EfiStatus,
@@ -21,8 +16,9 @@ pub struct EfiImage {
 	exit_boot_services: extern "efiapi" fn(EfiHandle, usize) -> EfiStatus,
 }
 
-impl EfiImage {
-	pub fn load_image(&self, boot_policy: bool, parent_image_handle: EfiHandle, device_path: &EfiDevicePathProcotol, source_buffer: Option<&[u8]>) -> EfiStatusEnum<EfiHandle> {
+impl EfiImageRaw {
+	#[inline(always)]
+	pub(super) fn load_image(&self, boot_policy: bool, parent_image_handle: EfiHandle, device_path: &EfiDevicePathProcotol, source_buffer: Option<&[u8]>) -> EfiStatusEnum<EfiHandle> {
 		let mut image_handle: EfiHandle = 0 as _;
 
 		let (source_buffer_ptr, source_buffer_len): (VoidPtr, usize) = if let Some(source_buffer) = source_buffer {
@@ -41,7 +37,8 @@ impl EfiImage {
 		).into_enum_data(image_handle)
 	}
 
-	pub fn start_image(&self, image_handle: EfiHandle) -> EfiStatusEnum<(&[u16], &[u8])> {
+	#[inline(always)]
+	pub(super) fn start_image(&self, image_handle: EfiHandle) -> EfiStatusEnum<(&[u16], &[u8])> {
 		let (mut exit_data, mut exit_data_size): (*const u16, usize) = (0 as _, 0);
 
 		let efi_status: EfiStatus = (self.start_image)(
@@ -95,7 +92,8 @@ impl EfiImage {
 		)
 	}
 
-	pub fn exit(&self, image_handle: EfiHandle, exit_status: EfiStatus, exit_data: Option<&[u16]>) -> EfiStatusEnum {
+	#[inline(always)]
+	pub(super) fn exit(&self, image_handle: EfiHandle, exit_status: EfiStatus, exit_data: Option<&[u16]>) -> EfiStatusEnum {
 		let (exit_data_ptr, exit_data_len): (*const u16, usize) = if let Some(exit_data) = exit_data {
 			(exit_data.as_ptr(), exit_data.len() * 2)
 		} else {
@@ -110,16 +108,30 @@ impl EfiImage {
 		).into_enum()
 	}
 
-	pub fn unload_image(&self, image_handle: EfiHandle) -> EfiStatusEnum {
+	#[inline(always)]
+	pub(super) fn unload_image(&self, image_handle: EfiHandle) -> EfiStatusEnum {
 		(self.unload_image)(
 			image_handle
 		).into_enum()
 	}
 
-	pub fn exit_boot_services(&self, image_handle: EfiHandle, memory_map_key: usize) -> EfiStatusEnum {
+	#[inline(always)]
+	pub(super) fn exit_boot_services(&self, image_handle: EfiHandle, memory_map: &EfiMemoryDescriptors) -> EfiStatusEnum {
 		(self.exit_boot_services)(
 			image_handle,
-			memory_map_key
+			memory_map.memory_map_key()
 		).into_enum()
 	}
+}
+
+pub trait EfiImage {
+	fn load_image(&self, boot_policy: bool, parent_image_handle: EfiHandle, device_path: &EfiDevicePathProcotol, source_buffer: Option<&[u8]>) -> EfiStatusEnum<EfiHandle>;
+
+	fn start_image(&self, image_handle: EfiHandle) -> EfiStatusEnum<(&[u16], &[u8])>;
+
+	fn exit(&self, image_handle: EfiHandle, exit_status: EfiStatus, exit_data: Option<&[u16]>) -> EfiStatusEnum;
+
+	fn unload_image(&self, image_handle: EfiHandle) -> EfiStatusEnum;
+
+	fn exit_boot_services(&self, image_handle: EfiHandle, memory_map: &EfiMemoryDescriptors) -> EfiStatusEnum;
 }

@@ -1,25 +1,20 @@
-use core::mem::MaybeUninit;
-
-use crate::{
-	status::{
-		EfiStatus,
-		EfiStatusEnum,
-	},
-};
+use crate::*;
 
 #[repr(C)]
-pub struct EfiTime {
+#[derive(Clone,Copy)]
+pub(super) struct EfiTimeRaw {
 	get_time: extern "efiapi" fn(*mut EfiTimeRepresentation, *mut EfiTimeCapabilities) -> EfiStatus,
 	set_time: extern "efiapi" fn(*const EfiTimeRepresentation) -> EfiStatus,
 	get_wakeup_time: extern "efiapi" fn(*mut bool, *mut bool, *mut EfiTimeRepresentation) -> EfiStatus,
 	set_wakeup_time: extern "efiapi" fn(bool, *const EfiTimeRepresentation) -> EfiStatus,
 }
 
-impl EfiTime {
-	pub fn get_time(&self) -> EfiStatusEnum<(EfiTimeRepresentation, EfiTimeCapabilities)> {
-		let (mut time, mut capabilities): (EfiTimeRepresentation, EfiTimeCapabilities) = unsafe {
-			MaybeUninit::zeroed().assume_init()
-		};
+impl EfiTimeRaw {
+	pub(super) fn get_time(&self) -> EfiStatusEnum<(EfiTimeRepresentation, EfiTimeCapabilities)> {
+		let (mut time, mut capabilities): (EfiTimeRepresentation, EfiTimeCapabilities) = (
+			EfiTimeRepresentation::zeroed(),
+			EfiTimeCapabilities::zeroed(),
+		);
 
 		let result: EfiStatus = (self.get_time)(
 			&mut time,
@@ -33,16 +28,14 @@ impl EfiTime {
 		result.into_enum_data((time, capabilities))
 	}
 
-	pub fn set_time(&self, time: &EfiTimeRepresentation) -> EfiStatusEnum {
+	pub(super) fn set_time(&self, time: &EfiTimeRepresentation) -> EfiStatusEnum {
 		(self.set_time)(
 			time
 		).into_enum()
 	}
 
-	pub fn get_wakeup_time(&self) -> EfiStatusEnum<EfiGetWakeupTime> {
-		let mut wakeup_time: EfiGetWakeupTime = unsafe {
-			MaybeUninit::zeroed().assume_init()
-		};
+	pub(super) fn get_wakeup_time(&self) -> EfiStatusEnum<EfiWakeupTime> {
+		let mut wakeup_time: EfiWakeupTime = EfiWakeupTime::zeroed();
 
 		(self.get_wakeup_time)(
 			&mut wakeup_time.enabled,
@@ -51,12 +44,22 @@ impl EfiTime {
 		).into_enum_data(wakeup_time)
 	}
 
-	pub fn set_wakeup_time(&self, enabled: bool, time: &EfiTimeRepresentation) -> EfiStatusEnum {
+	pub(super) fn set_wakeup_time(&self, enabled: bool, time: &EfiTimeRepresentation) -> EfiStatusEnum {
 		(self.set_wakeup_time)(
 			enabled,
 			time
 		).into_enum()
 	}
+}
+
+pub trait EfiTime {
+	fn get_time(&self) -> EfiStatusEnum<(EfiTimeRepresentation, EfiTimeCapabilities)>;
+
+	fn set_time(&self, time: &EfiTimeRepresentation) -> EfiStatusEnum;
+
+	fn get_wakeup_time(&self) -> EfiStatusEnum<EfiWakeupTime>;
+
+	fn set_wakeup_time(&self, enabled: bool, time: &EfiTimeRepresentation) -> EfiStatusEnum;
 }
 
 #[repr(transparent)]
@@ -102,8 +105,10 @@ pub struct EfiTimeZone {
 }
 
 impl EfiTimeZone {
-	pub const fn unspecified_time_zone() -> i16 {
-		0x7FF
+	pub const fn unspecified_time_zone() -> Self {
+		Self {
+			time_zone: 0x7FF,
+		}
 	}
 
 	pub fn new(minute_offset: i16) -> Self {
@@ -153,23 +158,71 @@ impl EfiTimeRepresentation {
 			_padding_2: 0,
 		}
 	}
+
+	fn zeroed() -> Self {
+		Self {
+			year: 0,
+			month: 0,
+			day: 0,
+			hour: 0,
+			minute: 0,
+			second: 0,
+			_padding_1: 0,
+			nanosecond: 0,
+			time_zone: EfiTimeZone::unspecified_time_zone(),
+			daylight: EfiDaylight::new(),
+			_padding_2: 0,
+		}
+	}
 }
 
 #[repr(C)]
 #[derive(Clone,Copy)]
 pub struct EfiTimeCapabilities {
-	pub resolution: u32,
-	pub accuracy: u32,
-	pub sets_to_zero: bool,
+	resolution: u32,
+	accuracy: u32,
+	sets_to_zero: bool,
 }
 
-pub struct EfiGetWakeupTime {
+impl EfiTimeCapabilities {
+	fn zeroed() -> Self {
+		Self {
+			resolution: 0,
+			accuracy: 0,
+			sets_to_zero: false,
+		}
+	}
+
+	pub fn resolution(&self) -> u32 {
+		self.resolution
+	}
+
+	pub fn accuracy(&self) -> u32 {
+		self.accuracy
+	}
+
+	pub fn sets_to_zero(&self) -> bool {
+		self.sets_to_zero
+	}
+}
+
+#[repr(C)]
+#[derive(Clone,Copy)]
+pub struct EfiWakeupTime {
 	enabled: bool,
 	pending: bool,
 	time: EfiTimeRepresentation,
 }
 
-impl EfiGetWakeupTime {
+impl EfiWakeupTime {
+	fn zeroed() -> Self {
+		Self {
+			enabled: false,
+			pending: false,
+			time: EfiTimeRepresentation::zeroed(),
+		}
+	}
+
 	pub fn enabled(&self) -> bool {
 		self.enabled
 	}

@@ -1,20 +1,12 @@
 use crate::{
-	types::{
-		EfiHandle,
-		Void,
-	},
-	table_header::EfiTableHeader,
+	*,
 	utilities::string_from_raw,
 	protocols::console::{
 		simple_text_input_protocol::EfiSimpleTextInputProtocol,
 		simple_text_output_protocol::EfiSimpleTextOutputProtocol,
 	},
 	boot_services::EfiBootServices,
-	runtime_services::structs::EfiRuntimeServices,
-	configuration_table::{
-		EfiConfigurationTable,
-		EfiConfigurationTableEntry,
-	},
+	runtime_services::EfiRuntimeServices,
 };
 
 #[repr(C)]
@@ -61,9 +53,11 @@ impl EfiSystemTable {
 		self.console_in_handle
 	}
 
-	pub fn con_in<'a>(&'a self) -> &'a mut EfiSimpleTextInputProtocol {
-		unsafe {
-			&mut *self.con_in
+	pub fn con_in<'a>(&'a self) -> Option<&'a mut EfiSimpleTextInputProtocol> {
+		if self.con_in.is_null() {
+			None
+		} else {
+			Some(unsafe { &mut *self.con_in })
 		}
 	}
 
@@ -71,9 +65,11 @@ impl EfiSystemTable {
 		self.console_out_handle
 	}
 
-	pub fn con_out<'a>(&'a self) -> &'a mut EfiSimpleTextOutputProtocol {
-		unsafe {
-			&mut *self.con_out
+	pub fn con_out<'a>(&'a self) -> Option<&'a mut EfiSimpleTextOutputProtocol> {
+		if self.con_out.is_null() {
+			None
+		} else {
+			Some(unsafe { &mut *self.con_out })
 		}
 	}
 
@@ -81,9 +77,11 @@ impl EfiSystemTable {
 		self.standart_error_handle
 	}
 
-	pub fn std_err<'a>(&'a self) -> &'a mut EfiSimpleTextOutputProtocol {
-		unsafe {
-			&mut *self.std_err
+	pub fn std_err<'a>(&'a self) -> Option<&'a mut EfiSimpleTextOutputProtocol> {
+		if self.std_err.is_null() {
+			None
+		} else {
+			Some(unsafe { &mut *self.std_err })
 		}
 	}
 

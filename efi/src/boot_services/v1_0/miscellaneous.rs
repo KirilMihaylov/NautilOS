@@ -1,17 +1,15 @@
-use crate::status::{
-	EfiStatus,
-	EfiStatusEnum,
-};
+use crate::*;
 
 #[repr(C)]
-pub struct EfiMiscellaneous {
+#[derive(Clone,Copy)]
+pub(super) struct EfiMiscellaneousRaw {
 	get_next_monotonic_count: extern "efiapi" fn(*mut u64) -> EfiStatus,
 	stall: extern "efiapi" fn(usize) -> EfiStatus,
 	set_watchdog_timer: extern "efiapi" fn(usize, u64, usize, *const u16) -> EfiStatus,
 }
 
-impl EfiMiscellaneous {
-	pub fn get_next_monotonic_count(&self) -> EfiStatusEnum<(u32, u32)> {
+impl EfiMiscellaneousRaw {
+	pub(super) fn get_next_monotonic_count(&self) -> EfiStatusEnum<(u32, u32)> {
 		let mut count: u64 = 0;
 
 		(self.get_next_monotonic_count)(
@@ -24,13 +22,13 @@ impl EfiMiscellaneous {
 		)
 	}
 
-	pub fn stall(&self, microseconds: usize) -> EfiStatusEnum {
+	pub(super) fn stall(&self, microseconds: usize) -> EfiStatusEnum {
 		(self.stall)(
 			microseconds
 		).into_enum()
 	}
 
-	pub fn set_watchdog_timer(&self, timeout: usize, watchdog_code: u64, watchdog_data: Option<&[u16]>) -> EfiStatusEnum {
+	pub(super) fn set_watchdog_timer(&self, timeout: usize, watchdog_code: u64, watchdog_data: Option<&[u16]>) -> EfiStatusEnum {
 		let (watchdog_data_ptr, watchdog_data_len): (*const u16, usize) = if let Some(watchdog_data) = watchdog_data {
 			(
 				watchdog_data.as_ptr(),
@@ -50,4 +48,12 @@ impl EfiMiscellaneous {
 			watchdog_data_ptr
 		).into_enum()
 	}
+}
+
+pub trait EfiMiscellaneous {
+	fn get_next_monotonic_count(&self) -> EfiStatusEnum<(u32, u32)>;
+
+	fn stall(&self, microseconds: usize) -> EfiStatusEnum;
+
+	fn set_watchdog_timer(&self, timeout: usize, watchdog_code: u64, watchdog_data: Option<&[u16]>) -> EfiStatusEnum;
 }

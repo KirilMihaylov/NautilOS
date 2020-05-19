@@ -10,27 +10,20 @@ use core::{
 };
 
 use crate::{
+	*,
 	utilities::validate_string,
-	guid::EfiGuid,
-	status::{
-		EfiStatus,
-		EfiStatusEnum,
-	},
-	types::{
-		VoidPtr,
-		VoidMutPtr,
-	},
 };
 
 #[repr(C)]
-pub struct EfiVariable {
+#[derive(Clone,Copy)]
+pub(super) struct EfiVariableRaw {
 	get_variable: extern "efiapi" fn(*const u16, *const EfiGuid, *mut u32, *mut usize, VoidMutPtr) -> EfiStatus,
 	get_next_variable_name: extern "efiapi" fn(*mut usize, *mut u16, *mut EfiGuid) -> EfiStatus,
 	set_variable: extern "efiapi" fn(*const u16, *const EfiGuid, *const u32, usize, VoidPtr) -> EfiStatus,
 }
 
-impl EfiVariable {
-	pub fn get_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, data: Option<&mut [u8]>) -> EfiStatusEnum<(usize, EfiVariableAttributes), (usize, EfiVariableAttributes)> {
+impl EfiVariableRaw {
+	pub(super) fn get_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, data: Option<&mut [u8]>) -> EfiStatusEnum<(usize, EfiVariableAttributes), (usize, EfiVariableAttributes)> {
 		let (variable_name_ptr, data_ptr, mut data_len, mut attributes): (*const u16, VoidMutPtr, usize, EfiVariableAttributes);
 
 		if let Ok(_) = validate_string(variable_name) {
@@ -63,7 +56,7 @@ impl EfiVariable {
 		)
 	}
 
-	pub fn get_next_variable_name(&self, variable_name: &mut [u16], vendor_guid: &mut EfiGuid) -> EfiStatusEnum<(), usize> {
+	pub(super) fn get_next_variable_name(&self, variable_name: &mut [u16], vendor_guid: &mut EfiGuid) -> EfiStatusEnum<(), usize> {
 		let mut variable_name_len: usize = variable_name.len();
 
 		(self.get_next_variable_name)(
@@ -76,7 +69,7 @@ impl EfiVariable {
 		)
 	}
 
-	pub fn set_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, attributes: &EfiVariableAttributes, data: &[u8]) -> EfiStatusEnum {
+	pub(super) fn set_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, attributes: &EfiVariableAttributes, data: &[u8]) -> EfiStatusEnum {
 		let variable_name_ptr: *const u16 = match validate_string(variable_name) {
 			Ok(_) => variable_name.as_ptr(),
 			Err(_) => 0 as *const u16,
@@ -90,6 +83,14 @@ impl EfiVariable {
 			data.as_ptr() as VoidPtr
 		).into_enum()
 	}
+}
+
+pub trait EfiVariable {
+	fn get_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, data: Option<&mut [u8]>) -> EfiStatusEnum<(usize, EfiVariableAttributes), (usize, EfiVariableAttributes)>;
+
+	fn get_next_variable_name(&self, variable_name: &mut [u16], vendor_guid: &mut EfiGuid) -> EfiStatusEnum<(), usize>;
+
+	fn set_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, attributes: &EfiVariableAttributes, data: &[u8]) -> EfiStatusEnum;
 }
 
 #[repr(transparent)]

@@ -1,48 +1,44 @@
 use crate::{
-	types::VoidMutPtrPtr,
-	status::{
-		EfiStatus,
-		EfiStatusEnum,
-	},
-	boot_services::memory::structs::{
+	*,
+	boot_services::memory::{
 		EfiMemoryDescriptor,
-		EfiMemoryMapMetadata,
+		EfiMemoryDescriptors,
 	},
 };
 
 #[repr(C)]
-pub struct EfiVirtualMemory {
+#[derive(Clone,Copy)]
+pub(super) struct EfiVirtualMemoryRaw {
 	set_virtual_address_map: extern "efiapi" fn(usize, usize, u32, *const EfiMemoryDescriptor) -> EfiStatus,
 	convert_pointer: extern "efiapi" fn(usize, VoidMutPtrPtr) -> EfiStatus,
 }
 
-impl EfiVirtualMemory {
-	pub fn set_virtual_address_map(&self, metadata: EfiMemoryMapMetadata) -> EfiStatusEnum {
+impl EfiVirtualMemoryRaw {
+	pub(super) fn set_virtual_address_map(&self, memory_map: EfiMemoryDescriptors) -> EfiStatusEnum {
 		(self.set_virtual_address_map)(
-			metadata.memory_map_size(),
-			metadata.descriptor_size(),
-			metadata.descriptor_version(),
-			metadata.descriptors_array()
+			memory_map.memory_map_size(),
+			memory_map.descriptor_size(),
+			memory_map.descriptor_version(),
+			memory_map.as_ptr()
 		).into_enum()
 	}
 
-	pub fn convert_pointer<T>(&self, pointer: &mut &T, flags_builder: EfiConvertPointerFlagsBuilder) -> EfiStatusEnum {
+	pub(super) fn convert_pointer(&self, pointer: &mut VoidPtr, flags_builder: EfiConvertPointerFlagsBuilder) -> EfiStatusEnum {
 		(self.convert_pointer)(
 			flags_builder.finish(),
-			pointer as *mut &T as VoidMutPtrPtr
-		).into_enum()
-	}
-
-	pub fn convert_raw_pointer<T>(&self, pointer: &mut *const T, flags_builder: EfiConvertPointerFlagsBuilder) -> EfiStatusEnum {
-		(self.convert_pointer)(
-			flags_builder.finish(),
-			pointer as *mut *const T as VoidMutPtrPtr
+			pointer as *mut VoidPtr
 		).into_enum()
 	}
 }
 
+pub trait EfiVirtualMemory {
+	fn set_virtual_address_map(&self, memory_map: EfiMemoryDescriptors) -> EfiStatusEnum;
+
+	fn convert_pointer(&self, pointer: &mut VoidPtr, flags_builder: EfiConvertPointerFlagsBuilder) -> EfiStatusEnum;
+}
+
 #[repr(transparent)]
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub struct EfiConvertPointerFlagsBuilder {
 	flags: usize,
 }
