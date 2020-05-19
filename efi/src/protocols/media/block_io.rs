@@ -24,25 +24,31 @@ pub struct EfiBlockIOProtocol {
 }
 
 impl EfiBlockIOProtocol {
+	fn media<'a>(&'a self) -> &'a EfiBlockIOMediaRaw {
+		unsafe {
+			&*self.media
+		}
+	}
+
 	pub fn revision(&self) -> u64 {
 		self.revision
 	}
 
-	pub fn media_revision_1<'a>(&'a self) -> impl EfiBlockIOMediaRevision1<'a> + 'a {
-		EfiBlockIOMedia(self)
+	pub fn media_revision_1<'a>(&'a self) -> &'a dyn EfiBlockIOMediaRevision1 {
+		self.media()
 	}
 
-	pub fn media_revision_2<'a>(&'a self) -> Option<impl EfiBlockIOMediaRevision2<'a> + 'a> {
+	pub fn media_revision_2<'a>(&'a self) -> Option<&'a dyn EfiBlockIOMediaRevision2> {
 		if self.revision >= 0x20001 {
-			Some(EfiBlockIOMedia(self))
+			Some(self.media())
 		} else {
 			None
 		}
 	}
 
-	pub fn media_revision_3<'a>(&'a self) -> Option<impl EfiBlockIOMediaRevision3<'a> + 'a> {
+	pub fn media_revision_3<'a>(&'a self) -> Option<&'a dyn EfiBlockIOMediaRevision3> {
 		if self.revision >= 0x2001F {
-			Some(EfiBlockIOMedia(self))
+			Some(self.media())
 		} else {
 			None
 		}
@@ -107,74 +113,89 @@ struct EfiBlockIOMediaRaw {
 	optimal_transfer_length_granulary: u32,
 }
 
-/// Defines [`EfiBlockIOMedia`]'s interface for accessing state defined in the base revision.
-pub trait EfiBlockIOMediaRevision1<'a> {
-	fn get_protocol(&'a self) -> &'a EfiBlockIOProtocol;
+/// Defines interface for accessing state defined in the base revision.
+pub trait EfiBlockIOMediaRevision1 {
+	fn media_id(&self) -> u32;
 
-	fn media_id(&'a self) -> u32 {
-		(unsafe { *self.get_protocol().media }).media_id
-	}
+	fn removable_media(&self) -> bool;
 
-	fn removable_media(&'a self) -> bool {
-		(unsafe { *self.get_protocol().media }).removable_media
-	}
+	fn media_present(&self) -> bool;
 
-	fn media_present(&'a self) -> bool {
-		(unsafe { *self.get_protocol().media }).media_present
-	}
+	fn logical_partition(&self) -> bool;
 
-	fn logical_partition(&'a self) -> bool {
-		(unsafe { *self.get_protocol().media }).logical_partition
-	}
+	fn read_only(&self) -> bool;
 
-	fn read_only(&'a self) -> bool {
-		(unsafe { *self.get_protocol().media }).read_only
-	}
+	fn write_caching(&self) -> bool;
 
-	fn write_caching(&'a self) -> bool {
-		(unsafe { *self.get_protocol().media }).write_caching
-	}
+	fn block_size(&self) -> u32;
 
-	fn block_size(&'a self) -> u32 {
-		(unsafe { *self.get_protocol().media }).block_size
-	}
+	fn io_alignment(&self) -> u32;
 
-	fn io_alignment(&'a self) -> u32 {
-		(unsafe { *self.get_protocol().media }).io_alignment
-	}
-
-	fn last_block(&'a self) -> EfiLBA {
-		(unsafe { *self.get_protocol().media }).last_block
-	}
+	fn last_block(&self) -> EfiLBA;
 }
 
 /// Extends [`EfiBlockIOMediaRevision1`]'s interface for accessing state defined in revision 2.
-pub trait EfiBlockIOMediaRevision2<'a>: EfiBlockIOMediaRevision1<'a> {
-	fn lowest_aligned_lba(&'a self) -> EfiLBA {
-		(unsafe { *self.get_protocol().media }).lowest_aligned_lba
-	}
+pub trait EfiBlockIOMediaRevision2: EfiBlockIOMediaRevision1 {
+	fn lowest_aligned_lba(&self) -> EfiLBA;
 
-	fn logical_blocks_per_physical_block(&'a self) -> u32 {
-		(unsafe { *self.get_protocol().media }).logical_blocks_per_physical_block
-	}
+	fn logical_blocks_per_physical_block(&self) -> u32;
 }
 
 /// Extends [`EfiBlockIOMediaRevision2`]'s interface for accessing state defined in revision 3.
-pub trait EfiBlockIOMediaRevision3<'a>: EfiBlockIOMediaRevision2<'a> {
-	fn optimal_transfer_length_granulary(&'a self) -> u32 {
-		(unsafe { *self.get_protocol().media }).optimal_transfer_length_granulary
+pub trait EfiBlockIOMediaRevision3: EfiBlockIOMediaRevision2 {
+	fn optimal_transfer_length_granulary(&self) -> u32;
+}
+
+impl EfiBlockIOMediaRevision1 for EfiBlockIOMediaRaw {
+	fn media_id(&self) -> u32 {
+		self.media_id
+	}
+
+	fn removable_media(&self) -> bool {
+		self.removable_media
+	}
+
+	fn media_present(&self) -> bool {
+		self.media_present
+	}
+
+	fn logical_partition(&self) -> bool {
+		self.logical_partition
+	}
+
+	fn read_only(&self) -> bool {
+		self.read_only
+	}
+
+	fn write_caching(&self) -> bool {
+		self.write_caching
+	}
+
+	fn block_size(&self) -> u32 {
+		self.block_size
+	}
+
+	fn io_alignment(&self) -> u32 {
+		self.io_alignment
+	}
+
+	fn last_block(&self) -> EfiLBA {
+		self.last_block
 	}
 }
 
-/// Implementation of EFI's `EFI_BLOCK_IO_MEDIA`.
-#[repr(transparent)]
-#[derive(Clone,Copy)]
-pub struct EfiBlockIOMedia<'a>(&'a EfiBlockIOProtocol);
+impl EfiBlockIOMediaRevision2 for EfiBlockIOMediaRaw {
+	fn lowest_aligned_lba(&self) -> EfiLBA {
+		self.lowest_aligned_lba
+	}
 
-impl<'a> EfiBlockIOMediaRevision1<'a> for EfiBlockIOMedia<'a> {
-	fn get_protocol(&'a self) -> &'a EfiBlockIOProtocol {
-		self.0
+	fn logical_blocks_per_physical_block(&self) -> u32 {
+		self.logical_blocks_per_physical_block
 	}
 }
-impl<'a> EfiBlockIOMediaRevision2<'a> for EfiBlockIOMedia<'a> {}
-impl<'a> EfiBlockIOMediaRevision3<'a> for EfiBlockIOMedia<'a> {}
+
+impl EfiBlockIOMediaRevision3 for EfiBlockIOMediaRaw {
+	fn optimal_transfer_length_granulary(&self) -> u32 {
+		self.optimal_transfer_length_granulary
+	}
+}

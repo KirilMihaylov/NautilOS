@@ -9,7 +9,7 @@ use crate::{
 		simple_text_input_protocol::EfiSimpleTextInputProtocol,
 		simple_text_output_protocol::EfiSimpleTextOutputProtocol,
 	},
-	boot_services::structs::EfiBootServices,
+	boot_services::EfiBootServices,
 	runtime_services::structs::EfiRuntimeServices,
 	configuration_table::{
 		EfiConfigurationTable,
