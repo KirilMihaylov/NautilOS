@@ -31,7 +31,7 @@ fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 
 		let con_out: &mut EfiSimpleTextOutputProtocol = unsafe { &mut *con_out };
 
-		con_out.output_string("\r\nPanic!");
+		con_out.output_string("\nPanic!");
 
 		if let Some(location) = panic_info.location() {
 			match write(
@@ -49,7 +49,7 @@ fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 			match write(
 				con_out,
 				format_args!(
-					"\r\nError: {}",
+					"\nError: {}",
 					message
 				)
 			) { _ => (), }

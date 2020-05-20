@@ -48,29 +48,47 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
-	/* Splits string into parts and executes the function until the first error (and returns it) or until the string is finished (and returns the last returned status) */
+	/// Splits string into parts and executes the function until the first error (and returns it) or until the string is finished (and returns the last returned status)
 	pub fn output_string(&self, mut string: &str) -> EfiStatusEnum {
 		let mut status: EfiStatus;
 
 		loop {
-			let mut buffer: [u16; 32] = [0; 32];
+			const BUFFER_LEN: usize = 64;
+
+			let mut buffer: [u16; BUFFER_LEN] = [0; BUFFER_LEN];
+		
+			let mut char_count: usize = 0;
 
 			let mut index: usize = 0;
 
 			for ch in string.chars() {
-				if (buffer.len() - index) < 2 {
+				if ch == '\n' {
+					if index + 2 >= BUFFER_LEN {
+						break;
+					}
+
+					'\n'.encode_utf16(&mut buffer[index..]);
+
+					'\r'.encode_utf16(&mut buffer[(index + 1)..]);
+
+					index += 2;
+
+					char_count += 1;
+
+					continue;
+				}
+				
+				let char_utf16_len = ch.len_utf16();
+
+				if index + char_utf16_len >= BUFFER_LEN {
 					break;
 				}
+
+				char_count += 1;
 				
 				ch.encode_utf16(&mut buffer[index..]);
 
-				index += 1;
-				
-				if index != buffer.len() {
-					if buffer[index] != 0 {
-						index += 1;
-					}
-				}
+				index += char_utf16_len;
 			}
 
 			status = (self.output_string)(
@@ -82,7 +100,9 @@ impl EfiSimpleTextOutputProtocol {
 				return status.into_enum();
 			}
 
-			string = string.split_at(index).1;
+			// string = string.split_at(index).1;
+
+			string = &string[char_count..];
 
 			if string.len() == 0 {
 				break;
