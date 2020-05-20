@@ -8,11 +8,44 @@
 
 mod panic;
 
+use core::sync::atomic::Ordering;
+
 use efi::{
 	EfiHandle,
 	EfiStatus,
 	EfiSystemTable,
+	protocols::console::EfiSimpleTextOutputProtocol,
 };
+
+/// Macro for printing formatted strings on the general console output. It uses [`panic`]'s [`CON_OUT`] to acquire pointer to the console output protocol's interface.
+/// 
+/// [`panic`]: panic/index.html
+/// [`CON_OUT`]: panic/static.CON_OUT.html
+#[macro_export]
+macro_rules! print {
+	($($args:tt)+) => {
+		{
+			let con_out: *mut EfiSimpleTextOutputProtocol = panic::CON_OUT.load(Ordering::Relaxed);
+
+			if !con_out.is_null() && (con_out as usize) % core::mem::align_of::<EfiSimpleTextOutputProtocol>() == 0 {
+				match core::fmt::write(unsafe { &mut *con_out }, format_args!($($args)+)) { _ => () }
+			}
+		}
+	};
+}
+
+/// Equivalent of [`print!()`] that appends new line character (`'\n'; 10; 0x0A`) in the end of the formatted string.
+/// 
+/// [`print!()`]: macro.print.html
+#[macro_export]
+macro_rules! println {
+	() => {
+		print!("\n");
+	};
+	($($args:tt)+) => {
+		print!("{}\n", format_args!($($args)+));
+	};
+}
 
 /// Loader's main function.
 /// 
@@ -36,9 +69,13 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 		return EfiStatus::error(0);
 	}
 
-	/* Set output for the panic handler */
+	/* Set the output interface for the panic handler (also used by "print!()" and "println!()") */
 	if let Some(con_out) = system_table.con_out() {
-		panic::CON_OUT.store(con_out as *const _ as *mut _, core::sync::atomic::Ordering::Relaxed);
+		panic::CON_OUT.store(con_out, Ordering::Relaxed);
+
+		if let efi::EfiStatusEnum::Error(status, _) = con_out.clear_screen() {
+			println!("[WARN] Clearing screen failed with EFI status: {}", status);
+		}
 	}
 	
 	/* Requirement: Feature detection mechanism */
