@@ -2,8 +2,8 @@ use crate::{
 	*,
 	utilities::string_from_raw,
 	protocols::console::{
-		simple_text_input_protocol::EfiSimpleTextInputProtocol,
-		simple_text_output_protocol::EfiSimpleTextOutputProtocol,
+		EfiSimpleTextInputProtocol,
+		EfiSimpleTextOutputProtocol,
 	},
 	boot_services::EfiBootServices,
 	runtime_services::EfiRuntimeServices,

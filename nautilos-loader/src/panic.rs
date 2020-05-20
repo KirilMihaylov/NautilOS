@@ -8,7 +8,7 @@ use core::{
 	mem::align_of,
 };
 
-use efi::protocols::console::simple_text_output_protocol::EfiSimpleTextOutputProtocol;
+use efi::protocols::console::EfiSimpleTextOutputProtocol;
 
 /// Stores pointer to UEFI's console output protocol interface.
 pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as _);
