@@ -7,6 +7,7 @@ use crate::{
 };
 
 pub mod acpi;
+pub mod bios_specification;
 pub mod hardware;
 pub mod media;
 pub mod messaging;
@@ -19,6 +20,7 @@ pub enum EfiDevicePathType<'a> {
 	AcpiPath(EfiAcpiDevicePathSubtype<'a>),
 	Messaging(EfiMessagingDevicePathSubtype<'a>),
 	Media(EfiMediaDevicePathSubtype<'a>),
+	BiosSpecification(EfiBiosSpecificationDevicePathSubtype<'a>),
 	
 	EndOfDevicePathInstance,
 	EndOfDevicePath,
@@ -33,6 +35,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 			2 => AcpiPath(EfiAcpiDevicePathSubtype::from(path)),
 			3 => Messaging(EfiMessagingDevicePathSubtype::from(path)),
 			4 => Media(EfiMediaDevicePathSubtype::from(path)),
+			5 => BiosSpecification(EfiBiosSpecificationDevicePathSubtype::from(path)),
 			
 			0x7F => {
 				match path.path_subtype {
@@ -327,6 +330,25 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiMediaDevicePathSubtype<'a> {
 			1 if path.len() == 42 => HardDrive(EfiHardDriveDevicePath::new(path)),
 			2 if path.len() == 24 => CDROM(EfiCDROMDevicePath::new(path)),
 			3 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
+			_ => Undefined,
+		}
+	}
+}
+
+#[non_exhaustive]
+pub enum EfiBiosSpecificationDevicePathSubtype<'a> {
+	Undefined,
+
+	V1_01(&'a bios_specification::EfiBiosBootSpecification_1_01_DevicePath),
+}
+
+impl<'a> From<&'a EfiDevicePathProcotol> for EfiBiosSpecificationDevicePathSubtype<'a> {
+	fn from(path: &'a EfiDevicePathProcotol) -> Self {
+		use EfiBiosSpecificationDevicePathSubtype::*;
+		use bios_specification::*;
+	
+		match path.path_subtype {
+			1 if path.len() >= 8 => V1_01(EfiBiosBootSpecification_1_01_DevicePath::new(path)),
 			_ => Undefined,
 		}
 	}
