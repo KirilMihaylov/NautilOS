@@ -6,7 +6,7 @@ use core::{
 use crate::protocols::{
 	device_path::{
 		EfiDevicePathProcotol,
-		EfiDevicePathInto,
+		EfiDevicePathRepr,
 	},
 	network::common::structs::{
 		EfiIPv4AddressRaw,
@@ -59,7 +59,7 @@ impl EfiDomainNameServiceDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiDomainNameServiceDevicePath> for EfiDomainNameServiceDevicePath {}
+impl EfiDevicePathRepr for EfiDomainNameServiceDevicePath {}
 
 #[non_exhaustive]
 #[derive(Clone,Copy)]

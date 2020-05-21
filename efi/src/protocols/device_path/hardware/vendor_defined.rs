@@ -4,12 +4,11 @@ use core::{
 };
 
 use crate::{
-	types::EfiGuidTuple,
+	*,
 	protocols::device_path::{
 		EfiDevicePathProcotol,
-		EfiDevicePathInto,
+		EfiDevicePathRepr,
 	},
-	guid::EfiGuid,
 };
 
 #[repr(C)]
@@ -52,4 +51,4 @@ impl EfiVendorDefinedDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiVendorDefinedDevicePath> for EfiVendorDefinedDevicePath {}
+impl EfiDevicePathRepr for EfiVendorDefinedDevicePath {}

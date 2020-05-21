@@ -1,11 +1,11 @@
 use core::mem::size_of;
 
 use crate::{
+	*,
 	protocols::device_path::{
 		EfiDevicePathProcotol,
-		EfiDevicePathInto
+		EfiDevicePathRepr,
 	},
-	types::EfiPhysicalAddress,
 	boot_services::memory::EfiMemoryType,
 };
 
@@ -43,4 +43,4 @@ impl EfiMemoryMappedDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiMemoryMappedDevicePath> for EfiMemoryMappedDevicePath {}
+impl EfiDevicePathRepr for EfiMemoryMappedDevicePath {}

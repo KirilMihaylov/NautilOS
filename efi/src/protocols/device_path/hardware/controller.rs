@@ -1,4 +1,7 @@
-use crate::protocols::device_path::{ EfiDevicePathProcotol, EfiDevicePathInto };
+use crate::protocols::device_path::{
+	EfiDevicePathProcotol,
+	EfiDevicePathRepr,
+ };
 
 #[repr(C)]
 pub struct EfiControllerDevicePath {
@@ -16,4 +19,4 @@ impl EfiControllerDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiControllerDevicePath> for EfiControllerDevicePath {}
+impl EfiDevicePathRepr for EfiControllerDevicePath {}

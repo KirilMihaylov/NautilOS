@@ -1,13 +1,14 @@
 use core::mem::size_of;
 
 use crate::{
-	guid::EfiGuid,
+	*,
 	protocols::EfiProtocol,
 	protocols::network::common::structs::EfiIPAddressRaw,
 };
 
 pub mod acpi;
 pub mod hardware;
+pub mod media;
 pub mod messaging;
 
 #[non_exhaustive]
@@ -17,6 +18,7 @@ pub enum EfiDevicePathType<'a> {
 	HardwarePath(EfiHardwareDevicePathSubtype<'a>),
 	AcpiPath(EfiAcpiDevicePathSubtype<'a>),
 	Messaging(EfiMessagingDevicePathSubtype<'a>),
+	Media(EfiMediaDevicePathSubtype<'a>),
 	
 	EndOfDevicePathInstance,
 	EndOfDevicePath,
@@ -30,6 +32,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiDevicePathType<'a> {
 			1 => HardwarePath(EfiHardwareDevicePathSubtype::from(path)),
 			2 => AcpiPath(EfiAcpiDevicePathSubtype::from(path)),
 			3 => Messaging(EfiMessagingDevicePathSubtype::from(path)),
+			4 => Media(EfiMediaDevicePathSubtype::from(path)),
 			
 			0x7F => {
 				match path.path_subtype {
@@ -306,6 +309,29 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiMessagingDevicePathSubtype<'a> {
 	}
 }
 
+#[non_exhaustive]
+pub enum EfiMediaDevicePathSubtype<'a> {
+	Undefined,
+
+	HardDrive(&'a media::EfiHardDriveDevicePath),
+	CDROM(&'a media::EfiCDROMDevicePath),
+	VendorDefined(&'a media::EfiVendorDefinedDevicePath),
+}
+
+impl<'a> From<&'a EfiDevicePathProcotol> for EfiMediaDevicePathSubtype<'a> {
+	fn from(path: &'a EfiDevicePathProcotol) -> Self {
+		use EfiMediaDevicePathSubtype::*;
+		use media::*;
+	
+		match path.path_subtype {
+			1 if path.len() == 42 => HardDrive(EfiHardDriveDevicePath::new(path)),
+			2 if path.len() == 24 => CDROM(EfiCDROMDevicePath::new(path)),
+			3 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
+			_ => Undefined,
+		}
+	}
+}
+
 #[repr(C)]
 pub struct EfiDevicePathProcotol {
 	path_type: u8,
@@ -374,10 +400,10 @@ impl<'a> Iterator for EfiDevicePathProcotolIterator<'a> {
 	}
 }
 
-pub(crate) trait EfiDevicePathInto<T> {
-	fn new<'a>(path: &'a EfiDevicePathProcotol) -> &'a T {
+pub(crate) trait EfiDevicePathRepr: Sized {
+	fn new<'a>(path: &'a EfiDevicePathProcotol) -> &'a Self {
 		unsafe {
-			&*(path as *const EfiDevicePathProcotol as *const T)
+			&*(path as *const EfiDevicePathProcotol as *const Self)
 		}
 	}
 }

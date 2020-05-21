@@ -2,7 +2,7 @@ use core::slice::from_raw_parts;
 
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -70,7 +70,7 @@ impl EfiiScsiDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiiScsiDevicePath> for EfiiScsiDevicePath {}
+impl EfiDevicePathRepr for EfiiScsiDevicePath {}
 
 #[non_exhaustive]
 #[derive(Clone,Copy)]

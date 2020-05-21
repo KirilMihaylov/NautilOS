@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -15,4 +15,4 @@ impl EfiNvdimmNamespaceDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiNvdimmNamespaceDevicePath> for EfiNvdimmNamespaceDevicePath {}
+impl EfiDevicePathRepr for EfiNvdimmNamespaceDevicePath {}

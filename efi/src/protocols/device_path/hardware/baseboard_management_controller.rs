@@ -1,7 +1,11 @@
 use core::mem::size_of;
 
-use crate::protocols::device_path::{ EfiDevicePathProcotol, EfiDevicePathInto };
-use crate::types::EfiPhysicalAddress;
+use crate::protocols::device_path::{
+	EfiDevicePathProcotol,
+	EfiDevicePathRepr,
+};
+
+use crate::*;
 
 #[repr(C)]
 pub struct EfiBaseboardManagementControllerDevicePath {
@@ -24,4 +28,4 @@ impl EfiBaseboardManagementControllerDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiBaseboardManagementControllerDevicePath> for EfiBaseboardManagementControllerDevicePath {}
+impl EfiDevicePathRepr for EfiBaseboardManagementControllerDevicePath {}

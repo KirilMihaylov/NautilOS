@@ -2,7 +2,7 @@ use core::slice::from_raw_parts;
 
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -87,6 +87,6 @@ impl EfiExtendedAcpiDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiExtendedAcpiDevicePath> for EfiExtendedAcpiDevicePath {}
+impl EfiDevicePathRepr for EfiExtendedAcpiDevicePath {}
 
 /* PRIVATE EFI STRUCTURES, TRAITS & IMPLEMENTATIONS */

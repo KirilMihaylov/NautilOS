@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -15,4 +15,4 @@ impl EfiBluetoothDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiBluetoothDevicePath> for EfiBluetoothDevicePath {}
+impl EfiDevicePathRepr for EfiBluetoothDevicePath {}

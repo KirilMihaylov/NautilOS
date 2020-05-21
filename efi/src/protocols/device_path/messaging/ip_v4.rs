@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -71,4 +71,4 @@ impl EfiIPv4DevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiIPv4DevicePath> for EfiIPv4DevicePath {}
+impl EfiDevicePathRepr for EfiIPv4DevicePath {}

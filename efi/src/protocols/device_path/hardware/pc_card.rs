@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -15,4 +15,4 @@ impl EfiPcCardDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiPcCardDevicePath> for EfiPcCardDevicePath {}
+impl EfiDevicePathRepr for EfiPcCardDevicePath {}

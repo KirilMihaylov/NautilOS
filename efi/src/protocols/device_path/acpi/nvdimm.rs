@@ -5,7 +5,7 @@ use efi_interops::{
 
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -20,4 +20,4 @@ impl EfiNVDIMMDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiNVDIMMDevicePath> for EfiNVDIMMDevicePath {}
+impl EfiDevicePathRepr for EfiNVDIMMDevicePath {}

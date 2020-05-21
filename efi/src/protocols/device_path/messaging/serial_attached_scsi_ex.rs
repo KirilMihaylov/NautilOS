@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -40,7 +40,7 @@ impl EfiSerialAttachedScsiExDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiSerialAttachedScsiExDevicePath> for EfiSerialAttachedScsiExDevicePath {}
+impl EfiDevicePathRepr for EfiSerialAttachedScsiExDevicePath {}
 
 #[non_exhaustive]
 #[derive(Clone,Copy)]

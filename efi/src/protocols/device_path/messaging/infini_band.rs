@@ -1,6 +1,6 @@
 use crate::protocols::device_path::{
 	EfiDevicePathProcotol,
-	EfiDevicePathInto,
+	EfiDevicePathRepr,
 };
 
 #[repr(C)]
@@ -55,7 +55,7 @@ impl EfiInfiniBandDevicePath {
 	}
 }
 
-impl EfiDevicePathInto<EfiInfiniBandDevicePath> for EfiInfiniBandDevicePath {}
+impl EfiDevicePathRepr for EfiInfiniBandDevicePath {}
 
 #[repr(transparent)]
 #[derive(Clone,Copy)]
