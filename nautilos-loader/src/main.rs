@@ -69,7 +69,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 		return EfiStatus::error(0);
 	}
 
-	/* Set the output interface for the panic handler (also used by "print!()" and "println!()") */
+	/* Set the output interface for the panic handler (also used by "print!" and "println!") */
 	if let Some(con_out) = system_table.con_out() {
 		panic::CON_OUT.store(con_out, Ordering::Relaxed);
 
