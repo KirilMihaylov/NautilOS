@@ -34,9 +34,9 @@ macro_rules! print {
 	};
 }
 
-/// Equivalent of [`print!()`] that appends new line character (`'\n'; 10; 0x0A`) in the end of the formatted string.
+/// Equivalent of [`print!`] that appends new line character (`'\n'; 10; 0x0A`) in the end of the formatted string.
 /// 
-/// [`print!()`]: macro.print.html
+/// [`print!`]: macro.print.html
 #[macro_export]
 macro_rules! println {
 	() => {
