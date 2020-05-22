@@ -319,6 +319,12 @@ pub enum EfiMediaDevicePathSubtype<'a> {
 	HardDrive(&'a media::EfiHardDriveDevicePath),
 	CDROM(&'a media::EfiCDROMDevicePath),
 	VendorDefined(&'a media::EfiVendorDefinedDevicePath),
+	FilePath(&'a media::EfiFilePathDevicePath),
+	MediaProtocol(&'a media::EfiMediaProtocolDevicePath),
+	PIWGFirmwareFile(&'a media::EfiPIWGFirmwareFileDevicePath),
+	PIWGFirmwareVolume(&'a media::EfiPIWGFirmwareVolumeDevicePath),
+	RelativeOffsetRange(&'a media::EfiRelativeOffsetRangeDevicePath),
+	RAMDisk(&'a media::EfiRAMDiskDevicePath),
 }
 
 impl<'a> From<&'a EfiDevicePathProcotol> for EfiMediaDevicePathSubtype<'a> {
@@ -330,6 +336,12 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiMediaDevicePathSubtype<'a> {
 			1 if path.len() == 42 => HardDrive(EfiHardDriveDevicePath::new(path)),
 			2 if path.len() == 24 => CDROM(EfiCDROMDevicePath::new(path)),
 			3 if path.len() >= 20 => VendorDefined(EfiVendorDefinedDevicePath::new(path)),
+			4 if path.len() >= 4 => FilePath(EfiFilePathDevicePath::new(path)),
+			5 if path.len() == 20 => MediaProtocol(EfiMediaProtocolDevicePath::new(path)),
+			6 if path.len() >= 4 => PIWGFirmwareFile(EfiPIWGFirmwareFileDevicePath::new(path)),
+			7 if path.len() >= 4 => PIWGFirmwareVolume(EfiPIWGFirmwareVolumeDevicePath::new(path)),
+			8 if path.len() == 24 => RelativeOffsetRange(EfiRelativeOffsetRangeDevicePath::new(path)),
+			9 if path.len() == 38 => RAMDisk(EfiRAMDiskDevicePath::new(path)),
 			_ => Undefined,
 		}
 	}
