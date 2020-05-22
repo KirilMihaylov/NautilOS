@@ -9,11 +9,6 @@ use core::{
 	},
 };
 
-use crate::{
-	boot_services::protocol_handler::EfiProtocolBinding,
-	protocols::EfiProtocol,
-};
-
 pub fn validate_string(data: &[u16]) -> Result<(), ()> {
 	if data.len() == 0 {
 		Err(())
@@ -78,15 +73,5 @@ pub unsafe fn string_from_raw_mut<'a>(string: *mut u16) -> Result<&'a mut [u16],
 		} else {
 			Ok(string)
 		}
-	}
-}
-
-pub fn resolve_protocol_binding<'a, T: EfiProtocol + Sized>(binding: &'a EfiProtocolBinding) -> Option<&'a T> {
-	if binding.pointer().is_null() {
-		None
-	} else if binding.guid() == T::guid() {
-		Some(unsafe { &*(binding.pointer() as *const T) })
-	} else {
-		None
 	}
 }

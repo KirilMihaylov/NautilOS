@@ -5,7 +5,10 @@ use core::{
 
 use crate::*;
 
-use crate::protocols::device_path::EfiDevicePathProcotol;
+use crate::protocols::{
+	EfiProtocol,
+	device_path::EfiDevicePathProcotol,
+};
 
 #[repr(C)]
 #[derive(Clone,Copy)]
@@ -209,11 +212,17 @@ pub struct EfiProtocolBinding {
 }
 
 impl EfiProtocolBinding {
-	pub fn pointer(&self) -> VoidPtr {
-		self.pointer
-	}
-
 	pub fn guid(&self) -> EfiGuid {
 		self.guid
+	}
+
+	pub fn resolve<'a, T: EfiProtocol + Sized + 'a>(&'a self) -> Option<&'a T> {
+		if self.pointer.is_null() {
+			None
+		} else if self.guid == T::guid() {
+			Some(unsafe { &*(self.pointer as *const T) })
+		} else {
+			None
+		}
 	}
 }
