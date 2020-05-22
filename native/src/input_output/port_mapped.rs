@@ -11,7 +11,7 @@ global_target_arch_else_error! {
 	else "Error: Type \"IOPortType\" not defined for this platform!"
 }
 
-/// This structure implement abstraction over port-mapped I/O interface.
+/// Abstract implementation over port-mapped I/O interface.
 #[repr(transparent)]
 pub struct IOPort {
 	port: IOPortType,
