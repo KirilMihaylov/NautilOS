@@ -79,8 +79,9 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 	}
 	
 	/* Requirement: Feature detection mechanism */
-	if !native::features::detection::detection_mechanism_present() {
-		panic!("No feature detection mechanism present!");
+	match native::features::detection::detection_mechanism_available() {
+		Ok(true) => println!("[LOG] Feature detection mechanism available."),
+		Ok(false) | Err(_) => panic!("No feature detection mechanism available!"),
 	}
 	
 	loop {}

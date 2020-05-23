@@ -8,7 +8,7 @@ pub enum Error {
 	Unaligned,
 }
 
-/// Defines new type `Result<T, Error>` over the core library's [`core::result::Result`] where [`Error`] is the one defined by this crate.
+/// Defines new type equivalent to `Result<T, Error>` over the core library's [`core::result::Result`] where [`Error`] is the one defined by this crate.
 /// 
 /// [`Error`]: enum.Error.html
 pub type Result<T> = core::result::Result<T, Error>;
