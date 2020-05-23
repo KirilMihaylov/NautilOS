@@ -49,10 +49,10 @@ impl IOPort {
 					);
 				}
 
-				return Ok(result)
-			},
+				Ok(result)
+			}
 			else {
-				return Err(Error::Unavailable);
+				Err(Error::Unavailable);
 			}
 		}
 	}
@@ -74,10 +74,10 @@ impl IOPort {
 					);
 				}
 
-				return Ok(());
-			},
+				Ok(())
+			}
 			else {
-				return Err(Error::Unavailable);
+				Err(Error::Unavailable)
 			}
 		}
 	}
@@ -102,10 +102,10 @@ impl IOPort {
 					);
 				}
 
-				return Ok(result);
-			},
+				Ok(result)
+			}
 			else {
-				return Err(Error::Unavailable);
+				Err(Error::Unavailable)
 			}
 		}
 	}
@@ -128,10 +128,10 @@ impl IOPort {
 					);
 				}
 
-				return Ok(());
-			},
+				Ok(())
+			}
 			else {
-				return Err(Error::Unavailable);
+				Err(Error::Unavailable)
 			}
 		}
 	}
@@ -156,10 +156,10 @@ impl IOPort {
 					);
 				}
 
-				return Ok(result)
-			},
+				Ok(result)
+			}
 			else {
-				return Err(Error::Unavailable)
+				Err(Error::Unavailable)
 			}
 		}
 	}
@@ -182,10 +182,10 @@ impl IOPort {
 					);
 				}
 				
-				return Ok(());
-			},
+				Ok(())
+			}
 			else {
-				return Err(Error::Unavailable);
+				Err(Error::Unavailable)
 			}
 		}
 	}
