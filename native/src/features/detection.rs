@@ -1,3 +1,5 @@
+//! Provides methods for detecting, enabling and disabling specific features.
+
 use crate::result::Result;
 
 /// Checks whether there is available feature detection mechanism.
