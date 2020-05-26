@@ -21,6 +21,13 @@ version = "0.1.0"
 [[package]]
 name = "native"
 version = "0.1.0"
+dependencies = [
+ "native_macros",
+]
+
+[[package]]
+name = "native_macros"
+version = "0.1.0"
 
 [[package]]
 name = "nautilos-loader"

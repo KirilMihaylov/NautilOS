@@ -11,5 +11,7 @@ all-features = true
 
 [features]
 memory_c = []
+kernel_mode = []
 
-[dependencies]
+[dependencies.native_macros]
+path = "native_macros"

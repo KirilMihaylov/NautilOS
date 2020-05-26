@@ -2,6 +2,7 @@
 members = [
 	"nautilos-loader",
 	"native",
+	"native/native_macros",
 	"efi",
 	"efi_interops",
 	"acpi",
