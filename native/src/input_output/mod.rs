@@ -1,4 +1,4 @@
-//! This module places an abstraction over the platform's I/O interface.
+//! This module provides an abstraction over the platform's I/O interface.
 
 mod port_mapped;
 
