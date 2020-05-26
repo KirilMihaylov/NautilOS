@@ -17,6 +17,7 @@ all-features = true
 path = "../native"
 features = [
 	"memory_c",
+	"kernel_mode",
 ]
 
 [dependencies.acpi]
