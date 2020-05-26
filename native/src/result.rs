@@ -1,9 +1,17 @@
 /// Defines all error types that can be returned by the functions within this crate.
 #[non_exhaustive]
+#[derive(Debug)]
 pub enum Error {
+	/// Unclassified error.
+	Unclassified,
 	/// Indicates the required operation is not available on the current platform.
 	Unavailable,
-
+	/// Feature is available but is disabled.
+	FeatureDisabled,
+	/// Feature is (likely to be) supported by the platform but OS interaction is required to determine whether it is supported by the OS.
+	/// # Notes
+	/// This value will not be returned by any function in this crate when using the `kernel_mode` feature.
+	OsManagedFeature,
 	/// Indicates the parameter(s) for the required operation are not properly aligned.
 	Unaligned,
 }
