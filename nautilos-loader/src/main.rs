@@ -17,6 +17,8 @@ use efi::{
 	protocols::console::EfiSimpleTextOutputProtocol,
 };
 
+use native::features::detection::*;
+
 /// Macro for printing formatted strings on the general console output. It uses [`panic`]'s [`CON_OUT`] to acquire pointer to the console output protocol's interface.
 /// 
 /// [`panic`]: panic/index.html
@@ -45,6 +47,16 @@ macro_rules! println {
 	($($args:tt)+) => {
 		print!("{}\n", format_args!($($args)+));
 	};
+}
+
+/// Equivalent of [`println!`] that appends `[LOG] ` in the beginning of the formatted string.
+/// 
+/// [`println!`]: macro.println.html
+#[macro_export]
+macro_rules! log {
+	($($args:tt)+) => {
+		println!("[LOG] {}", format_args!($($args)+));
+	}
 }
 
 /// Loader's main function.
@@ -79,9 +91,18 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 	}
 	
 	/* Requirement: Feature detection mechanism */
-	match native::features::detection::detection_mechanism_available() {
-		Ok(true) => println!("[LOG] Feature detection mechanism available."),
-		Ok(false) | Err(_) => panic!("No feature detection mechanism available!"),
+	match detection_mechanism_available() {
+		Ok(FeatureState::Enabled) => log!("Feature detection mechanism available."),
+		Ok(FeatureState::Disabled) => {
+			log!("Feature detection mechanism available but is disabled.");
+			log!("Enabling feature detection mechanism...");
+			match enable_detection_mechanism() {
+				Ok(FeatureState::Enabled) => (),
+				_ => panic!("Can not enable feature detection mechanism!"),
+			}
+		},
+		Err(native::Error::Unavailable) => panic!("Feature detection mechanism unavailable!"),
+		Err(_) => panic!("Error occured while testing for feature detection mechanism!"),
 	}
 	
 	loop {}
