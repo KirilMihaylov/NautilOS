@@ -152,3 +152,10 @@ pub fn cpu_vendor_id_available() -> Result<FeatureState> {
 		}
 	}
 }
+
+pub use super::simd64::{
+	simd_64_min_available,
+	simd_64_available,
+	simd_64_max_available,
+};
+
