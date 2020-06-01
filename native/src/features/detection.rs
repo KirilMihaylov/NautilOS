@@ -1,5 +1,5 @@
 /* For features and feature sets that are obsolete. */
-#![allow(deprecated)]
+#![allow(unused_imports,deprecated)]
 
 //! Provides methods for detecting, enabling and disabling specific features.
 //! 
@@ -58,7 +58,7 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 	use FeatureState::*;
 
 	target_arch_else_unimplemented_error!{
-		["x86", "x86_64"] {
+		["x86"] {
 			if DETECTION_MECHANISM.load(Relaxed) { Ok(Enabled) }
 			else {
 				let flags: usize;
@@ -95,6 +95,9 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 					}
 				})(((flags ^ updated_flags) >> 21) & 1 == 1)
 			}
+		},
+		["x86_64"] {
+			Ok(Enabled)
 		}
 	}
 }
@@ -104,16 +107,23 @@ pub fn enable_detection_mechanism() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
-	DETECTION_MECHANISM.store(false, Relaxed);
+	not_target_arch! {
+		["x86_64"] {
+			DETECTION_MECHANISM.store(false, Relaxed);
+		}
+	}
 
 	target_arch_else_unimplemented_error! {
-		["x86", "x86_64"] {
+		["x86"] {
 			if let Ok(_) = detection_mechanism_available() {
 				DETECTION_MECHANISM.store(true, Relaxed);
 				Ok(Enabled)
 			} else {
 				Err(Unavailable)
 			}
+		},
+		["x86_64"] {
+			Ok(Enabled)
 		}
 	}
 }
@@ -123,16 +133,23 @@ pub fn disable_detection_mechanism() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
-	DETECTION_MECHANISM.store(false, Relaxed);
+	not_target_arch! {
+		["x86_64"] {
+			DETECTION_MECHANISM.store(false, Relaxed);
+		}
+	}
 
 	target_arch_else_unimplemented_error! {
-		["x86", "x86_64"] {
+		["x86"] {
 			if let Ok(_) = detection_mechanism_available() {
 				DETECTION_MECHANISM.store(true, Relaxed);
 				Ok(Enabled)
 			} else {
 				Err(Unavailable)
 			}
+		},
+		["x86_64"] {
+			Ok(Enabled)
 		}
 	}
 }
@@ -143,12 +160,15 @@ pub fn cpu_vendor_id_available() -> Result<FeatureState> {
 	use FeatureState::*;
 
 	target_arch_else_unimplemented_error!{
-		["x86", "x86_64"] {
+		["x86"] {
 			if let Ok(_) = detection_mechanism_available() {
 				Ok(Enabled)
 			} else {
 				Err(Unavailable)
 			}
+		},
+		["x86_64"] {
+			Ok(Enabled)
 		}
 	}
 }
@@ -159,3 +179,248 @@ pub use super::simd64::{
 	simd_64_max_available,
 };
 
+/// Checks whether the recommended 128-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_128_min_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			/* SSE */
+
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					SSE: D[25]
+					*/
+
+					let result: u32;
+
+					unsafe { llvm_asm!("cpuid" : "={edx}"(result) : "{eax}"(1)); }
+
+					if result >> 25 & 1 == 1 { Ok(Enabled) } else { Err(Unavailable) }
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
+
+/// Checks whether the recommended 128-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_128_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			/* SSE2 */
+
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					SSE: D[25]
+					SSE2: D[26]
+					*/
+
+					let result: u32;
+
+					unsafe { llvm_asm!("cpuid" : "={edx}"(result) : "{eax}"(1)); }
+
+					if result >> 25 & 3 == 3 { Ok(Enabled) } else { Err(Unavailable) }
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
+
+/// Checks whether the recommended 128-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_128_max_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					SSE: D[25]
+					SSE2: D[26]
+					SSE3: C[0]
+					SSSE3: C[9]
+					SSE4.1: C[19]
+					SSE4.2: C[20]
+					*/
+
+					let (result_c, result_d): (u32, u32);
+
+					unsafe { llvm_asm!("cpuid" : "={ecx}"(result_c), "={edx}"(result_d) : "{eax}"(1)); }
+
+					if result_c & 0x180201 == 0x180201 && result_d >> 25 & 3 == 3 { Ok(Enabled) } else { Err(Unavailable) }
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
+
+/// Checks whether the recommended 256-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_256_min_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			/* AVX */
+
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					AVX: C[28]
+					*/
+
+					let result: u32;
+
+					unsafe { llvm_asm!("cpuid" : "={ecx}"(result) : "{eax}"(1)); }
+
+					if result >> 28 & 1 == 1 {
+						#[cfg(not(feature="kernel_mode"))]
+						{
+							/*
+							SSE: XCR0[1]
+							AVX: XCR0[2]
+							*/
+
+							if result >> 27 & 1 == 1 {
+								let result: u32;
+
+								unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0)); }
+
+								return Ok(if result & 6 == 6 { Enabled } else { Disabled });
+							}
+
+							Err(OsManagedFeature)
+						}
+
+						#[cfg(feature="kernel_mode")]
+						{
+							/*
+							Monitor co-processor: CR0[1]
+							Emulation: CR0[2]
+
+							*/
+
+							let (cr0, cr4): (usize, usize);
+
+							unsafe {
+								llvm_asm!("mov $0, cr0" : "=r"(cr0) ::: "intel");
+								llvm_asm!("mov $0, cr4" : "=r"(cr4) ::: "intel");
+							}
+
+							return Ok(if cr0 & 6 == 2 && cr4 >> 9 & 3 == 3 { Enabled } else { Disabled });
+						}
+					}
+
+					return Err(Unavailable);
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
+
+/// Checks whether the recommended 128-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_256_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			/* SSE2 */
+
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					MMX: D[23]
+					SSE: D[25]
+					SSE2: D[26]
+					*/
+
+					let result: u32;
+
+					unsafe { llvm_asm!("cpuid" : "={edx}"(result) : "{eax}"(1)); }
+
+					if result >> 23 & 13 == 13 { Ok(Enabled) } else { Err(Unavailable) }
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
+
+/// Checks whether the recommended 128-bit SIMD instructions are supported.
+/// 
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// 
+/// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
+pub fn simd_256_max_available() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			match detection_mechanism_available() {
+				Ok(Enabled) => {
+					/*
+					MMX: D[23]
+					SSE: D[25]
+					SSE2: D[26]
+					SSE3: C[0]
+					SSSE3: C[9]
+					SSE4.1: C[19]
+					SSE4.2: C[20]
+					*/
+
+					let (result_c, result_d): (u32, u32);
+
+					unsafe { llvm_asm!("cpuid" : "={ecx}"(result_c), "={edx}"(result_d) : "{eax}"(1)); }
+
+					if result_c & 0x180201 == 0x180201 && result_d >> 23 & 13 == 13 { Ok(Enabled) } else { Err(Unavailable) }
+				},
+				Ok(Disabled) => Err(FeatureDisabled),
+				error => error,
+			}
+		}
+	}
+}
