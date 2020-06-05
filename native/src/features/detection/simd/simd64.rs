@@ -7,7 +7,7 @@ use crate::result::{
 	Error,
 };
 
-use super::detection::{
+use super::super::{
 	detection_mechanism_available,
 	FeatureState,
 };
