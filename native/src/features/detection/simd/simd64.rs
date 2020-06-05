@@ -14,8 +14,8 @@ use super::super::{
 
 /// Checks whether the minimal 64-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]
@@ -90,8 +90,8 @@ pub fn min_available() -> Result<FeatureState> {
 
 /// Checks whether the recommended 64-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]
@@ -110,8 +110,8 @@ pub fn available() -> Result<FeatureState> {
 
 /// Checks whether the maximal 64-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]

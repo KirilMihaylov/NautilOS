@@ -14,8 +14,8 @@ use super::super::{
 
 /// Checks whether the minimal 128-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 pub fn min_available() -> Result<FeatureState> {
@@ -125,8 +125,8 @@ pub fn min_available() -> Result<FeatureState> {
 
 /// Checks whether the recommended 128-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 pub fn available() -> Result<FeatureState> {
@@ -237,8 +237,8 @@ pub fn available() -> Result<FeatureState> {
 
 /// Checks whether the maximal 128-bit SIMD instructions are supported.
 /// 
-/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
+/// Returns `Err` with [`Error::FeatureDisabled`] when feature detection mechanism is required but is disabled.
+/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 pub fn max_available() -> Result<FeatureState> {
