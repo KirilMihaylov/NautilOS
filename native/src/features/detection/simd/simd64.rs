@@ -19,7 +19,7 @@ use super::super::{
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]
-pub fn simd_64_min_available() -> Result<FeatureState> {
+pub fn min_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -95,7 +95,7 @@ pub fn simd_64_min_available() -> Result<FeatureState> {
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]
-pub fn simd_64_available() -> Result<FeatureState> {
+pub fn available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -103,7 +103,7 @@ pub fn simd_64_available() -> Result<FeatureState> {
 		["x86", "x86_64"] {
 			/* MMX */
 
-			simd_64_min_available()
+			min_available()
 		}
 	}
 }
@@ -115,7 +115,7 @@ pub fn simd_64_available() -> Result<FeatureState> {
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
 #[cfg_attr(any(target_arch = "x86", target_arch = "x86_64"), deprecated = "The 64-bit SIMD (MMX) is obsolete on this platform, consider using 128-bit SIMD (SSE or SSE2).")]
-pub fn simd_64_max_available() -> Result<FeatureState> {
+pub fn max_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -123,7 +123,7 @@ pub fn simd_64_max_available() -> Result<FeatureState> {
 		["x86", "x86_64"] {
 			/* MMX */
 
-			simd_64_min_available()
+			min_available()
 		}
 	}
 }

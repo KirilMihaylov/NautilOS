@@ -18,7 +18,7 @@ use super::super::{
 /// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
-pub fn simd_128_min_available() -> Result<FeatureState> {
+pub fn min_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -129,7 +129,7 @@ pub fn simd_128_min_available() -> Result<FeatureState> {
 /// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
-pub fn simd_128_available() -> Result<FeatureState> {
+pub fn available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -241,7 +241,7 @@ pub fn simd_128_available() -> Result<FeatureState> {
 /// Returns error value returned by [`detection_mechanism_available`] when feature detection mechanism is unavailable.
 /// 
 /// [`Error::FeatureDisabled`]: ../../enum.Error.html#variant.FeatureDisabled
-pub fn simd_128_max_available() -> Result<FeatureState> {
+pub fn max_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 

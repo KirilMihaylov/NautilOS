@@ -193,9 +193,6 @@ pub fn cpu_vendor_id_available() -> Result<FeatureState> {
 
 /// Provides methods for detecting whether SIMD instruction sets are available.
 pub mod simd {
-	mod simd64;
-	pub use simd64::*;
-
-	mod simd128;
-	pub use simd128::*;
+	pub mod simd64;
+	pub mod simd128;
 }
