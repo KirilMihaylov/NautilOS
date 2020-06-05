@@ -41,10 +41,10 @@ pub fn simd_64_min_available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
 					}
 
 					if d >> 23 & 3 == 3 {

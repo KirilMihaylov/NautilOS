@@ -39,10 +39,10 @@ pub fn simd_128_min_available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
 					}
 
 					if d >> 25 & 1 == 1 {
@@ -151,10 +151,10 @@ pub fn simd_128_available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0), "{edx}"(0));
+						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
 					}
 
 					if d >> 25 & 3 == 3 {
@@ -205,7 +205,7 @@ pub fn simd_128_available() -> Result<FeatureState> {
 				
 				let c: u32;
 				
-				unsafe { llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{edx}"(0)); }
+				unsafe { llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0)); }
 
 				if c >> 27 & 1 == 1 {
 					let result: u32;
