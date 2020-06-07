@@ -10,6 +10,7 @@ pub enum Error {
 	FeatureDisabled,
 	/// Feature is (most likely) supported by the platform but OS interaction is required to determine whether it is supported by the OS.
 	/// **Note**: This value will not be returned by any function in this crate when using the `kernel_mode` feature.
+	OsInteractionRequired,
 	/// Indicates the parameter(s) for the required operation are not properly aligned.
 	Unaligned,
 }

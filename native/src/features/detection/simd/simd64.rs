@@ -66,7 +66,7 @@ pub fn min_available() -> Result<FeatureState> {
 									return Ok(Enabled);
 								}
 							}
-							Err(OsManagedFeature)
+							Err(OsInteractionRequired)
 						}
 
 						#[cfg(feature="kernel_mode")]
