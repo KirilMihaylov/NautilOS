@@ -12,18 +12,22 @@
 //!                 * Check feature's state (enabled or disabled).
 //!                 * Return `Ok` with respective [`FeatureState`] value.
 //!             * Feature is unavailable.
-//!                 * Return `Err` with [`Error::Unavailable`].
+//!                 * Return `Err` with [`Unavailable`].
 //!     * Detection mechanism is unavailable.
-//!         * Return `Err` with [`Error::Unavailable`].
+//!         * Return `Err` with [`Unavailable`].
 //! * Detection mechanism is not required (feature is built-in of the platform).
 //!     * Check whether feature is available.
 //!         * Feature is available.
 //!             * Check feature's state (enabled or disabled).
 //!             * Return `Ok` with respective [`FeatureState`] value.
 //!         * Feature is unavailable.
-//!             * Return `Err` with [`Error::Unavailable`].
+//!             * Return `Err` with [`Unavailable`].
 //! 
 //! [`Error::Unavailable`]: ../../enum.Error.html#variant.Unavailable
+
+#[cfg(doc)]
+#[allow(unused_imports)]
+use crate::result::Error::Unavailable;
 
 use core::sync::atomic::{
 	AtomicBool,

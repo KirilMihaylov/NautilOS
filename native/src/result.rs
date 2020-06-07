@@ -8,10 +8,8 @@ pub enum Error {
 	Unavailable,
 	/// Feature is available but is disabled.
 	FeatureDisabled,
-	/// Feature is (likely to be) supported by the platform but OS interaction is required to determine whether it is supported by the OS.
-	/// # Notes
-	/// This value will not be returned by any function in this crate when using the `kernel_mode` feature.
-	OsManagedFeature,
+	/// Feature is (most likely) supported by the platform but OS interaction is required to determine whether it is supported by the OS.
+	/// **Note**: This value will not be returned by any function in this crate when using the `kernel_mode` feature.
 	/// Indicates the parameter(s) for the required operation are not properly aligned.
 	Unaligned,
 }
