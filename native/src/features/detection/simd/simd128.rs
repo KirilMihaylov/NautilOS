@@ -1,20 +1,18 @@
 //! Provides interface over platform's 128-bit SIMD features.
 
-#![allow(unused_imports,deprecated)]
-
-use crate::result::{
-	Result,
-	Error,
+use crate::{
+	result::{
+		Result,
+		Error::{
+			self,
+			FeatureDisabled,
+		},
+	},
+	features::detection::{
+		detection_mechanism_available,
+		FeatureState,
+	}
 };
-
-use super::super::{
-	detection_mechanism_available,
-	FeatureState,
-};
-
-#[cfg(doc)]
-#[allow(unused_imports)]
-use crate::result::Error::FeatureDisabled;
 
 /// Checks whether the minimal 128-bit SIMD instructions are supported.
 /// 

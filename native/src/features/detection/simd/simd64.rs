@@ -1,20 +1,18 @@
 //! Provides interface over platform's 64-bit SIMD features.
 
-#![allow(unused_imports,deprecated)]
-
-use crate::result::{
-	Result,
-	Error,
+use crate::{
+	result::{
+		Result,
+		Error::{
+			self,
+			FeatureDisabled,
+		},
+	},
+	features::detection::{
+		detection_mechanism_available,
+		FeatureState,
+	},
 };
-
-use super::super::{
-	detection_mechanism_available,
-	FeatureState,
-};
-
-#[cfg(doc)]
-#[allow(unused_imports)]
-use crate::result::Error::FeatureDisabled;
 
 /// Checks whether the minimal 64-bit SIMD instructions are supported.
 /// 
@@ -103,6 +101,7 @@ pub fn available() -> Result<FeatureState> {
 		["x86", "x86_64"] {
 			/* MMX */
 
+			#[allow(deprecated)]
 			min_available()
 		}
 	}
@@ -121,6 +120,7 @@ pub fn max_available() -> Result<FeatureState> {
 		["x86", "x86_64"] {
 			/* MMX */
 
+			#[allow(deprecated)]
 			min_available()
 		}
 	}
