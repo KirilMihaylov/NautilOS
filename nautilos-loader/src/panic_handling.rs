@@ -14,6 +14,7 @@ use efi::protocols::console::EfiSimpleTextOutputProtocol;
 /// Stores pointer to EFI's console output protocol interface.
 pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as _);
 
+#[doc(hidden)]
 static IN_PANIC: AtomicBool = AtomicBool::new(false);
 
 /// Panic handler's implementation.
@@ -22,8 +23,6 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 /// It checks whether the pointer is non-null & properly aligned.
 /// 
 /// **Warning**: Dangling pointers **cannot** be validated, so resetting to a null pointer before doing any memory map changes is recommended.
-/// 
-/// ['CON_OUT']: panic/static.CON_OUT.html
 #[cfg_attr(not(test), panic_handler)]
 #[cfg_attr(test, allow(dead_code))]
 fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
