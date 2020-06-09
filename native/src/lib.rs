@@ -2,8 +2,10 @@
 //! # Features
 //! This crate provides the following features:
 //! * `memory_c`
+//!     
 //!     Defines memory operation primitives (e.g.: `memcpy`, `memset`, etc.) required by "bare metal" environments.
 //! * `kernel_mode`
+//!     
 //!     This mode is recommended on "bare metal" environments and when it will be running with supervisor permissions.
 //!     
 //!     **Warning:** This mode can lead to causing exceptions (e.g.: "General Protection Exception" on IA-32 (x86) and AMD64 (x86_64)).

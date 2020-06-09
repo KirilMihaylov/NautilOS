@@ -1,6 +1,3 @@
-/* For features and feature sets that are obsolete. */
-#![allow(unused_imports,deprecated)]
-
 //! Provides methods for detecting, enabling and disabling specific features.
 //! 
 //! Feature availability functions have platform-specific behaviour.
@@ -22,24 +19,24 @@
 //!             * Return `Ok` with respective [`FeatureState`] value.
 //!         * Feature is unavailable.
 //!             * Return `Err` with [`Unavailable`].
-//! 
-//! [`Error::Unavailable`]: ../../enum.Error.html#variant.Unavailable
 
-#[cfg(doc)]
-#[allow(unused_imports)]
-use crate::result::Error::Unavailable;
+#![allow(unused_imports)]
 
-use core::sync::atomic::{
-	AtomicBool,
-	Ordering::Relaxed,
+use {
+	core::sync::atomic::{
+		AtomicBool,
+		Ordering::Relaxed,
+	},
+	crate::result::{
+		Result,
+		Error::{
+			self,
+			Unavailable,
+		},
+	},
 };
 
-use crate::result::{
-	Result,
-	Error,
-};
-
-/// Defines feature states
+/// Defines feature states.
 #[derive(Debug)]
 pub enum FeatureState {
 	/// Feature is available but disabled
@@ -53,10 +50,8 @@ static DETECTION_MECHANISM: AtomicBool = AtomicBool::new(false);
 /// Checks whether there is available feature detection mechanism.
 /// 
 /// It returns `Ok` when mechanism is available.
-/// Returns `Err(Unavailable)` when mechanism is unavailable.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
-/// [`Error`]: ../../enum.Error.html
 pub fn detection_mechanism_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
@@ -109,10 +104,8 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 /// This function attempts to enable the feature detection mechanism and returns the new state when no errors occured.
 /// 
 /// It returns `Ok` when mechanism is available.
-/// Returns `Err(Unavailable)` when mechanism is unavailable.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
-/// [`Error`]: ../../enum.Error.html
 pub fn enable_detection_mechanism() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
@@ -141,10 +134,8 @@ pub fn enable_detection_mechanism() -> Result<FeatureState> {
 /// This function attempts to disable the feature detection mechanism and returns the new state when no errors occured.
 /// 
 /// It returns `Ok` when mechanism is available.
-/// Returns `Err(Unavailable)` when mechanism is unavailable.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
-/// [`Error`]: ../../enum.Error.html
 pub fn disable_detection_mechanism() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
@@ -173,10 +164,8 @@ pub fn disable_detection_mechanism() -> Result<FeatureState> {
 /// Checks whether CPU vendor's identification is available.
 /// 
 /// It returns `Ok` when mechanism is available.
-/// Returns `Err(Unavailable)` when mechanism is unavailable.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
-/// [`Error`]: ../../enum.Error.html
 pub fn cpu_vendor_id_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
@@ -200,5 +189,4 @@ pub mod simd {
 	pub mod simd64;
 	pub mod simd128;
 }
-
 pub mod state_storing;
