@@ -7,18 +7,21 @@
 #![feature(panic_info_message)]
 
 mod panic_handling;
-use panic_handling::CON_OUT;
 
-use core::sync::atomic::Ordering;
-
-use efi::{
-	EfiHandle,
-	EfiStatus,
-	EfiSystemTable,
-	protocols::console::EfiSimpleTextOutputProtocol,
+use {
+	panic_handling::CON_OUT,
+	core::sync::atomic::Ordering,
+	efi::{
+		EfiHandle,
+		EfiStatus,
+		EfiSystemTable,
+		protocols::console::EfiSimpleTextOutputProtocol,
+	},
+	native::{
+		Error,
+		features::detection::*,
+	},
 };
-
-use native::features::detection::*;
 
 /// Macro for printing formatted strings on the general console output.
 /// It uses [`panic_handling`]'s [`CON_OUT`] to acquire pointer to the console output protocol's interface.
@@ -54,6 +57,14 @@ macro_rules! log {
 	}
 }
 
+/// Equivalent of [`println!`] that appends `[WARN] ` in the beginning of the formatted string.
+#[macro_export]
+macro_rules! warn {
+	($($args:tt)+) => {
+		println!("[WARN] {}", format_args!($($args)+));
+	}
+}
+
 /// Loader's main function.
 /// 
 /// This function acts as EFI's entry point.
@@ -81,7 +92,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 		CON_OUT.store(con_out, Ordering::Relaxed);
 
 		if let efi::EfiStatusEnum::Error(status, _) = con_out.clear_screen() {
-			println!("[WARN] Clearing screen failed with EFI status: {}", status);
+			warn!("Clearing screen failed with EFI status: {}", status);
 		}
 	}
 	
