@@ -68,7 +68,7 @@ pub fn extended_state_storing_info() -> Result<StateStoringInfo> {
 							lateout("ebx") required_bytes,
 							inlateout("ecx") 0 => _,
 							lateout("edx") _ /* features_high */,
-							options(pure, nomem, nostack)
+							options(nomem, nostack)
 						);
 					}
 
@@ -110,7 +110,7 @@ pub fn state_storing_info() -> Result<StateStoringInfo> {
 							lateout("ebx") required_bytes,
 							inlateout("ecx") 0 => _,
 							lateout("edx") _ /* features_high */,
-							options(pure, nomem, nostack)
+							options(nomem, nostack)
 						);
 					}
 
