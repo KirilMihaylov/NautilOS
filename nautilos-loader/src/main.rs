@@ -19,7 +19,10 @@ use {
 	},
 	native::{
 		Error,
-		features::detection::*,
+		features::detection::{
+			*,
+			state_storing::*,
+		},
 	},
 };
 
@@ -95,21 +98,30 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 			warn!("Clearing screen failed with EFI status: {}", status);
 		}
 	}
-	
-	/* Requirement: Feature detection mechanism */
-	match detection_mechanism_available() {
-		Ok(FeatureState::Enabled) => log!("Feature detection mechanism available."),
+
+	match enable_detection_mechanism() {
+		Ok(FeatureState::Enabled) => log!("Feature detection mechanism enabled."),
+		Ok(FeatureState::Disabled) => warn!("Feature detection mechanism couldn't be enabled. It may be required later."),
+		Err(Error::Unavailable) => warn!("Feature detection mechanism unavailable. It may be required later."),
+		Err(error) => panic!("Error occured while enabling feature detection mechanism!\nError: {:?}", error),
+	}
+
+	/* Requirement: State storing mechanism */
+	match state_storing_available() {
+		Ok(FeatureState::Enabled) => log!("State storing mechanism available."),
 		Ok(FeatureState::Disabled) => {
-			log!("Feature detection mechanism available but is disabled.");
-			log!("Enabling feature detection mechanism...");
+			warn!("State storing mechanism available but is disabled.");
+			log!("Enabling state storing mechanism...");
 			match enable_detection_mechanism() {
-				Ok(FeatureState::Enabled) => (),
-				_ => panic!("Can not enable feature detection mechanism!"),
+				Ok(FeatureState::Enabled) => log!("State storing mechanism enabled."),
+				Ok(FeatureState::Disabled) => panic!("State storing mechanism couldn't be enabled!"),
+				Err(error) => panic!("Error occured while enabling feature detection mechanism!\nError: {:?}", error),
 			}
 		},
-		Err(native::Error::Unavailable) => panic!("Feature detection mechanism unavailable!"),
-		Err(_) => panic!("Error occured while testing for feature detection mechanism!"),
+		Err(Error::Unavailable) => panic!("State storing mechanism unavailable!"),
+		Err(Error::FeatureDisabled) => panic!("Feature detection mechanism required to determine whether state storing is available, but is disabled!"),
+		Err(error) => panic!("Error occured while testing for state storing mechanism!\nError: {:?}", error),
 	}
-	
+
 	loop {}
 }
