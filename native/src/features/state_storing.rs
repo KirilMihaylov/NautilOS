@@ -10,7 +10,7 @@ use crate::{
 	},
 	features::detection::{
 		FeatureState,
-		state_storing::available,
+		state_storing::state_storing_available,
 	},
 };
 
@@ -48,12 +48,12 @@ impl StateStoringInfo {
 /// Gathers information about which features are going to be stored and the size of the block required to store the extended (defined by specific features which may differ) state.
 /// # Notes
 /// Depending on the platform the architectural state storing and the extended state storing *may or may not* be separable.
-/// In case they are not, this function will return `Err` with [`Unavailable`], even when [`available`] returns value indicating the mechanism itself is.
+/// In case they are not, this function will return `Err` with [`Unavailable`], even when [`state_storing_available`] returns value indicating the mechanism itself is.
 pub fn extended_state_storing_info() -> Result<StateStoringInfo> {
 	use Error::*;
 	use FeatureState::*;
 
-	match crate::features::detection::state_storing::available() {
+	match state_storing_available() {
 		Ok(_feature_state) => {
 			target_arch_else_unimplemented_error!{
 				["x86", "x86_64"] {
@@ -97,7 +97,7 @@ pub fn state_storing_info() -> Result<StateStoringInfo> {
 	use Error::*;
 	use FeatureState::*;
 
-	match crate::features::detection::state_storing::available() {
+	match state_storing_available() {
 		Ok(_feature_state) => {
 			target_arch_else_unimplemented_error!{
 				["x86", "x86_64"] {

@@ -6,6 +6,7 @@ use crate::{
 		Error::{
 			self,
 			FeatureDisabled,
+			Unavailable,
 		},
 	},
 	features::detection::{
@@ -18,7 +19,7 @@ use crate::{
 /// 
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
-pub fn available() -> Result<FeatureState> {
+pub fn state_storing_available() -> Result<FeatureState> {
 	use Error::*;
 	use FeatureState::*;
 
@@ -68,6 +69,84 @@ pub fn available() -> Result<FeatureState> {
 				},
 				Ok(Disabled) => Err(FeatureDisabled),
 				error => error,
+			}
+		}
+	}
+}
+
+/// This function attempts to enable the state storing mechanism and returns the new state when no errors occured.
+/// 
+/// It returns `Ok` when mechanism is available.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
+/// Returns `Err` with respective [`Error`] value when an error occured while checking.
+pub fn enable_state_storing() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			match state_storing_available() {
+				Ok(Enabled) => Ok(Enabled),
+				Ok(Disabled) => {
+					#[cfg(not(feature = "kernel_mode"))]
+					{ Err(OsInteractionRequired) }
+
+					#[cfg(feature = "kernel_mode")]
+					{
+						unsafe {
+							asm!(
+								"mov {temp}, cr0
+								or {temp}, {bit}
+								mov cr0, {temp}",
+								temp = lateout(reg) _,
+								bit = const 1 << 18,
+								options(nomem, nostack)
+							);
+						}
+
+						Ok(Enabled)
+					}
+				},
+				Err(error) => Err(error),
+			}
+		}
+	}
+}
+
+/// This function attempts to enable the state storing mechanism and returns the new state when no errors occured.
+/// 
+/// It returns `Ok` when mechanism is available.
+/// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
+/// Returns `Err` with respective [`Error`] value when an error occured while checking.
+pub fn disable_state_storing() -> Result<FeatureState> {
+	use Error::*;
+	use FeatureState::*;
+
+	target_arch_else_unimplemented_error!{
+		["x86", "x86_64"] {
+			match state_storing_available() {
+				Ok(Enabled) => {
+					#[cfg(not(feature = "kernel_mode"))]
+					{ Err(OsInteractionRequired) }
+
+					#[cfg(feature = "kernel_mode")]
+					{
+						unsafe {
+							asm!(
+								"mov {temp}, cr0
+								and {temp}, {bit}
+								mov cr0, {temp}",
+								temp = lateout(reg) _,
+								bit = const !(1 << 18),
+								options(nomem, nostack)
+							);
+						}
+
+						Ok(Disabled)
+					}
+				},
+				Ok(Disabled) => Ok(Disabled),
+				Err(error) => Err(error),
 			}
 		}
 	}
