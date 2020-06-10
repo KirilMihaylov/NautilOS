@@ -40,12 +40,11 @@ impl IOPort {
 				let result: u8;
 
 				unsafe {
-					llvm_asm!(
-						"in al, dx" :
-						"={al}"(result) :
-						"{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"in al, dx",
+						lateout("al") result,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 
@@ -65,12 +64,11 @@ impl IOPort {
 		target_arch_else! {
 			["x86", "x86_64"] {
 				unsafe {
-					llvm_asm!(
-						"out dx, al" :
-						:
-						"{al}"(value), "{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"out dx, al",
+						in("al") value,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 
@@ -93,12 +91,11 @@ impl IOPort {
 				let result: u16;
 
 				unsafe {
-					llvm_asm!(
-						"in ax, dx" :
-						"={ax}"(result) :
-						"{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"in ax, dx",
+						lateout("ax") result,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 
@@ -119,12 +116,11 @@ impl IOPort {
 				}
 
 				unsafe {
-					llvm_asm!(
-						"out dx, ax" :
-						:
-						"{ax}"(value), "{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"out dx, ax",
+						in("ax") value,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 
@@ -147,12 +143,11 @@ impl IOPort {
 				let result: u32;
 
 				unsafe {
-					llvm_asm!(
-						"in eax, dx" :
-						"={eax}"(result) :
-						"{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"in eax, dx",
+						lateout("eax") result,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 
@@ -173,12 +168,11 @@ impl IOPort {
 				}
 
 				unsafe {
-					llvm_asm!(
-						"out dx, eax" :
-						:
-						"{eax}"(value), "{dx}"(self.port) :
-						:
-						"intel"
+					asm!(
+						"out dx, eax",
+						in("eax") value,
+						in("dx") self.port,
+						options(nomem, nostack)
 					);
 				}
 				

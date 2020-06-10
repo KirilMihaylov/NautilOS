@@ -32,17 +32,39 @@ pub fn available() -> Result<FeatureState> {
 					XSAVE: CPUID[1].C[26]
 					*/
 
-					let (a, c): (u32, u32);
+					let mut result: u32;
 
 					unsafe {
-						llvm_asm!("cpuid" : "={eax}"(a) : "{eax}"(0), "{ecx}"(0), "{ebx}"(0), "{edx}"(0));
-
-						llvm_asm!("cpuid" : "={ecx}"(c) : "{eax}"(1), "{ebx}"(0), "{edx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 0 => result,
+							lateout("ebx") _,
+							lateout("ecx") _,
+							lateout("edx") _,
+							options(nomem, nostack)
+						);
 					}
 
-					if a >= 0xD && c >> 26 & 1 == 1 {
-						Ok(Enabled)
-					} else { Err(Unavailable) }
+					if result >= 0xD {
+						unsafe {
+							asm!(
+								"cpuid",
+								inlateout("eax") 1 => _,
+								lateout("ebx") _,
+								lateout("ecx") result,
+								lateout("edx") _,
+								options(nomem, nostack)
+							);
+						}
+
+						if result >> 26 & 1 == 1 {
+							Ok(Enabled)
+						} else {
+							Err(Unavailable)
+						}
+					} else {
+						Err(Unavailable)
+					}
 				},
 				Ok(Disabled) => Err(FeatureDisabled),
 				error => error,

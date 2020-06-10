@@ -39,10 +39,24 @@ pub fn min_available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							lateout("ebx") _,
+							lateout("ecx") c,
+							lateout("edx") d,
+							options(nomem, nostack)
+						);
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							lateout("ebx") _,
+							lateout("ecx") _,
+							lateout("edx") d,
+							options(nomem, nostack)
+						);
 					}
 
 					if d >> 25 & 1 == 1 {
@@ -57,7 +71,15 @@ pub fn min_available() -> Result<FeatureState> {
 							if c >> 27 & 1 == 1 {
 								let result: u32;
 
-								unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+								unsafe {
+									asm!(
+										"xgetbv",
+										lateout("eax") result,
+										in("ecx") 0,
+										lateout("edx") _,
+										options(nomem, nostack)
+									);
+								}
 
 								if result & 3 == 3 {
 									return Ok(Enabled);
@@ -70,7 +92,15 @@ pub fn min_available() -> Result<FeatureState> {
 						{
 							let (cr0, cr4): (usize, usize);
 
-							unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+							unsafe {
+								asm!(
+									"mov {cr0}, cr0
+									mov {cr4}, cr4",
+									cr0 = lateout(reg) cr0,
+									cr4 = lateout(reg) cr4,
+									options(nomem, nostack)
+								);
+							}
 
 							Ok(if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 { Enabled } else { Disabled })
 						}
@@ -93,12 +123,29 @@ pub fn min_available() -> Result<FeatureState> {
 				
 				let c: u32;
 				
-				unsafe { llvm_asm!("cpuid" : "={ecx}"(c) : "{eax}"(1), "{ebx}"(0), "{edx}"(0)); }
+				unsafe {
+					asm!(
+						"cpuid",
+						inlateout("eax") 1 => _,
+						lateout("ebx") _,
+						lateout("ecx") c,
+						lateout("edx") _,
+						options(nomem, nostack)
+					);
+				}
 
 				if c >> 27 & 1 == 1 {
 					let result: u32;
 
-					unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+					unsafe {
+						asm!(
+							"xgetbv",
+							lateout("eax") result,
+							in("ecx") 0,
+							lateout("edx") _,
+							options(nomem, nostack)
+						);
+					}
 
 					if result & 3 == 3 {
 						return Ok(Enabled);
@@ -111,7 +158,15 @@ pub fn min_available() -> Result<FeatureState> {
 			{
 				let (cr0, cr4): (usize, usize);
 
-				unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+				unsafe {
+					asm!(
+						"mov {cr0}, cr0
+						mov {cr4}, cr4",
+						cr0 = lateout(reg) cr0,
+						cr4 = lateout(reg) cr4,
+						options(nomem, nostack)
+					);
+				}
 
 				if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 {
 					Ok(Enabled)
@@ -149,10 +204,24 @@ pub fn available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							lateout("ebx") _,
+							lateout("ecx") c,
+							lateout("edx") d,
+							options(nomem, nostack)
+						);
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							lateout("ebx") _,
+							lateout("ecx") _,
+							lateout("edx") d,
+							options(nomem, nostack)
+						);
 					}
 
 					if d >> 25 & 3 == 3 {
@@ -167,7 +236,15 @@ pub fn available() -> Result<FeatureState> {
 							if c >> 27 & 1 == 1 {
 								let result: u32;
 
-								unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+								unsafe {
+									asm!(
+										"xgetbv",
+										lateout("eax") result,
+										in("ecx") 0,
+										lateout("edx") _,
+										options(nomem, nostack)
+									);
+								}
 
 								if result & 3 == 3 {
 									return Ok(Enabled);
@@ -180,7 +257,15 @@ pub fn available() -> Result<FeatureState> {
 						{
 							let (cr0, cr4): (usize, usize);
 
-							unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+							unsafe {
+								asm!(
+									"mov {cr0}, cr0
+									mov {cr4}, cr4",
+									cr0 = lateout(reg) cr0,
+									cr4 = lateout(reg) cr4,
+									options(nomem, nostack)
+								);
+							}
 
 							Ok(if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 { Enabled } else { Disabled })
 						}
@@ -196,19 +281,36 @@ pub fn available() -> Result<FeatureState> {
 			#[cfg(not(feature="kernel_mode"))]
 			{
 				/*
-				OSXSAVE: C[27]
+				OSXSAVE: CPUID.C[27]
 				FPU/MMX: XCR0[0]
 				SSE/SSE2: XCR0[1]
 				*/
 				
 				let c: u32;
 				
-				unsafe { llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0)); }
+				unsafe {
+					llvm_asm!(
+						"cpuid",
+						inlateout("eax") 1 => _,
+						lateout("ebx") _,
+						lateout("ecx") c,
+						lateout("edx") _,
+						options(nomem, nostack)
+					);
+				}
 
 				if c >> 27 & 1 == 1 {
 					let result: u32;
 
-					unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+					unsafe {
+						asm!(
+							"xgetbv"
+							lateout("eax") result,
+							in("ecx") 0,
+							lateout("edx") _,
+							options(nomem, nostack)
+						);
+					}
 
 					if result & 3 == 3 {
 						return Ok(Enabled);
@@ -221,7 +323,15 @@ pub fn available() -> Result<FeatureState> {
 			{
 				let (cr0, cr4): (usize, usize);
 
-				unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+				unsafe {
+					asm!(
+						"mov {cr0}, cr0
+						mov {cr4}, cr4",
+						cr0 = lateout(reg) cr0,
+						cr4 = lateout(reg) cr4,
+						options(nomem, nostack)
+					);
+				}
 
 				if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 {
 					Ok(Enabled)
@@ -258,7 +368,16 @@ pub fn max_available() -> Result<FeatureState> {
 
 					let (c, d): (u32, u32);
 
-					unsafe { llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0)); }
+					unsafe {
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							lateout("ebx") _,
+							lateout("ecx") c,
+							lateout("edx") d,
+							options(nomem, nostack)
+						);
+					}
 
 					if c & 0x180201 == 0x180201 && d >> 25 & 3 == 3 {
 						#[cfg(not(feature="kernel_mode"))]
@@ -272,7 +391,15 @@ pub fn max_available() -> Result<FeatureState> {
 							if c >> 27 & 1 == 1 {
 								let result: u32;
 
-								unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+								unsafe {
+									asm!(
+										"xgetbv",
+										lateout("eax") result,
+										in("ecx") 0,
+										lateout("edx") _,
+										options(nomem, nostack)
+									);
+								}
 
 								if result & 3 == 3 {
 									return Ok(Enabled);
@@ -285,7 +412,15 @@ pub fn max_available() -> Result<FeatureState> {
 						{
 							let (cr0, cr4): (usize, usize);
 
-							unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+							unsafe {
+								asm!(
+									"mov {cr0}, cr0
+									mov {cr4}, cr4",
+									cr0 = lateout(reg) cr0,
+									cr4 = lateout(reg) cr4,
+									options(nomem, nostack)
+								);
+							}
 
 							Ok(if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 { Enabled } else { Disabled })
 						}
@@ -309,7 +444,16 @@ pub fn max_available() -> Result<FeatureState> {
 
 			let (c, d): (u32, u32);
 
-			unsafe { llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0)); }
+			unsafe {
+				asm!(
+					"cpuid",
+					inlateout("eax") 1 => _,
+					lateout("ebx") _,
+					lateout("ecx") c,
+					lateout("edx") d,
+					options(nomem, nostack)
+				);
+			}
 
 			if c & 0x180201 == 0x180201 && d >> 25 & 3 == 3 {
 				#[cfg(not(feature="kernel_mode"))]
@@ -323,7 +467,15 @@ pub fn max_available() -> Result<FeatureState> {
 					if c >> 27 & 1 == 1 {
 						let result: u32;
 
-						unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+						unsafe {
+							asm!(
+								"xgetbv",
+								lateout("eax") result,
+								in("ecx") 0,
+								lateout("edx") _,
+								options(nomem, nostack)
+							);
+						}
 
 						if result & 3 == 3 {
 							return Ok(Enabled);
@@ -336,7 +488,15 @@ pub fn max_available() -> Result<FeatureState> {
 				{
 					let (cr0, cr4): (usize, usize);
 
-					unsafe { llvm_asm!("mov $0, cr0 \n mov $1, cr4" : "=r"(cr0), "=r"(cr4) ::: "intel"); }
+					unsafe {
+						asm!(
+							"mov {cr0}, cr0
+							mov {cr4}, cr4",
+							cr0 = lateout(reg) cr0,
+							cr4 = lateout(reg) cr4,
+							options(nomem, nostack)
+						);
+					}
 
 					Ok(if cr0 & 6 == 6 && cr4 >> 9 & 3 == 3 { Enabled } else { Disabled })
 				}

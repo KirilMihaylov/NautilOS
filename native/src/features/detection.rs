@@ -63,24 +63,25 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 				let flags: usize;
 
 				unsafe {
-					llvm_asm!(
+					asm!(
 						"pushf
-						pop $0" :
-						"=r"(flags)
+						pop {flags}",
+						flags = lateout(reg) flags,
+						options(pure, nomem)
 					);
 				}
 
 				let updated_flags: usize;
 
 				unsafe {
-					llvm_asm!(
-						"push $1
+					asm!(
+						"push {flags}
 						popf
-
 						pushf
-						pop $0" :
-						"=r"(updated_flags) :
-						"r"(flags ^ (1usize << 21))
+						pop {new_flags}",
+						new_flags = lateout(reg) updated_flags,
+						flags = in(reg) (flags ^ (1usize << 21)),
+						options(pure, nomem)
 					);
 				}
 
@@ -92,7 +93,7 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 					} else {
 						Err(Unavailable)
 					}
-				})(((flags ^ updated_flags) >> 21) & 1 == 1)
+				})((flags ^ updated_flags) >> 21 & 1 == 1)
 			}
 		},
 		["x86_64"] {

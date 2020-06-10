@@ -18,7 +18,7 @@
 #![doc(html_no_source)]
 
 /* For platform-specific operations */
-#![feature(llvm_asm)]
+#![feature(asm)]
 
 #[macro_use]
 mod macros;

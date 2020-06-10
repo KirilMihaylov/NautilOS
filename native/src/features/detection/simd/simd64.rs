@@ -41,10 +41,24 @@ pub fn min_available() -> Result<FeatureState> {
 
 					unsafe {
 						#[cfg(not(feature="kernel_mode"))]
-						llvm_asm!("cpuid" : "={ecx}"(c), "={edx}"(d) : "{eax}"(1), "{ebx}"(0));
+						asm!(
+							"cpuid",
+							inlateout("eax") 1 => _,
+							out("ebx") _,
+							out("ecx") c,
+							out("edx") d,
+							options(nomem, nostack)
+						);
 
 						#[cfg(feature="kernel_mode")]
-						llvm_asm!("cpuid" : "={edx}"(d) : "{eax}"(1), "{ebx}"(0), "{ecx}"(0));
+						asm!(
+							"cpuid",
+							inout("eax") 1 => _,
+							out("ebx") _,
+							out("ecx") _,
+							out("edx") d,
+							options(nomem, nostack)
+						);
 					}
 
 					if d >> 23 & 3 == 3 {
@@ -58,7 +72,15 @@ pub fn min_available() -> Result<FeatureState> {
 							if c >> 27 & 1 == 1 {
 								let result: u32;
 
-								unsafe { llvm_asm!("xgetbv" : "={eax}"(result) : "{ecx}"(0), "{edx}"(0)); }
+								unsafe {
+									asm!(
+										"xgetbv",
+										out("eax") result,
+										in("ecx") 0,
+										out("edx") _,
+										options(nomem, nostack)
+									);
+								}
 
 								if result & 1 == 1 {
 									return Ok(Enabled);
@@ -71,7 +93,13 @@ pub fn min_available() -> Result<FeatureState> {
 						{
 							let cr0: usize;
 
-							unsafe { llvm_asm!("mov $0, cr0" : "=r"(cr0) ::: "intel"); }
+							unsafe {
+								asm!(
+									"mov {cr0}, cr0",
+									cr0 = out(reg) cr0,
+									options(nomem, nostack)
+								);
+							}
 
 							if cr0 & 6 == 6 {
 								Ok(Enabled)

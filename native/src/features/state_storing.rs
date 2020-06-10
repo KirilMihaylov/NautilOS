@@ -59,28 +59,27 @@ pub fn extended_state_storing_info() -> Result<StateStoringInfo> {
 				["x86", "x86_64"] {
 					/* state_storing::available depends on detection_mechanism_available so it is safe to use CPUID */
 
-					let (required_bytes, features_low, _features_high): (u32, u32, u32);
+					let (required_bytes, features_low/*, features_high*/): (u32, u32/*, u32*/);
 
 					unsafe {
-						llvm_asm!(
-							"cpuid" :
-							"={eax}"(features_low), "={ebx}"(required_bytes), "={edx}"(_features_high) :
-							"{eax}"(0xD), "{ecx}"(0)
+						asm!(
+							"cpuid",
+							inlateout("eax") 0xD => features_low,
+							lateout("ebx") required_bytes,
+							inlateout("ecx") 0 => _,
+							lateout("edx") _ /* features_high */,
+							options(pure, nomem, nostack)
 						);
 					}
 
-					target_arch!{
-						["x86", "x86_64"] {
-							Ok(
-								StateStoringInfo {
-									required_bytes: /* Extended state */ (required_bytes as usize),
-									alignment: 64,
-									simd64: if features_low & 1 == 1 { true } else { false },
-									simd128: if features_low & 2 == 2 { true } else { false },
-								}
-							)
+					Ok(
+						StateStoringInfo {
+							required_bytes: /* Extended state */ (required_bytes as usize),
+							alignment: 64,
+							simd64: if features_low & 1 == 1 { true } else { false },
+							simd128: if features_low & 2 == 2 { true } else { false },
 						}
-					}
+					)
 				}
 			}
 		},
@@ -102,13 +101,16 @@ pub fn state_storing_info() -> Result<StateStoringInfo> {
 		Ok(_feature_state) => {
 			target_arch_else_unimplemented_error!{
 				["x86", "x86_64"] {
-					let (required_bytes, features_low, _features_high): (u32, u32, u32);
+					let (required_bytes, features_low/*, features_high*/): (u32, u32/*, u32*/);
 
 					unsafe {
-						llvm_asm!(
-							"cpuid" :
-							"={eax}"(features_low), "={ebx}"(required_bytes), "={edx}"(_features_high) :
-							"{eax}"(0xD), "{ecx}"(0)
+						asm!(
+							"cpuid",
+							inlateout("eax") 0xD => features_low,
+							lateout("ebx") required_bytes,
+							inlateout("ecx") 0 => _,
+							lateout("edx") _ /* features_high */,
+							options(pure, nomem, nostack)
 						);
 					}
 
