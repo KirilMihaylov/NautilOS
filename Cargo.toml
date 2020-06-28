@@ -7,3 +7,6 @@ members = [
 	"efi_interops",
 	"acpi",
 ]
+
+[profile.release]
+lto = "fat"
