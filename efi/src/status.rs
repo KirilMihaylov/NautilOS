@@ -165,6 +165,7 @@ impl From<EfiStatus> for EfiStatusRaw {
 	}
 }
 
+#[must_use = "this type's value may contain information about an error that occured"]
 pub enum EfiStatusEnum<T = (), E = ()> {
 	Success(T),
 	Warning(EfiStatusRaw, T),
