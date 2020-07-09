@@ -166,7 +166,7 @@ pub enum EfiStatusEnum<T = (), E = ()> {
 	Error(EfiStatusRaw, E),
 }
 
-impl EfiStatusEnum {
+impl<T, E> EfiStatusEnum<T, E> {
 	pub fn is_success(&self) -> bool {
 		if let Self::Success(_) = self {
 			true
@@ -190,6 +190,23 @@ impl EfiStatusEnum {
 			false
 		}
 	}
+
+	pub fn map<'a>(&'a self) -> Result<(EfiStatusWarning, &'a T), (EfiStatusError, &'a E)> {
+		match self {
+			Self::Success(data) => Ok((EfiStatusWarning::NoWarning, data)),
+			Self::Warning(status, data) => Ok((EfiStatus::from(*status).get_warning(), data)),
+			Self::Error(status, data) => Err((EfiStatus::from(*status).get_error(), data)),
+		}
+	}
+
+	pub fn map_no_code<'a>(&'a self) -> Result<&'a T, &'a E> {
+		match self {
+			Self::Success(data) | Self::Warning(_, data) => Ok(data),
+			Self::Error(_, data) => Err(data),
+		}
+	}
+
+	pub fn ignore(&self) {}
 }
 
 impl<T: Clone, E: Clone> Clone for EfiStatusEnum<T, E> {
