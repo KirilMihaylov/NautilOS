@@ -5,6 +5,12 @@
 /* Enables 'extern "efiapi"' */
 #![feature(abi_efiapi)]
 
+/* Disables warning for trait specialization */
+#![allow(incomplete_features)]
+
+/* Enables trait specialization */
+#![feature(specialization)]
+
 pub mod utilities;
 
 mod types;

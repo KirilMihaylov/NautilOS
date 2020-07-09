@@ -1,6 +1,7 @@
 use crate::types::EfiStatusRaw;
 
 #[repr(transparent)]
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
 pub struct EfiStatus(EfiStatusRaw);
 
 impl EfiStatus {
@@ -145,14 +146,6 @@ impl EfiStatus {
 	}
 }
 
-impl Clone for EfiStatus {
-	fn clone(&self) -> Self {
-		Self(self.0)
-	}
-}
-
-impl Copy for EfiStatus {}
-
 impl From<EfiStatusRaw> for EfiStatus {
 	fn from(data: EfiStatusRaw) -> Self {
 		Self(data)
@@ -166,6 +159,7 @@ impl From<EfiStatus> for EfiStatusRaw {
 }
 
 #[must_use = "this type's value may contain information about an error that occured"]
+#[derive(Debug)]
 pub enum EfiStatusEnum<T = (), E = ()> {
 	Success(T),
 	Warning(EfiStatusRaw, T),
@@ -198,6 +192,53 @@ impl EfiStatusEnum {
 	}
 }
 
+impl<T: Clone, E: Clone> Clone for EfiStatusEnum<T, E> {
+	fn clone(&self) -> Self {
+		match self {
+			Self::Success(data) => Self::Success(data.clone()),
+			Self::Warning(status, data) => Self::Warning(*status, data.clone()),
+			Self::Error(status, data) => Self::Error(*status, data.clone()),
+		}
+	}
+}
+
+impl<T: Copy, E: Copy> Copy for EfiStatusEnum<T, E> {}
+
+impl<T: PartialEq, E: PartialEq> PartialEq<Self> for EfiStatusEnum<T, E> {
+	default fn eq(&self, other: &Self) -> bool {
+		match (self, other) {
+			(Self::Success(data), Self::Success(other_data)) => data == other_data,
+			(Self::Warning(status, data), Self::Warning(other_status, other_data)) => status == other_status && data == other_data,
+			(Self::Error(status, data), Self::Error(other_status, other_data)) => status == other_status && data == other_data,
+			_ => false,
+		}
+	}
+}
+
+impl<E: PartialEq> PartialEq<Self> for EfiStatusEnum<(), E> {
+	default fn eq(&self, other: &Self) -> bool {
+		match (self, other) {
+			(Self::Success(_), Self::Success(_)) => true,
+			(Self::Warning(self_status, _), Self::Warning(other_status, _)) => self_status == other_status,
+			(Self::Error(self_status, data), Self::Error(other_status, other_data)) => self_status == other_status && data == other_data,
+			_ => false,
+		}
+	}
+}
+
+impl PartialEq<Self> for EfiStatusEnum<(), ()> {
+	fn eq(&self, other: &Self) -> bool {
+		match (self, other) {
+			(Self::Success(_), Self::Success(_)) => true,
+			(Self::Warning(status, _), Self::Warning(other_status, _)) | (Self::Error(status, _), Self::Error(other_status, _)) => status == other_status,
+			_ => false,
+		}
+	}
+}
+
+impl<T: Eq, E: Eq> Eq for EfiStatusEnum<T, E> {}
+
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
 #[non_exhaustive]
 pub enum EfiStatusWarning {
 	NoWarning,
@@ -213,6 +254,7 @@ pub enum EfiStatusWarning {
 	EfiWarnResetRequired,
 }
 
+#[derive(Debug,Clone,Copy,PartialEq,Eq)]
 #[non_exhaustive]
 pub enum EfiStatusError {
 	NoError,
