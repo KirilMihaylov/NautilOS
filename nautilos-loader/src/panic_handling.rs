@@ -22,42 +22,47 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 /// Acquires the pointer to the console output protocol's interface from [`CON_OUT`].
 /// It checks whether the pointer is non-null & properly aligned.
 /// 
-/// **Warning**: Dangling pointers **cannot** be validated, so resetting to a null pointer before doing any memory map changes is recommended.
+/// **Note**: Since dangling pointers **can not** be validated, so setting to a null pointer while doing any memory map changes is mandatory.
 #[cfg_attr(not(test), panic_handler)]
 #[cfg_attr(test, allow(dead_code))]
 fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
-	/* Stops recursive panics */
+	/* Stops recursive panics and allows multi-threading */
 	while !IN_PANIC.compare_and_swap(false, true, Relaxed) {}
 
 	let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Relaxed);
 	
-	if !con_out.is_null() && (con_out as usize) % align_of::<EfiSimpleTextOutputProtocol>() == 0 {
-		use core::fmt::write;
+	if con_out.align_offset(align_of::<EfiSimpleTextOutputProtocol>()) == 0 {
+		if let Some(con_out) = unsafe { con_out.as_mut() } {
+			use core::fmt::write;
+			
+			let (file, line, column, message): (&str, u32, u32, core::fmt::Arguments);
 
-		let con_out: &mut EfiSimpleTextOutputProtocol = unsafe { &mut *con_out };
+			if let Some(location) = panic_info.location() {
+				file = location.file();
+				line = location.line();
+				column = location.column();
+			} else {
+				file = "";
+				line = 0;
+				column = 0;
+			}
 
-		con_out.output_string("\nPanic!");
+			if let Some(info_message) = panic_info.message() {
+				message = info_message.clone();
+			} else {
+				message = format_args!("(No message)");
+			}
 
-		if let Some(location) = panic_info.location() {
 			match write(
 				con_out,
 				format_args!(
-					" [{} -> Line {} : Column {}]",
-					location.file(),
-					location.line(),
-					location.column()
-				)
-			) { _ => (), }
-		}
-
-		if let Some(message) = panic_info.message() {
-			match write(
-				con_out,
-				format_args!(
-					"\nError: {}",
+					"\nPanic [{} -> Line {} : Column {}]\nError message: {}",
+					file,
+					line,
+					column,
 					message
 				)
-			) { _ => (), }
+			) { _ => (), };
 		}
 	}
 
