@@ -225,4 +225,14 @@ impl EfiProtocolBinding {
 			None
 		}
 	}
+
+	pub fn resolve_mut<T: EfiProtocol>(&mut self) -> Option<&mut T> {
+		if self.pointer.is_null() {
+			None
+		} else if self.guid == T::guid() {
+			Some(unsafe { &mut *(self.pointer as *const T as *mut T) })
+		} else {
+			None
+		}
+	}
 }
