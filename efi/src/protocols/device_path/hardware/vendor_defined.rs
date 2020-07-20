@@ -37,7 +37,7 @@ impl EfiVendorDefinedDevicePath {
 		EfiGuid::from_tuple(guid)
 	}
 
-	pub fn data<'a>(&'a self) -> &'a [u8] {
+	pub fn data(&self) -> &[u8] {
 		unsafe {
 			from_raw_parts(
 				&self.data as *const () as *const u8,
@@ -48,6 +48,10 @@ impl EfiVendorDefinedDevicePath {
 
 	pub fn len(&self) -> usize {
 		self.base.len() as usize - size_of::<Self>()
+	}
+
+	pub fn is_empty(&self) -> bool {
+		self.len() == 0
 	}
 }
 

@@ -98,6 +98,12 @@ impl EfiDaylight {
 	}
 }
 
+impl Default for EfiDaylight {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 #[repr(transparent)]
 #[derive(Clone,Copy)]
 pub struct EfiTimeZone {
@@ -143,18 +149,19 @@ pub struct EfiTimeRepresentation {
 }
 
 impl EfiTimeRepresentation {
-	pub fn new(year: u16, month: u8, day: u8, hour: u8, minute: u8, second: u8, nanosecond: u32, time_zone: EfiTimeZone, daylight: EfiDaylight) -> Self {
+	/// Format for date is `(day, month, year)` and for time is `(hour, minute, second, nanosecond)`.
+	pub fn new(date: (u8, u8, u16), time: (u8, u8, u8, u32), time_zone: EfiTimeZone, daylight: EfiDaylight) -> Self {
 		Self {
-			year: year,
-			month: month,
-			day: day,
-			hour: hour,
-			minute: minute,
-			second: second,
+			year: date.2,
+			month: date.1,
+			day: date.0,
+			hour: time.0,
+			minute: time.1,
+			second: time.2,
 			_padding_1: 0,
-			nanosecond: nanosecond,
-			time_zone: time_zone,
-			daylight: daylight,
+			nanosecond: time.3,
+			time_zone,
+			daylight,
 			_padding_2: 0,
 		}
 	}

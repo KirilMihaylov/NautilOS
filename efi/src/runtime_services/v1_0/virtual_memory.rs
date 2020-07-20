@@ -69,3 +69,9 @@ impl EfiConvertPointerFlagsBuilder {
 		self.custom_flag(1, value)
 	}
 }
+
+impl Default for EfiConvertPointerFlagsBuilder {
+	fn default() -> Self {
+		Self::new()
+	}
+}

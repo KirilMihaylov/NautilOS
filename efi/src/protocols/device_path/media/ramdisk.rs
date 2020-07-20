@@ -33,11 +33,7 @@ impl EfiRAMDiskDevicePath {
 	}
 
 	pub fn disk_type_guid(&self) -> EfiGuid {
-		if let Some(guid) = EfiGuid::from_buffer(&self.disk_type_guid) {
-			guid
-		} else {
-			unreachable!("GUID must be valid!");
-		}
+		EfiGuid::from_array(&self.disk_type_guid)
 	}
 
 	pub fn disk_type(&self) -> EfiRAMDiskDevicePathDeviceType {

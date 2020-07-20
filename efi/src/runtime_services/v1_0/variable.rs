@@ -26,18 +26,18 @@ impl EfiVariableRaw {
 	pub(super) fn get_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, data: Option<&mut [u8]>) -> EfiStatusEnum<(usize, EfiVariableAttributes), (usize, EfiVariableAttributes)> {
 		let (variable_name_ptr, data_ptr, mut data_len, mut attributes): (*const u16, VoidMutPtr, usize, EfiVariableAttributes);
 
-		if let Ok(_) = validate_string(variable_name) {
-			variable_name_ptr = variable_name.as_ptr();
+		variable_name_ptr = if validate_string(variable_name).is_ok() {
+			variable_name.as_ptr()
 		} else {
-			variable_name_ptr = 0 as *const u16;
-		}
+			core::ptr::null()
+		};
 
 		if let Some(data) = data {
 			data_len = data.len();
 			data_ptr = data.as_mut_ptr() as VoidMutPtr;
 		} else {
 			data_len = 0;
-			data_ptr = 0 as VoidMutPtr;
+			data_ptr = core::ptr::null_mut();
 		}
 
 		attributes = EfiVariableAttributes {
@@ -70,10 +70,12 @@ impl EfiVariableRaw {
 	}
 
 	pub(super) fn set_variable(&self, variable_name: &[u16], vendor_guid: &EfiGuid, attributes: &EfiVariableAttributes, data: &[u8]) -> EfiStatusEnum {
-		let variable_name_ptr: *const u16 = match validate_string(variable_name) {
-			Ok(_) => variable_name.as_ptr(),
-			Err(_) => 0 as *const u16,
-		};
+		let variable_name_ptr: *const u16 =
+			if validate_string(variable_name).is_ok() {
+				variable_name.as_ptr()
+			} else {
+				core::ptr::null()
+			};
 
 		(self.set_variable)(
 			variable_name_ptr,

@@ -14,11 +14,7 @@ pub struct EfiMediaProtocolDevicePath {
 
 impl EfiMediaProtocolDevicePath {
 	pub fn protocol_guid(&self) -> EfiGuid {
-		if let Some(guid) = EfiGuid::from_buffer(&self.protocol_guid) {
-			guid
-		} else {
-			unreachable!("GUID must be valid!");
-		}
+		EfiGuid::from_array(&self.protocol_guid)
 	}
 }
 

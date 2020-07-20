@@ -12,7 +12,7 @@ pub struct EfiAddressDevicePath {
 }
 
 impl EfiAddressDevicePath {
-	pub fn addresses<'a>(&'a self) -> &'a [u32] {
+	pub fn addresses(&self) -> &[u32] {
 		unsafe {
 			from_raw_parts(
 				self.first_address.as_ptr() as *const u32,

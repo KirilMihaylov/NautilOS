@@ -17,14 +17,10 @@ pub struct EfiVendorDefinedDevicePath {
 
 impl EfiVendorDefinedDevicePath {
 	pub fn vendor_guid(&self) -> EfiGuid {
-		if let Some(guid) = EfiGuid::from_buffer(&self.vendor_guid) {
-			guid
-		} else {
-			unreachable!("GUID must be valid!");
-		}
+		EfiGuid::from_array(&self.vendor_guid)
 	}
 
-	pub fn vendor_defined_data<'a>(&'a self) -> &'a [u8] {
+	pub fn vendor_defined_data(&self) -> &[u8] {
 		unsafe {
 			from_raw_parts(
 				&self.vendor_defined_data as *const () as *const u8,

@@ -23,7 +23,13 @@ impl EfiGuid {
 		}
 	}
 
-	pub fn from_buffer(data: &[u8]) -> Option<Self> {
+	pub fn from_array(data: &[u8; 16]) -> Self {
+		unsafe {
+			core::mem::transmute(data)
+		}
+	}
+
+	pub fn from_slice(data: &[u8]) -> Option<Self> {
 		if data.len() < 16 {
 			None
 		} else {
@@ -37,15 +43,6 @@ impl EfiGuid {
 					}
 				)
 			}
-		}
-	}
-
-	pub unsafe fn from_raw(data: *const u8) -> Self {
-		Self {
-			data_1: (data as *const u32).read_unaligned(),
-			data_2: (data.offset(4) as *const u16).read_unaligned(),
-			data_3: (data.offset(6) as *const u16).read_unaligned(),
-			data_4: (data.offset(8) as *const [u8; 8]).read_unaligned(),
 		}
 	}
 }

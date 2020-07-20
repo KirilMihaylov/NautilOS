@@ -18,32 +18,20 @@ impl EfiStatus {
 	}
 
 	pub fn is_success(&self) -> bool {
-		if self.0 == 0 {
-			true /* Success */
-		} else {
-			false /* Warning or Error */
-		}
+		/* 0 => Success */
+		/* _ => Warning or Error */
+		self.0 == 0
 	}
 
 	pub fn is_warning(&self) -> bool {
-		if self.is_success() {
-			false /* Success */
-		} else if self.is_error() {
-			false /* Error */
-		} else {
-			true /* Warning */
-		}
+		!(self.is_success() || self.is_error())
 	}
 
 	pub fn is_error(&self) -> bool {
-		if self.0.leading_zeros() == 0 {
-			true /* Error */
-		} else {
-			false /* Success or Warning */
-		}
+		self.0.leading_zeros() == 0
 	}
 
-	pub fn into_enum(&self) -> EfiStatusEnum {
+	pub fn into_enum(self) -> EfiStatusEnum {
 		use EfiStatusEnum::*;
 
 		if self.is_success() {
@@ -55,7 +43,7 @@ impl EfiStatus {
 		}
 	}
 
-	pub fn into_enum_data<S>(&self, data: S) -> EfiStatusEnum<S> {
+	pub fn into_enum_data<S>(self, data: S) -> EfiStatusEnum<S> {
 		use EfiStatusEnum::*;
 
 		if self.is_success() {
@@ -67,7 +55,7 @@ impl EfiStatus {
 		}
 	}
 
-	pub fn into_enum_data_error<S, E>(&self, data: S, error_data: E) -> EfiStatusEnum<S, E> {
+	pub fn into_enum_data_error<S, E>(self, data: S, error_data: E) -> EfiStatusEnum<S, E> {
 		use EfiStatusEnum::*;
 
 		if self.is_success() {
@@ -191,7 +179,7 @@ impl<T, E> EfiStatusEnum<T, E> {
 		}
 	}
 
-	pub fn map<'a>(&'a self) -> Result<(EfiStatusWarning, &'a T), (EfiStatusError, &'a E)> {
+	pub fn map(&self) -> Result<(EfiStatusWarning, &T), (EfiStatusError, &E)> {
 		match self {
 			Self::Success(data) => Ok((EfiStatusWarning::NoWarning, data)),
 			Self::Warning(status, data) => Ok((EfiStatus::from(*status).get_warning(), data)),
@@ -199,7 +187,7 @@ impl<T, E> EfiStatusEnum<T, E> {
 		}
 	}
 
-	pub fn map_no_code<'a>(&'a self) -> Result<&'a T, &'a E> {
+	pub fn map_no_code(&self) -> Result<&T, &E> {
 		match self {
 			Self::Success(data) | Self::Warning(_, data) => Ok(data),
 			Self::Error(_, data) => Err(data),

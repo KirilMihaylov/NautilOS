@@ -5,14 +5,14 @@ fn target_feature(attr: TokenStream, enable: bool) -> String {
 
 	let mut output: String = String::new();
 
-	for z in 0..attrs.len() {
+	for (index, attr) in attrs.iter().enumerate() {
 		use TokenTree::{
 			Ident,
 			Punct,
 		};
 
-		if z % 2 == 0 {
-			if let Ident(feature) = &attrs[z] {
+		if index % 2 == 0 {
+			if let Ident(feature) = attr {
 				output += &format!(
 					"#[target_feature({}=\"{}\")]",
 					if enable { "enable" } else { "disable" },
@@ -35,16 +35,14 @@ fn target_feature(attr: TokenStream, enable: bool) -> String {
 					}
 				);
 			} else {
-				panic!("Error: Expected feature identificator instead got \"{}\"!", attrs[z].to_string());
+				panic!("Error: Expected feature identificator instead got \"{}\"!", attr.to_string());
+			}
+		} else if let Punct(punct) = attr {
+			if punct.as_char() != ',' {
+				panic!("Error: Expected ',' instead got '{}'!", punct.as_char());
 			}
 		} else {
-			if let Punct(punct) = &attrs[z] {
-				if punct.as_char() != ',' {
-					panic!("Error: Expected ',' instead got '{}'!", punct.as_char());
-				}
-			} else {
-				panic!("Error: Expected ',' instead got \"{}\"!", attrs[z].to_string());
-			}
+			panic!("Error: Expected ',' instead got \"{}\"!", attr.to_string());
 		}
 	}
 

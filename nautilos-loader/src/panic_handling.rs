@@ -12,7 +12,7 @@ use core::{
 use efi::protocols::console::EfiSimpleTextOutputProtocol;
 
 /// Stores pointer to EFI's console output protocol interface.
-pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(0 as _);
+pub static CON_OUT: AtomicPtr<EfiSimpleTextOutputProtocol> = AtomicPtr::new(core::ptr::null_mut());
 
 #[doc(hidden)]
 static IN_PANIC: AtomicBool = AtomicBool::new(false);
@@ -35,25 +35,21 @@ fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 		if let Some(con_out) = unsafe { con_out.as_mut() } {
 			use core::fmt::write;
 			
-			let (file, line, column, message): (&str, u32, u32, core::fmt::Arguments);
+			let (file, line, column): (&str, u32, u32) =
+				if let Some(location) = panic_info.location() {
+					(location.file(), location.line(), location.column())
+				} else {
+					("", 0, 0)
+				};
 
-			if let Some(location) = panic_info.location() {
-				file = location.file();
-				line = location.line();
-				column = location.column();
-			} else {
-				file = "";
-				line = 0;
-				column = 0;
-			}
+			let message: core::fmt::Arguments =
+				if let Some(message) = panic_info.message() {
+					*message
+				} else {
+					format_args!("(No message)")
+				};
 
-			if let Some(info_message) = panic_info.message() {
-				message = info_message.clone();
-			} else {
-				message = format_args!("(No message)");
-			}
-
-			match write(
+			let _ = write(
 				con_out,
 				format_args!(
 					"\nPanic [{} -> Line {} : Column {}]\nError message: {}",
@@ -62,7 +58,7 @@ fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
 					column,
 					message
 				)
-			) { _ => (), };
+			);
 		}
 	}
 

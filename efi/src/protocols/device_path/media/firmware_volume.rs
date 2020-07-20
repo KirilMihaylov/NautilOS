@@ -12,7 +12,7 @@ pub struct EfiPIWGFirmwareVolumeDevicePath {
 }
 
 impl EfiPIWGFirmwareVolumeDevicePath {
-	pub fn data<'a>(&'a self) -> &'a [u8] {
+	pub fn data(&self) -> &[u8] {
 		unsafe {
 			from_raw_parts(
 				&self.data as *const () as *const u8,

@@ -18,7 +18,7 @@ impl EfiBootServices {
 		self.table_header.verify_table()
 	}
 
-	pub fn header<'a>(&'a self) -> &'a EfiTableHeader {
+	pub fn header(&self) -> &EfiTableHeader {
 		&self.table_header
 	}
 

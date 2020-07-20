@@ -114,18 +114,13 @@ impl EfiTableHeader {
 			let iterator: Iter<u8> = data.iter();
 
 			let (crc32_start_offset, crc32_end_offset): (usize, usize);
-			crc32_start_offset = (&self.crc32 as *const u32 as usize) - (self as *const Self as usize);
+			crc32_start_offset = (&self.crc32 as *const _ as usize) - (self as *const Self as usize);
 			crc32_end_offset = crc32_start_offset + size_of_val(&self.crc32);
 			
 			/* Calculate until "crc32" */
-			for (_, byte) in iterator.clone().enumerate().take_while(
-				|&(index, _)|
-				if index < crc32_start_offset {
-					true
-				} else {
-					false
-				}
-			) {
+			for byte in iterator
+				.clone()
+				.take(crc32_start_offset) {
 				crc = LOOKUP_TABLE[((crc as u8) ^ byte) as usize] ^ (crc >> 8);
 			}
 
@@ -140,12 +135,10 @@ impl EfiTableHeader {
 			}
 		}
 		
-		return !crc;
+		!crc
 	}
 
-	pub fn update_crc32(&self) {
-		unsafe {
-			*(&self.crc32 as *const u32 as *mut u32) = self.calculate_crc32();
-		}
+	pub fn update_crc32(&mut self) {
+		self.crc32 = self.calculate_crc32();
 	}
 }

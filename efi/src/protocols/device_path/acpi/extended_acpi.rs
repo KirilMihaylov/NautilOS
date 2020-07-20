@@ -42,7 +42,7 @@ impl EfiExtendedAcpiDevicePath {
 		)
 	}
 
-	pub fn _hid<'a>(&'a self) -> &'a [u8] {
+	pub fn _hid(&self) -> &[u8] {
 		if self._hidstr[0] != 0 {
 			let _hid_ptr: *const u8 = self._hidstr.as_ptr();
 			unsafe {
@@ -56,7 +56,7 @@ impl EfiExtendedAcpiDevicePath {
 		}
 	}
 
-	pub fn _uid<'a>(&'a self) -> &'a [u8] {
+	pub fn _uid(&self) -> &[u8] {
 		unsafe {
 			let _uidstr_ptr: *const u8 = self._uidstr();
 			
@@ -71,7 +71,7 @@ impl EfiExtendedAcpiDevicePath {
 		}
 	}
 
-	pub fn _cid<'a>(&'a self) -> &'a [u8] {
+	pub fn _cid(&self) -> &[u8] {
 		unsafe {
 			let _cidstr_ptr: *const u8 = self._cidstr();
 			

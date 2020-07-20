@@ -1,5 +1,5 @@
-mod acpi;
-pub use self::acpi::*;
+mod acpi_device;
+pub use acpi_device::*;
 
 mod address;
 pub use address::*;

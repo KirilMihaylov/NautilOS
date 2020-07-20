@@ -28,7 +28,7 @@ impl<'a> EfiConfigurationTable<'a> {
 	pub fn get(&'a self, guid: EfiGuid) -> EfiConfigurationTableIterator<'a> {
 		EfiConfigurationTableIterator {
 			entries: self.entries,
-			guid: guid,
+			guid,
 		}
 	}
 }

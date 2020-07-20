@@ -104,7 +104,7 @@ impl EfiSimpleTextOutputProtocol {
 
 			string = &string[char_count..];
 
-			if string.len() == 0 {
+			if string.is_empty() {
 				break;
 			}
 		}
@@ -145,9 +145,11 @@ impl EfiSimpleTextOutputProtocol {
 				index += 1;
 				
 				if index != buffer.len() - 1 {
-					if buffer[index] != 0 {
-						index += 1;
-					}
+					continue;
+				}
+
+				if buffer[index] != 0 {
+					index += 1;
 				}
 			}
 
@@ -162,7 +164,7 @@ impl EfiSimpleTextOutputProtocol {
 
 			string = string.split_at(index).1;
 
-			if string.len() == 0 {
+			if string.is_empty() {
 				break;
 			}
 		}

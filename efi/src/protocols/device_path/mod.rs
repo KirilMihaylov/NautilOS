@@ -210,9 +210,12 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiMessagingDevicePathSubtype<'a> {
 			},
 			10 => match path.len() {
 				x if x >= 20 => {
-					let guid: EfiGuid = unsafe {
-						EfiGuid::from_raw(&path.path_data as *const () as *const u8)
-					};
+					let guid: EfiGuid =
+						EfiGuid::from_array(
+							unsafe {
+								&*(path.path_data as *const _ as *const [u8; 16])
+							}
+						);
 
 					match guid.as_tuple() {
 						(0x37499a9d, 0x542f, 0x4c89, [0xa0, 0x26, 0x35, 0xda, 0x14, 0x20, 0x94, 0xe4]) => UARTFlowControl(EfiUartFlowControlDevicePath::new(path)),
@@ -380,15 +383,7 @@ impl EfiDevicePathProcotol {
 	}
 
 	fn is_end_of_device_path(&self) -> bool {
-		if self.path_type == 0x7F {
-			if self.path_subtype == 0xFF {
-				true
-			} else {
-				false
-			}
-		} else {
-			false
-		}
+		self.path_type == 0x7F && self.path_subtype == 0xFF
 	}
 
 	pub(crate) fn len(&self) -> u16 {
@@ -426,7 +421,7 @@ impl<'a> Iterator for EfiDevicePathProcotolIterator<'a> {
 				&*(
 					(
 						self.current as *const EfiDevicePathProcotol as *const u8
-					).offset(self.current.len() as usize as isize) as *const EfiDevicePathProcotol
+					).add(self.current.len() as usize) as *const EfiDevicePathProcotol
 				)
 			};
 			Some(return_item)
@@ -435,7 +430,7 @@ impl<'a> Iterator for EfiDevicePathProcotolIterator<'a> {
 }
 
 pub(crate) trait EfiDevicePathRepr: Sized {
-	fn new<'a>(path: &'a EfiDevicePathProcotol) -> &'a Self {
+	fn new(path: &EfiDevicePathProcotol) -> &Self {
 		unsafe {
 			&*(path as *const EfiDevicePathProcotol as *const Self)
 		}

@@ -10,16 +10,16 @@ use core::{
 };
 
 pub fn validate_string(data: &[u16]) -> Result<(), ()> {
-	if data.len() == 0 {
+	if data.is_empty() {
 		Err(())
 	} else {
-		let utf16_iter: DecodeUtf16<_> = decode_utf16(data.iter().map(|x| *x));
+		let utf16_iter: DecodeUtf16<_> = decode_utf16(data.iter().cloned());
 
 		if utf16_iter.clone().any(|c| c.is_err()) { /* Has invalid characters? */
 			Err(())
 		}
 		/* All characters are valid */
-		else if utf16_iter.clone().any(|c| if c.unwrap_or('?') == '\0' { true } else { false }) { /* Has terminating-null? */
+		else if utf16_iter.clone().any(|c| c.unwrap_or('?') == '\0') { /* Has terminating-null? */
 			Ok(())
 		}
 		/* Doesn't have terminating-null */
@@ -50,11 +50,11 @@ pub unsafe fn string_length_max(mut string: *const u16, buffer_length: usize) ->
 
 pub unsafe fn string_from_raw<'a>(string: *const u16) -> Result<&'a [u16], ()> {
 	if string.is_null() {
-		return Err(());
+		Err(())
 	} else {
 		let string: &'a [u16] = from_raw_parts(string, string_length(string)?);
 
-		if decode_utf16(string.iter().map(|&x| x)).any(|c| c.is_err()) {
+		if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
 			Err(())
 		} else {
 			Ok(string)
@@ -64,11 +64,11 @@ pub unsafe fn string_from_raw<'a>(string: *const u16) -> Result<&'a [u16], ()> {
 
 pub unsafe fn string_from_raw_mut<'a>(string: *mut u16) -> Result<&'a mut [u16], ()> {
 	if string.is_null() {
-		return Err(());
+		Err(())
 	} else {
 		let string: &'a mut [u16] = from_raw_parts_mut(string, string_length(string)?);
 
-		if decode_utf16(string.iter().map(|&x| x)).any(|c| c.is_err()) {
+		if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
 			Err(())
 		} else {
 			Ok(string)

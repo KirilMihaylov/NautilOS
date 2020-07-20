@@ -24,7 +24,7 @@ pub struct EfiBlockIOProtocol {
 }
 
 impl EfiBlockIOProtocol {
-	fn media<'a>(&'a self) -> &'a EfiBlockIOMediaRaw {
+	fn media(&self) -> &EfiBlockIOMediaRaw {
 		unsafe {
 			&*self.media
 		}
@@ -34,11 +34,11 @@ impl EfiBlockIOProtocol {
 		self.revision
 	}
 
-	pub fn media_revision_1<'a>(&'a self) -> &'a dyn EfiBlockIOMediaRevision1 {
+	pub fn media_revision_1(&self) -> &dyn EfiBlockIOMediaRevision1 {
 		self.media()
 	}
 
-	pub fn media_revision_2<'a>(&'a self) -> Option<&'a dyn EfiBlockIOMediaRevision2> {
+	pub fn media_revision_2(&self) -> Option<&dyn EfiBlockIOMediaRevision2> {
 		if self.revision >= 0x20001 {
 			Some(self.media())
 		} else {
@@ -46,7 +46,7 @@ impl EfiBlockIOProtocol {
 		}
 	}
 
-	pub fn media_revision_3<'a>(&'a self) -> Option<&'a dyn EfiBlockIOMediaRevision3> {
+	pub fn media_revision_3(&self) -> Option<&dyn EfiBlockIOMediaRevision3> {
 		if self.revision >= 0x2001F {
 			Some(self.media())
 		} else {

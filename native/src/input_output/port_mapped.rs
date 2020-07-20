@@ -21,7 +21,7 @@ impl IOPort {
 	/// Creates new instance bound to the given port.
 	pub fn new(port: IOPortType) -> Self {
 		Self {
-			port: port,
+			port,
 		}
 	}
 

@@ -1,6 +1,6 @@
 use crate::*;
 
-#[repr(C)]
+#[repr(u32)]
 #[derive(Clone,Copy)]
 #[non_exhaustive]
 pub enum EfiEventType {

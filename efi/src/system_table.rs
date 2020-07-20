@@ -31,7 +31,7 @@ impl EfiSystemTable {
 		self.table_header.verify_table() && self.boot_services().verify_table() && self.runtime_services().verify_table()
 	}
 
-	pub fn header<'a>(&'a self) -> &'a EfiTableHeader {
+	pub fn header(&self) -> &EfiTableHeader {
 		&self.table_header
 	}
 
@@ -39,7 +39,7 @@ impl EfiSystemTable {
 		self.table_header.revision()
 	}
 
-	pub fn firmware_vendor<'a>(&'a self) -> Result<&'a [u16], ()> {
+	pub fn firmware_vendor(&self) -> Result<&[u16], ()> {
 		unsafe {
 			string_from_raw(self.firmware_vendor)
 		}
@@ -53,7 +53,15 @@ impl EfiSystemTable {
 		self.console_in_handle
 	}
 
-	pub fn con_in<'a>(&'a self) -> Option<&'a mut EfiSimpleTextInputProtocol> {
+	pub fn con_in(&self) -> Option<&EfiSimpleTextInputProtocol> {
+		if self.con_in.is_null() {
+			None
+		} else {
+			Some(unsafe { &*self.con_in })
+		}
+	}
+
+	pub fn con_in_mut(&mut self) -> Option<&mut EfiSimpleTextInputProtocol> {
 		if self.con_in.is_null() {
 			None
 		} else {
@@ -65,7 +73,15 @@ impl EfiSystemTable {
 		self.console_out_handle
 	}
 
-	pub fn con_out<'a>(&'a self) -> Option<&'a mut EfiSimpleTextOutputProtocol> {
+	pub fn con_out(&self) -> Option<&EfiSimpleTextOutputProtocol> {
+		if self.con_out.is_null() {
+			None
+		} else {
+			Some(unsafe { &*self.con_out })
+		}
+	}
+
+	pub fn con_out_mut(&mut self) -> Option<&mut EfiSimpleTextOutputProtocol> {
 		if self.con_out.is_null() {
 			None
 		} else {
@@ -77,7 +93,15 @@ impl EfiSystemTable {
 		self.standart_error_handle
 	}
 
-	pub fn std_err<'a>(&'a self) -> Option<&'a mut EfiSimpleTextOutputProtocol> {
+	pub fn std_err(&self) -> Option<&EfiSimpleTextOutputProtocol> {
+		if self.std_err.is_null() {
+			None
+		} else {
+			Some(unsafe { &*self.std_err })
+		}
+	}
+
+	pub fn std_err_mut(&mut self) -> Option<&mut EfiSimpleTextOutputProtocol> {
 		if self.std_err.is_null() {
 			None
 		} else {
@@ -85,21 +109,36 @@ impl EfiSystemTable {
 		}
 	}
 
-	pub fn runtime_services<'a>(&'a self) -> &'a mut EfiRuntimeServices {
+	pub fn runtime_services(&self) -> &EfiRuntimeServices {
+		unsafe {
+			&*self.runtime_services
+		}
+	}
+
+	pub fn runtime_services_mut(&mut self) -> &mut EfiRuntimeServices {
 		unsafe {
 			&mut *self.runtime_services
 		}
 	}
 
-	pub fn boot_services<'a>(&'a self) -> &'a mut EfiBootServices {
+	pub fn boot_services(&self) -> &EfiBootServices {
+		unsafe {
+			&*self.boot_services
+		}
+	}
+
+	pub fn boot_services_mut(&mut self) -> &mut EfiBootServices {
 		unsafe {
 			&mut *self.boot_services
 		}
 	}
 
-	pub fn configuration_tables<'a>(&'a self) -> EfiConfigurationTable<'a> {
+	pub fn configuration_tables<'a>(&self) -> EfiConfigurationTable<'a> {
 		unsafe {
-			EfiConfigurationTable::new(self.configuration_tables, self.configuration_tables_count)
+			EfiConfigurationTable::new(
+				self.configuration_tables,
+				self.configuration_tables_count
+			)
 		}
 	}
 
@@ -107,9 +146,9 @@ impl EfiSystemTable {
 	/// 
 	/// [`&mut &Void`]: types/type.Void.html
 	/// [`convert_pointer`]: runtime_services/virtual_memory/structs/struct.EfiVirtualMemory.html#method.convert_pointer
-	pub fn configuration_tables_pointer(&self) -> &mut &Void {
+	pub fn configuration_tables_pointer(&mut self) -> &mut &Void {
 		unsafe {
-			&mut*(&self.configuration_tables as *const *mut EfiConfigurationTableEntry as *mut &Void)
+			&mut *(&mut self.configuration_tables as *mut *mut EfiConfigurationTableEntry as *mut &Void)
 		}
 	}
 }

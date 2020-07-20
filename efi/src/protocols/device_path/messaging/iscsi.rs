@@ -51,15 +51,15 @@ impl EfiiScsiDevicePath {
 		}
 	}
 
-	pub fn target_name<'a>(&'a self) -> &'a [u8] {
+	pub fn target_name(&self) -> &[u8] {
 		let offset: usize = (&self.target_name as *const () as usize) - (self as *const Self as usize);
 		let length: usize;
 
-		if self.base.len() as usize - offset <= 223 {
-			length = self.base.len() as usize - offset;
+		length = if self.base.len() as usize - offset <= 223 {
+			self.base.len() as usize - offset
 		} else {
-			length = 223;
-		}
+			223
+		};
 
 		unsafe {
 			from_raw_parts(

@@ -12,7 +12,7 @@ pub struct EfiFilePathDevicePath {
 }
 
 impl EfiFilePathDevicePath {
-	pub fn path_name<'a>(&'a self) -> &'a [u8] {
+	pub fn path_name(&self) -> &[u8] {
 		unsafe {
 			from_raw_parts(
 				&self.path_name as *const () as *const u8,
