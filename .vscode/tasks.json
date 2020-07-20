@@ -59,6 +59,26 @@
 			],
 		},
 		{
+			"label": "Run clippy (x86)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"clippy",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--package",
+				"nautilos-loader",
+				"--release",
+				"--target=i686-unknown-uefi"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
+		{
 			"label": "Build Loader (x86_64)",
 			"type": "process",
 			"command": "cargo",
@@ -112,6 +132,26 @@
 			"problemMatcher": [
 				"$rustc"
 			],
-		}
+		},
+		{
+			"label": "Run clippy (x86_64)",
+			"type": "process",
+			"command": "cargo",
+			"args": [
+				"clippy",
+				"-Z",
+				"unstable-options",
+				"-Z",
+				"build-std=core,alloc",
+				"--package",
+				"nautilos-loader",
+				"--release",
+				"--target=x86_64-unknown-uefi"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$rustc"
+			],
+		},
 	]
 }
