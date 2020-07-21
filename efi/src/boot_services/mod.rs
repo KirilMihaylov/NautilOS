@@ -22,11 +22,19 @@ impl EfiBootServices {
 		&self.table_header
 	}
 
+	pub fn header_mut(&mut self) -> &mut EfiTableHeader {
+		&mut self.table_header
+	}
+
 	pub fn revision(&self) -> u32 {
 		self.table_header.revision()
 	}
 	
 	pub fn revision_1_0(&self) -> &dyn EfiBootServicesRevision_1_0 {
 		&self.v1_0
+	}
+
+	pub fn revision_1_0_mut(&mut self) -> &mut dyn EfiBootServicesRevision_1_0 {
+		&mut self.v1_0
 	}
 }
