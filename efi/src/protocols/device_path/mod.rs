@@ -213,7 +213,7 @@ impl<'a> From<&'a EfiDevicePathProcotol> for EfiMessagingDevicePathSubtype<'a> {
 					let guid: EfiGuid =
 						EfiGuid::from_array(
 							unsafe {
-								&*(path.path_data as *const _ as *const [u8; 16])
+								&*(&path.path_data as *const _ as *const [u8; 16])
 							}
 						);
 

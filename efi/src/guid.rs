@@ -25,7 +25,7 @@ impl EfiGuid {
 
 	pub fn from_array(data: &[u8; 16]) -> Self {
 		unsafe {
-			core::mem::transmute(data)
+			core::mem::transmute(*data)
 		}
 	}
 

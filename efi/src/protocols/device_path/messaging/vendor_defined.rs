@@ -17,9 +17,7 @@ pub struct EfiVendorDefinedDevicePath {
 
 impl EfiVendorDefinedDevicePath {
 	pub fn vendor_guid(&self) -> EfiGuid {
-		unsafe {
-			EfiGuid::from_array(&self.vendor_guid)
-		}
+		EfiGuid::from_array(&self.vendor_guid)
 	}
 
 	pub fn vendor_defined_data(&self) -> &[u8] {
