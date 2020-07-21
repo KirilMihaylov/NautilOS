@@ -59,3 +59,14 @@ macro_rules! efi_panic {
 		);
 	};
 }
+
+/// Equivalent of [`assert!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+macro_rules! efi_assert {
+	($expr:expr, $($args:tt)+) => {
+		assert!(
+			$expr,
+			"(EFI) {}",
+			format_args!($($args)+)
+		);
+	};
+}
