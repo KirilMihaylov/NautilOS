@@ -24,6 +24,14 @@ macro_rules! println {
 	};
 }
 
+/// Equivalent of [`println!`] that appends `[DEBUG] ` in the beginning of the passed formatted string.
+#[macro_export]
+macro_rules! debug_info {
+	($($args:tt)+) => {
+		println!("[LOG] {}", format_args!($($args)+));
+	}
+}
+
 /// Equivalent of [`println!`] that appends `[LOG] ` in the beginning of the passed formatted string.
 #[macro_export]
 macro_rules! log {
@@ -41,6 +49,7 @@ macro_rules! warn {
 }
 
 /// Equivalent of [`warn!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+#[macro_export]
 macro_rules! efi_warn {
 	($($args:tt)+) => {
 		warn!(
@@ -51,6 +60,7 @@ macro_rules! efi_warn {
 }
 
 /// Equivalent of [`panic!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+#[macro_export]
 macro_rules! efi_panic {
 	($($args:tt)+) => {
 		panic!(
@@ -61,6 +71,7 @@ macro_rules! efi_panic {
 }
 
 /// Equivalent of [`assert!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+#[macro_export]
 macro_rules! efi_assert {
 	($expr:expr, $($args:tt)+) => {
 		assert!(
