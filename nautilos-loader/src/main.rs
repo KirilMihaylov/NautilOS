@@ -53,11 +53,14 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 	}
 
 	/* Set the output interface for the panic handler (also used by "print!" and "println!") */
-	if let Some(con_out) = system_table.con_out() {
+	if let Some(con_out) = system_table.con_out_mut() {
 		CON_OUT.store(con_out, Ordering::Relaxed);
 
 		if let efi::EfiStatusEnum::Error(status, _) = con_out.clear_screen() {
-			warn!("Clearing screen failed with EFI status: {}", status);
+			efi_warn!(
+				"Clearing screen failed with error: {:?}",
+				EfiStatus::from(status).get_error()
+			);
 		}
 	}
 
