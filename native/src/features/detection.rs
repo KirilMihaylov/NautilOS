@@ -85,15 +85,15 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 					);
 				}
 
-				(|value: bool| -> Result<FeatureState> {
-					DETECTION_MECHANISM.store(value, Relaxed);
+				let value: bool = (flags ^ updated_flags) >> 21 & 1 == 1;
 
-					if value {
-						Ok(Enabled)
-					} else {
-						Err(Unavailable)
-					}
-				})((flags ^ updated_flags) >> 21 & 1 == 1)
+				DETECTION_MECHANISM.store(value, Relaxed);
+
+				if value {
+					Ok(Enabled)
+				} else {
+					Err(Unavailable)
+				}
 			}
 		},
 		["x86_64"] {
@@ -119,8 +119,9 @@ pub fn enable_detection_mechanism() -> Result<FeatureState> {
 
 	target_arch_else_unimplemented_error! {
 		["x86"] {
-			if let Ok(_) = detection_mechanism_available() {
+			if detection_mechanism_available().is_ok() {
 				DETECTION_MECHANISM.store(true, Relaxed);
+				
 				Ok(Enabled)
 			} else {
 				Err(Unavailable)
@@ -149,8 +150,9 @@ pub fn disable_detection_mechanism() -> Result<FeatureState> {
 
 	target_arch_else_unimplemented_error! {
 		["x86"] {
-			if let Ok(_) = detection_mechanism_available() {
+			if detection_mechanism_available().is_ok() {
 				DETECTION_MECHANISM.store(true, Relaxed);
+
 				Ok(Enabled)
 			} else {
 				Err(Unavailable)
@@ -173,11 +175,13 @@ pub fn cpu_vendor_id_available() -> Result<FeatureState> {
 
 	target_arch_else_unimplemented_error!{
 		["x86"] {
-			if let Ok(_) = detection_mechanism_available() {
-				Ok(Enabled)
-			} else {
-				Err(Unavailable)
-			}
+			detection_mechanism_available()
+				.map(
+					|_| Enabled
+				)
+				.map_err(
+					|_| Unavailable
+				)
 		},
 		["x86_64"] {
 			Ok(Enabled)

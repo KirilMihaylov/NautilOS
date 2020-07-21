@@ -120,8 +120,8 @@ pub fn state_storing_info() -> Result<StateStoringInfo> {
 								StateStoringInfo {
 									required_bytes: /* Architectural state */ 68 + /* Padding */ 60 + /* Extended state */ (required_bytes as usize),
 									alignment: 64,
-									simd64: if features_low & 1 == 1 { true } else { false },
-									simd128: if features_low & 2 == 2 { true } else { false },
+									simd64: features_low & 1 == 1,
+									simd128: features_low & 2 == 2,
 								}
 							)
 						},
