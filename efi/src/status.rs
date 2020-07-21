@@ -193,8 +193,6 @@ impl<T, E> EfiStatusEnum<T, E> {
 			Self::Error(_, data) => Err(data),
 		}
 	}
-
-	pub fn ignore(&self) {}
 }
 
 impl<T: Clone, E: Clone> Clone for EfiStatusEnum<T, E> {
