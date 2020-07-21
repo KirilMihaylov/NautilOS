@@ -134,6 +134,24 @@ pub trait EfiBlockIOMediaRevision1 {
 	fn last_block(&self) -> EfiLBA;
 }
 
+impl core::fmt::Debug for &dyn EfiBlockIOMediaRevision1 {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(
+			f,
+			"EfiBlockIOMediaRevision1 {{ ID: {}, Removable: {}, Present: {}, Logical Partition: {}, Read-Only: {}, Write-caching: {}, Block size: {}, I/O alignment: {}, Last block's LBA: {} }}",
+			self.media_id(),
+			self.removable_media(),
+			self.media_present(),
+			self.logical_partition(),
+			self.read_only(),
+			self.write_caching(),
+			self.block_size(),
+			self.io_alignment(),
+			self.last_block(),
+		)
+	}
+}
+
 /// Extends [`EfiBlockIOMediaRevision1`]'s interface for accessing state defined in revision 2.
 pub trait EfiBlockIOMediaRevision2: EfiBlockIOMediaRevision1 {
 	fn lowest_aligned_lba(&self) -> EfiLBA;
@@ -141,9 +159,50 @@ pub trait EfiBlockIOMediaRevision2: EfiBlockIOMediaRevision1 {
 	fn logical_blocks_per_physical_block(&self) -> u32;
 }
 
+impl core::fmt::Debug for &dyn EfiBlockIOMediaRevision2 {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(
+			f,
+			"EfiBlockIOMediaRevision2 {{ ID: {}, Removable: {}, Present: {}, Logical Partition: {}, Read-Only: {}, Write-caching: {}, Block size: {}, I/O alignment: {}, Last block's LBA: {}, Lowest aligned LBA: {}, Logical blocks per physical block: {} }}",
+			self.media_id(),
+			self.removable_media(),
+			self.media_present(),
+			self.logical_partition(),
+			self.read_only(),
+			self.write_caching(),
+			self.block_size(),
+			self.io_alignment(),
+			self.last_block(),
+			self.lowest_aligned_lba(),
+			self.logical_blocks_per_physical_block(),
+		)
+	}
+}
+
 /// Extends [`EfiBlockIOMediaRevision2`]'s interface for accessing state defined in revision 3.
 pub trait EfiBlockIOMediaRevision3: EfiBlockIOMediaRevision2 {
 	fn optimal_transfer_length_granulary(&self) -> u32;
+}
+
+impl core::fmt::Debug for &dyn EfiBlockIOMediaRevision3 {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		write!(
+			f,
+			"EfiBlockIOMediaRevision3 {{ ID: {}, Removable: {}, Present: {}, Logical Partition: {}, Read-Only: {}, Write-caching: {}, Block size: {}, I/O alignment: {}, Last block's LBA: {}, Lowest aligned LBA: {}, Logical blocks per physical block: {}, Optimal transfer length granulary: {} }}",
+			self.media_id(),
+			self.removable_media(),
+			self.media_present(),
+			self.logical_partition(),
+			self.read_only(),
+			self.write_caching(),
+			self.block_size(),
+			self.io_alignment(),
+			self.last_block(),
+			self.lowest_aligned_lba(),
+			self.logical_blocks_per_physical_block(),
+			self.optimal_transfer_length_granulary(),
+		)
+	}
 }
 
 impl EfiBlockIOMediaRevision1 for EfiBlockIOMediaRaw {
