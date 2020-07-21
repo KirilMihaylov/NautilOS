@@ -21,7 +21,6 @@
 
 mod panic_handling;
 
-#[macro_use]
 mod macros;
 
 use {
