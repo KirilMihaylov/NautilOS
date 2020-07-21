@@ -29,12 +29,20 @@ pub fn validate_string(data: &[u16]) -> Result<(), ()> {
 	}
 }
 
+/// Returns the length of raw `u16` null-terminated string.
+/// # Safety
+/// Returns `Err` if the pointer is null-pointer or is not properly aligned.
+/// The called must ensure the pointer will not be pointing to invalid memory until it is null-terminated.
 pub unsafe fn string_length(string: *const u16) -> Result<usize, ()> {
 	string_length_max(string, usize::max_value())
 }
 
+/// Returns the length of raw `u16` null-terminated string with an end bound.
+/// # Safety
+/// Returns `Err` if the pointer is null-pointer, is not properly aligned or the end bound is reached before reaching a null-terminator.
+/// The called must ensure the pointer will not be pointing to invalid memory until the end bound comes.
 pub unsafe fn string_length_max(mut string: *const u16, buffer_length: usize) -> Result<usize, ()> {
-	if string.is_null() {
+	if string.is_null() || string.align_offset(core::mem::align_of::<u16>()) != 0 {
 		return Err(());
 	}
 
@@ -48,20 +56,28 @@ pub unsafe fn string_length_max(mut string: *const u16, buffer_length: usize) ->
 	Err(())
 }
 
+/// Returns a checked slice of raw `u16` null-terminated string.
+/// # Safety
+/// Returns `Err` if the pointer is null-pointer, is not properly aligned or the string contains invalid UTF-16 characters.
+/// The called must ensure the pointer will not be pointing to invalid memory until it is null-terminated.
 pub unsafe fn string_from_raw<'a>(string: *const u16) -> Result<&'a [u16], ()> {
-	if string.is_null() {
+	if string.is_null() || string.align_offset(core::mem::align_of::<u16>()) != 0 {
+		return Err(());
+	}
+
+	let string: &'a [u16] = from_raw_parts(string, string_length(string)?);
+
+	if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
 		Err(())
 	} else {
-		let string: &'a [u16] = from_raw_parts(string, string_length(string)?);
-
-		if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
-			Err(())
-		} else {
-			Ok(string)
-		}
+		Ok(string)
 	}
 }
 
+/// Returns a checked mutable slice of raw `u16` null-terminated string.
+/// # Safety
+/// Returns `Err` if the pointer is null-pointer, is not properly aligned or the string contains invalid UTF-16 characters.
+/// The called must ensure the pointer will not be pointing to invalid memory until it is null-terminated.
 pub unsafe fn string_from_raw_mut<'a>(string: *mut u16) -> Result<&'a mut [u16], ()> {
 	if string.is_null() {
 		Err(())
