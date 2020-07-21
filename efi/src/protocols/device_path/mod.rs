@@ -405,11 +405,11 @@ impl EfiProtocol for EfiDevicePathProcotol {
 	}
 }
 
-pub struct EfiDevicePathProcotolIterator<'a> {
+pub struct EfiDevicePathProcotolIter<'a> {
 	current: &'a EfiDevicePathProcotol,
 }
 
-impl<'a> Iterator for EfiDevicePathProcotolIterator<'a> {
+impl<'a> Iterator for EfiDevicePathProcotolIter<'a> {
 	type Item = &'a EfiDevicePathProcotol;
 
 	fn next(&mut self) -> Option<<Self as Iterator>::Item> {
