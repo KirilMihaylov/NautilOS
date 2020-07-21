@@ -34,6 +34,11 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
+	/// Prints UTF-16 encoded string to the screen.
+	/// # Safety
+	/// The caller must ensure that the pointer will not be pointing invalid memory, is null-terminated and will only contain valid UTF-16 characters until is null-terminated.
+	///
+	/// If those conditions are violated, this will result in Undefined Behaviour.
 	pub unsafe fn output_string_raw(&self, string: *const u16) -> EfiStatusEnum {
 		(self.output_string)(
 			self,
@@ -41,14 +46,19 @@ impl EfiSimpleTextOutputProtocol {
 		).into_enum()
 	}
 
-	pub fn output_string_slice(&self, string: &[u16]) -> EfiStatusEnum {
+	/// Prints UTF-16 encoded string to the screen.
+	/// # Safety
+	/// The caller must ensure that the string is null-terminated and will only contain valid UTF-16 characters until is null-terminated.
+	///
+	/// If those conditions are violated, this will result in Undefined Behaviour.
+	pub unsafe fn output_string_slice(&self, string: &[u16]) -> EfiStatusEnum {
 		(self.output_string)(
 			self,
 			string.as_ptr()
 		).into_enum()
 	}
 
-	/// Splits string into parts and executes the function until the first error (and returns it) or until the string is finished (and returns the last returned status)
+	/// Splits string into parts and prints them until the first error (and returns it) or until the string is finished (and returns the last returned status)
 	pub fn output_string(&self, mut string: &str) -> EfiStatusEnum {
 		let mut status: EfiStatus;
 
@@ -112,14 +122,24 @@ impl EfiSimpleTextOutputProtocol {
 		status.into_enum()
 	}
 
+	/// Tests whether the UTF-16 encoded string contains only printable characters.
+	/// # Safety
+	/// The caller must ensure that the pointer will not be pointing invalid memory, is null-terminated and will only contain valid UTF-16 characters until is null-terminated.
+	///
+	/// If those conditions are violated, this will result in Undefined Behaviour.
 	pub unsafe fn test_string_raw(&self, string: *const u16) -> EfiStatusEnum {
 		(self.test_string)(
 			self,
 			string
 		).into_enum()
 	}
-
-	pub fn test_string_slice(&self, string: &[u16]) -> EfiStatusEnum {
+	
+	/// Tests whether the UTF-16 encoded string contains only printable characters.
+	/// # Safety
+	/// The caller must ensure that the string is null-terminated and will only contain valid UTF-16 characters until is null-terminated.
+	///
+	/// If those conditions are violated, this will result in Undefined Behaviour.
+	pub unsafe fn test_string_slice(&self, string: &[u16]) -> EfiStatusEnum {
 		(self.test_string)(
 			self,
 			string.as_ptr()
