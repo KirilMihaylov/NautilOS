@@ -187,6 +187,7 @@ impl<T, E> EfiStatusEnum<T, E> {
 		}
 	}
 
+	/// Strips status code and returns `Success` and `Warning` as `Ok` and `Error` as `Err`.
 	pub fn map_result(self) -> Result<T, E> {
 		match self {
 			Self::Success(data) | Self::Warning(_, data) => Ok(data),
