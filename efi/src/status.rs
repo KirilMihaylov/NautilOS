@@ -187,7 +187,7 @@ impl<T, E> EfiStatusEnum<T, E> {
 		}
 	}
 
-	pub fn map_no_code(&self) -> Result<&T, &E> {
+	pub fn map_result(self) -> Result<T, E> {
 		match self {
 			Self::Success(data) | Self::Warning(_, data) => Ok(data),
 			Self::Error(_, data) => Err(data),
