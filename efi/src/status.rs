@@ -147,7 +147,6 @@ impl From<EfiStatus> for EfiStatusRaw {
 }
 
 #[must_use = "this type's value may contain information about an error that occured"]
-#[derive(Debug)]
 pub enum EfiStatusEnum<T = (), E = ()> {
 	Success(T),
 	Warning(EfiStatusRaw, T),
@@ -192,6 +191,26 @@ impl<T, E> EfiStatusEnum<T, E> {
 		match self {
 			Self::Success(data) | Self::Warning(_, data) => Ok(data),
 			Self::Error(_, data) => Err(data),
+		}
+	}
+}
+
+impl<T: core::fmt::Debug, E: core::fmt::Debug> core::fmt::Debug for EfiStatusEnum<T, E> {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+		match self {
+			Self::Success(data) => write!(f, "Success({:?})", data),
+			Self::Warning(status, data) => write!(
+				f,
+				"Warning({:?}, {:?})",
+				EfiStatus::from(*status).get_warning(),
+				data
+			),
+			Self::Error(status, data) => write!(
+				f,
+				"Error({:?}, {:?})",
+				EfiStatus::from(*status).get_error(),
+				data
+			),
 		}
 	}
 }
