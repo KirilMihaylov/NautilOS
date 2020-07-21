@@ -378,11 +378,11 @@ pub struct EfiDevicePathProcotol {
 }
 
 impl EfiDevicePathProcotol {
-	pub fn parse_object<'a>(&'a self) -> EfiDevicePathType<'a> {
-		EfiDevicePathType::<'a>::from(self)
+	pub fn parse_object(&self) -> EfiDevicePathType<'_> {
+		EfiDevicePathType::from(self)
 	}
 
-	pub fn iter<'a>(&'a self) -> EfiDevicePathProcotolIter<'a> {
+	pub fn iter(&self) -> EfiDevicePathProcotolIter<'_> {
 		EfiDevicePathProcotolIter {
 			current: self,
 		}
