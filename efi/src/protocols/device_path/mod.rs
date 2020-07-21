@@ -382,6 +382,12 @@ impl EfiDevicePathProcotol {
 		EfiDevicePathType::<'a>::from(self)
 	}
 
+	pub fn iter<'a>(&'a self) -> EfiDevicePathProcotolIter<'a> {
+		EfiDevicePathProcotolIter {
+			current: self,
+		}
+	}
+
 	fn is_end_of_device_path(&self) -> bool {
 		self.path_type == 0x7F && self.path_subtype == 0xFF
 	}
