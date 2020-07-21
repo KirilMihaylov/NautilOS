@@ -39,3 +39,23 @@ macro_rules! warn {
 		println!("[WARN] {}", format_args!($($args)+));
 	}
 }
+
+/// Equivalent of [`warn!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+macro_rules! efi_warn {
+	($($args:tt)+) => {
+		warn!(
+			"(EFI) {}",
+			format_args!($($args)+)
+		);
+	};
+}
+
+/// Equivalent of [`panic!`] that appends `(EFI) ` in the beginning of the passed formatted string.
+macro_rules! efi_panic {
+	($($args:tt)+) => {
+		panic!(
+			"(EFI) {}",
+			format_args!($($args)+)
+		);
+	};
+}
