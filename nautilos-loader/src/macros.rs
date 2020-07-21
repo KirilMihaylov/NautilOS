@@ -24,7 +24,7 @@ macro_rules! println {
 	};
 }
 
-/// Equivalent of [`println!`] that appends `[LOG] ` in the beginning of the formatted string.
+/// Equivalent of [`println!`] that appends `[LOG] ` in the beginning of the passed formatted string.
 #[macro_export]
 macro_rules! log {
 	($($args:tt)+) => {
@@ -32,7 +32,7 @@ macro_rules! log {
 	}
 }
 
-/// Equivalent of [`println!`] that appends `[WARN] ` in the beginning of the formatted string.
+/// Equivalent of [`println!`] that appends `[WARN] ` in the beginning of the passed formatted string.
 #[macro_export]
 macro_rules! warn {
 	($($args:tt)+) => {
