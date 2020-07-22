@@ -95,7 +95,6 @@ impl EfiProtocol for EfiBlockIOProtocol {
 }
 
 #[repr(C)]
-#[derive(Clone,Copy)]
 struct EfiBlockIOMediaRaw {
 	media_id: u32,
 	removable_media: bool,
