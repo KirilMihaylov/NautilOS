@@ -155,27 +155,15 @@ pub enum EfiStatusEnum<T = (), E = ()> {
 
 impl<T, E> EfiStatusEnum<T, E> {
 	pub fn is_success(&self) -> bool {
-		if let Self::Success(_) = self {
-			true
-		} else {
-			false
-		}
+		matches!(self, Self::Success(_))
 	}
 
 	pub fn is_warning(&self) -> bool {
-		if let Self::Warning(_, _) = self {
-			true
-		} else {
-			false
-		}
+		matches!(self, Self::Warning(_, _))
 	}
 
 	pub fn is_error(&self) -> bool {
-		if let Self::Error(_, _) = self {
-			true
-		} else {
-			false
-		}
+		matches!(self, Self::Error(_, _))
 	}
 
 	pub fn map(&self) -> Result<(EfiStatusWarning, &T), (EfiStatusError, &E)> {
