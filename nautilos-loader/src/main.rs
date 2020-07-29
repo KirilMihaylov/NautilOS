@@ -25,12 +25,31 @@ mod macros;
 
 use {
 	panic_handling::CON_OUT,
-	core::sync::atomic::Ordering,
+	core::{
+		slice::from_raw_parts_mut,
+		mem::size_of,
+		sync::atomic::Ordering,
+	},
 	efi::{
 		EfiHandle,
 		EfiStatus,
+		EfiStatusEnum,
 		EfiSystemTable,
-		protocols::console::EfiSimpleTextOutputProtocol,
+		boot_services::{
+			memory::EfiMemoryType,
+			protocol_handler::{
+				EfiLocateSearchType,
+				EfiProtocolBinding,
+			},
+		},
+		protocols::{
+			EfiProtocol,
+			console::EfiSimpleTextOutputProtocol,
+			media::{
+				EfiBlockIOProtocol,
+				EfiDiskIOProtocol,
+			},
+		},
 	},
 	native::{
 		Error,
@@ -86,6 +105,126 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 		Err(Error::FeatureDisabled) => panic!("Feature detection mechanism required to determine whether state storing is available, but is disabled!"),
 		Err(error) => panic!("Error occured while testing for state storing mechanism!\nError: {:?}", error),
 	}
+
+	let boot_services = system_table.boot_services_mut().revision_1_0_mut();
+
+	let (mut handles_slice, mut handles_buffer): (&[EfiHandle], &mut [EfiHandle]);
+	handles_slice = &[];
+	
+	{
+		const MAX_ATTEMPT_COUNT: u8 = 2;
+
+		let mut required_size: usize = 32 * size_of::<EfiHandle>();
+
+		for attempt in 1..=MAX_ATTEMPT_COUNT {
+			handles_buffer = match boot_services.allocate_pool(
+				EfiMemoryType::custom(0),
+				required_size
+			) {
+				EfiStatusEnum::Success(ptr) => unsafe {
+					from_raw_parts_mut(
+						ptr as *mut EfiHandle,
+						required_size / size_of::<EfiHandle>()
+					)
+				},
+				EfiStatusEnum::Warning(status, ptr) => {
+					warn!(
+						"(EFI) Warning occured while allocating memory.\tWarning: {:?}",
+						EfiStatus::from(status).get_warning()
+					);
+					
+					unsafe {
+						from_raw_parts_mut(
+							ptr as *mut EfiHandle,
+							required_size / size_of::<EfiHandle>()
+						)
+					}
+				},
+				EfiStatusEnum::Error(status, _) => {
+					panic!(
+						"(EFI) Error occured while allocating memory!\nError: {:?}",
+						EfiStatus::from(status).get_error()
+					);
+				},
+			};
+
+			let result: EfiStatusEnum<&[EfiHandle], usize> = boot_services.locate_handle(
+				EfiLocateSearchType::ByProtocol,
+				Some(&EfiDiskIOProtocol::guid()),
+				None,
+				handles_buffer
+			);
+
+			if let EfiStatusEnum::Warning(status, _) = result {
+				efi_warn!(
+					"Warning status returned while retrieving disk I/O device handles.\tWarning: {:?}",
+					EfiStatus::from(status).get_warning()
+				);
+			}
+
+			match result {
+				EfiStatusEnum::Success(handles) | EfiStatusEnum::Warning(_, handles) => {
+					handles_slice = handles;
+
+					break;
+				},
+				EfiStatusEnum::Error(status, required_bytes) => {
+					required_size = required_bytes;
+					
+					handles_slice = &[];
+
+					efi_assert!(
+						!boot_services.free_pool(handles_buffer.as_ptr() as efi::VoidPtr).map_result().is_err(),
+						"Error occured while freeing memory pool!"
+					);
+
+					efi_assert!(
+						attempt != MAX_ATTEMPT_COUNT,
+						"Error occured while retrieving disk I/O device handles!\nError: {:?}",
+						EfiStatus::from(status).get_error()
+					);
+				},
+			};
+		}
+	}
+
+	efi_assert!(!handles_slice.is_empty(), "No devices that implement disk I/O protocol found!");
+	
+	handles_slice
+		.iter()
+		.for_each(
+			|&handle| {
+				debug_info!("Handle pointer: {:?}", handle);
+
+				let result: EfiStatusEnum<EfiProtocolBinding> = boot_services.handle_protocol(
+					handles_slice[0],
+					&EfiBlockIOProtocol::guid()
+				);
+
+				if let EfiStatusEnum::Warning(status, _) = result {
+					efi_warn!(
+						"Warning status returned while getting block I/O protocol.\tWarning: {:?}",
+						EfiStatus::from(status).get_warning()
+					);
+				}
+
+				match result {
+					EfiStatusEnum::Success(block_io_binding) | EfiStatusEnum::Warning(_, block_io_binding) => {
+						let block_io: &EfiBlockIOProtocol = block_io_binding.resolve().expect("Internal error occured!");
+
+						{
+							let media: &dyn efi::protocols::media::EfiBlockIOMediaRevision1 = block_io.media_revision_1();
+
+							debug_info!("Media:\n{:?}", media);
+						}
+					},
+					EfiStatusEnum::Error(status, _) => efi_panic!(
+						"Error occured while getting block I/O protocol.\nError: {:?}",
+						EfiStatus::from(status).get_error()
+					),
+				}
+			}
+		);
 
 	loop {}
 }
