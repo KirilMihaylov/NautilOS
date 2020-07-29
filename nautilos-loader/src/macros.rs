@@ -28,7 +28,7 @@ macro_rules! println {
 #[macro_export]
 macro_rules! debug_info {
 	($($args:tt)+) => {
-		println!("[LOG] {}", format_args!($($args)+));
+		println!("[DEBUG] {}", format_args!($($args)+));
 	}
 }
 
