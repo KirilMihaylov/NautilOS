@@ -1,23 +1,20 @@
 use proc_macro::*;
 
 fn target_feature(attr: TokenStream, enable: bool) -> String {
-	let attrs: Vec<TokenTree> = attr.into_iter().collect();
+    let attrs: Vec<TokenTree> = attr.into_iter().collect();
 
-	let mut output: String = String::new();
+    let mut output: String = String::new();
 
-	for (index, attr) in attrs.iter().enumerate() {
-		use TokenTree::{
-			Ident,
-			Punct,
-		};
+    for (index, attr) in attrs.iter().enumerate() {
+        use TokenTree::{Ident, Punct};
 
-		if index % 2 == 0 {
-			if let Ident(feature) = attr {
-				output += &format!(
-					"#[target_feature({}=\"{}\")]",
-					if enable { "enable" } else { "disable" },
-					{
-						#[cfg(any(target_arch="x86",target_arch="x86_64"))]
+        if index % 2 == 0 {
+            if let Ident(feature) = attr {
+                output += &format!(
+                    "#[target_feature({}=\"{}\")]",
+                    if enable { "enable" } else { "disable" },
+                    {
+                        #[cfg(any(target_arch="x86",target_arch="x86_64"))]
 						match feature.to_string().as_ref() {
 							"simd64_min" | "simd64" | "simd64_max" => panic!("Error: 64-bit SIMD (MMX) is currently unavailable, consider using 128-bit SIMD (SSE2)."),
 
@@ -32,29 +29,36 @@ fn target_feature(attr: TokenStream, enable: bool) -> String {
 
 							feature => panic!("Error: Unknown or unimplemented feature \"{}\" used!", feature),
 						}
-					}
-				);
-			} else {
-				panic!("Error: Expected feature identificator instead got \"{}\"!", attr.to_string());
-			}
-		} else if let Punct(punct) = attr {
-			if punct.as_char() != ',' {
-				panic!("Error: Expected ',' instead got '{}'!", punct.as_char());
-			}
-		} else {
-			panic!("Error: Expected ',' instead got \"{}\"!", attr.to_string());
-		}
-	}
+                    }
+                );
+            } else {
+                panic!(
+                    "Error: Expected feature identificator instead got \"{}\"!",
+                    attr.to_string()
+                );
+            }
+        } else if let Punct(punct) = attr {
+            if punct.as_char() != ',' {
+                panic!("Error: Expected ',' instead got '{}'!", punct.as_char());
+            }
+        } else {
+            panic!("Error: Expected ',' instead got \"{}\"!", attr.to_string());
+        }
+    }
 
-	output
+    output
 }
 
 #[proc_macro_attribute]
 pub fn enable_feature(attr: TokenStream, item: TokenStream) -> TokenStream {
-	format!("{}\n{}", target_feature(attr, true), item).parse().unwrap()
+    format!("{}\n{}", target_feature(attr, true), item)
+        .parse()
+        .unwrap()
 }
 
 #[proc_macro_attribute]
 pub fn disable_feature(attr: TokenStream, item: TokenStream) -> TokenStream {
-	format!("{}\n{}", target_feature(attr, false), item).parse().unwrap()
+    format!("{}\n{}", target_feature(attr, false), item)
+        .parse()
+        .unwrap()
 }

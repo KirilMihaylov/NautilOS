@@ -1,13 +1,10 @@
 #![no_std]
 #![allow(dead_code)]
 #![doc(html_no_source)]
-
 /* Enables 'extern "efiapi"' */
 #![feature(abi_efiapi)]
-
 /* Disables warning for trait specialization */
 #![allow(incomplete_features)]
-
 /* Enables trait specialization */
 #![feature(specialization)]
 
@@ -32,5 +29,5 @@ mod system_table;
 pub use system_table::*;
 
 pub mod boot_services;
-pub mod runtime_services;
 pub mod protocols;
+pub mod runtime_services;

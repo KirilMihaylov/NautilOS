@@ -1,55 +1,52 @@
-use crate::protocols::device_path::{
-	EfiDevicePathProcotol,
-	EfiDevicePathRepr,
-};
+use crate::protocols::device_path::{EfiDevicePathProcotol, EfiDevicePathRepr};
 
 #[repr(C)]
 pub struct EfiRestServiceDevicePath {
-	base: EfiDevicePathProcotol,
-	service_type: u8,
-	access_mode: u8,
+    base: EfiDevicePathProcotol,
+    service_type: u8,
+    access_mode: u8,
 }
 
 impl EfiRestServiceDevicePath {
-	pub fn service_type(&self) -> EfiRestServiceDevicePathServiceType {
-		use EfiRestServiceDevicePathServiceType::*;
+    pub fn service_type(&self) -> EfiRestServiceDevicePathServiceType {
+        use EfiRestServiceDevicePathServiceType::*;
 
-		match self.service_type {
-			1 => Redfish,
-			2 => OData,
+        match self.service_type {
+            1 => Redfish,
+            2 => OData,
 
-			x => Unknown(x),
-		}
-	}
+            x => Unknown(x),
+        }
+    }
 
-	pub fn address_type(&self) -> EfiRestServiceDevicePathAccessMode {
-		use EfiRestServiceDevicePathAccessMode::*;
+    pub fn address_type(&self) -> EfiRestServiceDevicePathAccessMode {
+        use EfiRestServiceDevicePathAccessMode::*;
 
-		match self.access_mode {
-			1 => InBand,
-			2 => OutOfBand,
+        match self.access_mode {
+            1 => InBand,
+            2 => OutOfBand,
 
-			x => Unknown(x),
-		}
-	}
+            x => Unknown(x),
+        }
+    }
 }
 
 impl EfiDevicePathRepr for EfiRestServiceDevicePath {}
 
 #[non_exhaustive]
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub enum EfiRestServiceDevicePathServiceType {
-	Redfish,
-	OData,
+    Redfish,
+    OData,
 
-	Unknown(u8),
+    Unknown(u8),
 }
 
 #[non_exhaustive]
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub enum EfiRestServiceDevicePathAccessMode {
-	InBand,
-	OutOfBand,
+    InBand,
+    OutOfBand,
 
-	Unknown(u8),
+    Unknown(u8),
 }
