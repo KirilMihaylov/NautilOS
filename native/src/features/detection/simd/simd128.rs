@@ -283,7 +283,7 @@ pub fn available() -> Result<FeatureState> {
                 let c: u32;
 
                 unsafe {
-                    llvm_asm!(
+                    asm!(
                         "cpuid",
                         inlateout("eax") 1 => _,
                         lateout("ebx") _,
@@ -298,7 +298,7 @@ pub fn available() -> Result<FeatureState> {
 
                     unsafe {
                         asm!(
-                            "xgetbv"
+                            "xgetbv",
                             lateout("eax") result,
                             in("ecx") 0,
                             lateout("edx") _,
@@ -310,6 +310,7 @@ pub fn available() -> Result<FeatureState> {
                         return Ok(Enabled);
                     }
                 }
+                
                 Err(OsInteractionRequired)
             }
 
