@@ -1,7 +1,7 @@
 #![no_std]
 #![allow(dead_code)]
 #![doc(html_no_source)]
-#![forbid(warnings)]
+#![forbid(warnings, clippy::pedantic)]
 /* Enables 'extern "efiapi"' */
 #![feature(abi_efiapi)]
 /* Enables trait specialization */
