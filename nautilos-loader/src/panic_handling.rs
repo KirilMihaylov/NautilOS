@@ -2,6 +2,7 @@
 
 use core::{
     mem::align_of,
+    panic::{Location, PanicInfo},
     sync::atomic::{AtomicBool, AtomicPtr, Ordering::Relaxed},
 };
 
@@ -21,7 +22,7 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 /// **Note**: Since dangling pointers **can not** be validated, so setting to a null pointer while doing any memory map changes is mandatory.
 #[cfg_attr(not(test), panic_handler)]
 #[cfg_attr(test, allow(dead_code))]
-fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
+fn panic_handler(panic_info: &PanicInfo) -> ! {
     /* Stops recursive panics and allows multi-threading */
     while !IN_PANIC.compare_and_swap(false, true, Relaxed) {}
 
@@ -31,12 +32,11 @@ fn panic_handler(panic_info: &core::panic::PanicInfo) -> ! {
         if let Some(con_out) = unsafe { con_out.as_mut() } {
             use core::fmt::write;
 
-            let (file, line, column): (&str, u32, u32) =
-                if let Some(location) = panic_info.location() {
+            let (file, line, column): (&str, u32, u32) = panic_info
+                .location()
+                .map_or(("", 0, 0), |location: &Location| {
                     (location.file(), location.line(), location.column())
-                } else {
-                    ("", 0, 0)
-                };
+                });
 
             let message: core::fmt::Arguments = if let Some(message) = panic_info.message() {
                 *message

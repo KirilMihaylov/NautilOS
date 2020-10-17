@@ -4,9 +4,11 @@
 macro_rules! print {
 	($($args:tt)+) => {
 		{
-			let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Ordering::Relaxed);
+			let con_out:
+				*mut efi::protocols::console::EfiSimpleTextOutputProtocol =
+				crate::panic_handling::CON_OUT.load(core::sync::atomic::Ordering::Relaxed);
 
-			if !con_out.is_null() && (con_out as usize) % core::mem::align_of::<EfiSimpleTextOutputProtocol>() == 0 {
+			if !con_out.is_null() && (con_out as usize) % core::mem::align_of::<efi::protocols::console::EfiSimpleTextOutputProtocol>() == 0 {
 				match core::fmt::write(unsafe { &mut *con_out }, format_args!($($args)+)) { _ => () }
 			}
 		}
@@ -17,10 +19,10 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
 	() => {
-		print!("\n");
+		$crate::print!("\n");
 	};
 	($($args:tt)+) => {
-		print!("{}\n", format_args!($($args)+));
+		$crate::print!("{}\n", format_args!($($args)+));
 	};
 }
 
@@ -28,7 +30,7 @@ macro_rules! println {
 #[macro_export]
 macro_rules! debug_info {
 	($($args:tt)+) => {
-		println!("[DEBUG] {}", format_args!($($args)+));
+		$crate::println!("[DEBUG] {}", format_args!($($args)+));
 	}
 }
 
@@ -36,7 +38,7 @@ macro_rules! debug_info {
 #[macro_export]
 macro_rules! log {
 	($($args:tt)+) => {
-		println!("[LOG] {}", format_args!($($args)+));
+		$crate::println!("[LOG] {}", format_args!($($args)+));
 	}
 }
 
@@ -44,7 +46,7 @@ macro_rules! log {
 #[macro_export]
 macro_rules! warn {
 	($($args:tt)+) => {
-		println!("[WARN] {}", format_args!($($args)+));
+		$crate::println!("[WARN] {}", format_args!($($args)+));
 	}
 }
 
@@ -52,7 +54,7 @@ macro_rules! warn {
 #[macro_export]
 macro_rules! efi_warn {
 	($($args:tt)+) => {
-		warn!(
+		$crate::warn!(
 			"(EFI) {}",
 			format_args!($($args)+)
 		);

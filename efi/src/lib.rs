@@ -1,12 +1,13 @@
 #![no_std]
 #![allow(dead_code)]
 #![doc(html_no_source)]
+#![forbid(warnings)]
 /* Enables 'extern "efiapi"' */
 #![feature(abi_efiapi)]
-/* Disables warning for trait specialization */
-#![allow(incomplete_features)]
 /* Enables trait specialization */
-#![feature(specialization)]
+#![feature(min_specialization)]
+/* Enables usage of "core::mem::transmute" in "const fn"s */
+#![feature(const_fn_transmute)]
 
 pub mod utilities;
 

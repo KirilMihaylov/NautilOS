@@ -17,29 +17,30 @@
 #![cfg_attr(not(doc), no_main)]
 #![doc(html_no_source)]
 #![feature(panic_info_message)]
+#![forbid(warnings, clippy::pedantic)]
 
 mod panic_handling;
 
 mod macros;
 
+mod efi_defs;
+
+mod helpers;
+
 use {
-    core::{mem::size_of, slice::from_raw_parts_mut, sync::atomic::Ordering},
+    core::{mem::size_of, sync::atomic::Ordering},
     efi::{
         boot_services::{
-            memory::EfiMemoryType,
             protocol_handler::{EfiLocateSearchType, EfiProtocolBinding},
+            EfiBootServicesRevision1_0,
         },
         protocols::{
-            console::EfiSimpleTextOutputProtocol,
             media::{EfiBlockIOProtocol, EfiDiskIOProtocol},
             EfiProtocol,
         },
         EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
     },
-    native::{
-        features::detection::{state_storing::*, *},
-        Error,
-    },
+    native::{features::detection::state_storing::state_storing_available, Error},
     panic_handling::CON_OUT,
 };
 
@@ -65,38 +66,10 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         }
     }
 
-    match enable_detection_mechanism() {
-        Ok(FeatureState::Enabled) => log!("Feature detection mechanism enabled."),
-        Ok(FeatureState::Disabled) => {
-            warn!("Feature detection mechanism couldn't be enabled. It may be required later.")
-        }
-        Err(Error::Unavailable) => {
-            warn!("Feature detection mechanism unavailable. It may be required later.")
-        }
-        Err(error) => panic!(
-            "Error occured while enabling feature detection mechanism!\nError: {:?}",
-            error
-        ),
-    }
+    stages::start_up();
 
-    /* Requirement: State storing mechanism */
-    match state_storing_available() {
-		Ok(FeatureState::Enabled) => log!("State storing mechanism available."),
-		Ok(FeatureState::Disabled) => {
-			warn!("State storing mechanism available but is disabled.");
-			log!("Enabling state storing mechanism...");
-			match enable_detection_mechanism() {
-				Ok(FeatureState::Enabled) => log!("State storing mechanism enabled."),
-				Ok(FeatureState::Disabled) => panic!("State storing mechanism couldn't be enabled!"),
-				Err(error) => panic!("Error occured while enabling feature detection mechanism!\nError: {:?}", error),
-			}
-		},
-		Err(Error::Unavailable) => panic!("State storing mechanism unavailable!"),
-		Err(Error::FeatureDisabled) => panic!("Feature detection mechanism required to determine whether state storing is available, but is disabled!"),
-		Err(error) => panic!("Error occured while testing for state storing mechanism!\nError: {:?}", error),
-	}
-
-    let boot_services = system_table.boot_services_mut().revision_1_0_mut();
+    let boot_services: &mut dyn EfiBootServicesRevision1_0 =
+        system_table.boot_services_mut().revision_1_0_mut();
 
     let (mut handles_slice, mut handles_buffer): (&[EfiHandle], &mut [EfiHandle]);
     handles_slice = &[];
@@ -104,37 +77,10 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
     {
         const MAX_ATTEMPT_COUNT: u8 = 2;
 
-        let mut required_size: usize = 32 * size_of::<EfiHandle>();
+        let mut length: usize = 32;
 
         for attempt in 1..=MAX_ATTEMPT_COUNT {
-            handles_buffer =
-                match boot_services.allocate_pool(EfiMemoryType::custom(0), required_size) {
-                    EfiStatusEnum::Success(ptr) => unsafe {
-                        from_raw_parts_mut(
-                            ptr as *mut EfiHandle,
-                            required_size / size_of::<EfiHandle>(),
-                        )
-                    },
-                    EfiStatusEnum::Warning(status, ptr) => {
-                        warn!(
-                            "(EFI) Warning occured while allocating memory.\tWarning: {:?}",
-                            EfiStatus::from(status).get_warning()
-                        );
-
-                        unsafe {
-                            from_raw_parts_mut(
-                                ptr as *mut EfiHandle,
-                                required_size / size_of::<EfiHandle>(),
-                            )
-                        }
-                    }
-                    EfiStatusEnum::Error(status, _) => {
-                        panic!(
-                            "(EFI) Error occured while allocating memory!\nError: {:?}",
-                            EfiStatus::from(status).get_error()
-                        );
-                    }
-                };
+            handles_buffer = helpers::alloc(boot_services, length);
 
             let result: EfiStatusEnum<&[EfiHandle], usize> = boot_services.locate_handle(
                 EfiLocateSearchType::ByProtocol,
@@ -157,7 +103,12 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
                     break;
                 }
                 EfiStatusEnum::Error(status, required_bytes) => {
-                    required_size = required_bytes;
+                    length = required_bytes / size_of::<EfiHandle>()
+                        + if required_bytes % size_of::<EfiHandle>() == 0 {
+                            0
+                        } else {
+                            1
+                        };
 
                     handles_slice = &[];
 
@@ -218,4 +169,53 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
     });
 
     loop {}
+}
+
+mod stages {
+    use crate::{log, warn};
+    use crate::{state_storing_available, Error};
+    use native::features::detection::{
+        enable_detection_mechanism, state_storing::enable_state_storing, FeatureState,
+    };
+
+    pub fn start_up() {
+        setup_detection_mechanism();
+
+        setup_state_storing();
+    }
+
+    fn setup_detection_mechanism() {
+        match enable_detection_mechanism() {
+            Ok(FeatureState::Enabled) => log!("Feature detection mechanism enabled."),
+            Ok(FeatureState::Disabled) => {
+                warn!("Feature detection mechanism couldn't be enabled. It may be required later.")
+            }
+            Err(Error::Unavailable) => {
+                warn!("Feature detection mechanism unavailable. It may be required later.")
+            }
+            Err(error) => panic!(
+                "Error occured while enabling feature detection mechanism!\nError: {:?}",
+                error
+            ),
+        }
+    }
+
+    fn setup_state_storing() {
+        /* Requirement: State storing mechanism */
+        match state_storing_available() {
+            Ok(FeatureState::Enabled) => log!("State storing mechanism available."),
+            Ok(FeatureState::Disabled) => {
+                warn!("State storing mechanism available but is disabled.");
+                log!("Enabling state storing mechanism...");
+                match enable_state_storing() {
+                    Ok(FeatureState::Enabled) => log!("State storing mechanism enabled."),
+                    Ok(FeatureState::Disabled) => panic!("State storing mechanism couldn't be enabled!"),
+                    Err(error) => panic!("Error occured while enabling feature detection mechanism!\nError: {:?}", error),
+                }
+            },
+            Err(Error::Unavailable) => panic!("State storing mechanism unavailable!"),
+            Err(Error::FeatureDisabled) => panic!("Feature detection mechanism required to determine whether state storing is available, but is disabled!"),
+            Err(error) => panic!("Error occured while testing for state storing mechanism!\nError: {:?}", error),
+        }
+    }
 }

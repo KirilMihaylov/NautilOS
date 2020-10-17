@@ -1,4 +1,7 @@
-use core::marker::PhantomData;
+use core::{
+    marker::PhantomData,
+    mem::{size_of, transmute},
+};
 
 use crate::*;
 
@@ -34,9 +37,13 @@ pub enum EfiMemoryType {
     EfiMaxMemoryType,
 }
 
+pub const EFI_MEMORY_TYPE_SIZE: usize = size_of::<EfiMemoryType>();
+
 impl EfiMemoryType {
-    pub fn custom(memory_type: usize) -> EfiMemoryType {
-        unsafe { *(&(memory_type | 1usize.reverse_bits()) as *const usize as *const EfiMemoryType) }
+    pub const fn custom(mut memory_type: [u8; EFI_MEMORY_TYPE_SIZE]) -> EfiMemoryType {
+        memory_type[EFI_MEMORY_TYPE_SIZE - 1] |= 0x80;
+
+        unsafe { transmute(memory_type) }
     }
 
     pub fn is_custom(&self) -> bool {
@@ -156,10 +163,7 @@ pub trait EfiMemory {
         number_of_pages: usize,
     ) -> EfiStatusEnum;
 
-    fn get_memory_map<'a>(
-        &self,
-        memory_map: &'a mut [u8],
-    ) -> EfiStatusEnum<EfiMemoryDescriptors, usize>;
+    fn get_memory_map(&self, memory_map: &mut [u8]) -> EfiStatusEnum<EfiMemoryDescriptors, usize>;
 
     fn allocate_pool(&self, pool_type: EfiMemoryType, pool_size: usize) -> EfiStatusEnum<VoidPtr>;
 
