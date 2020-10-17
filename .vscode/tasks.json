@@ -59,7 +59,7 @@
 			],
 		},
 		{
-			"label": "Run clippy (x86)",
+			"label": "Run Clippy (x86)",
 			"type": "process",
 			"command": "cargo",
 			"args": [
@@ -134,7 +134,7 @@
 			],
 		},
 		{
-			"label": "Run clippy (x86_64)",
+			"label": "Run Clippy (x86_64)",
 			"type": "process",
 			"command": "cargo",
 			"args": [
