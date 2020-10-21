@@ -1,7 +1,7 @@
 //! Provides interface over platform's state storing features.
 
 use crate::{
-    features::detection::{state_storing::state_storing_available, FeatureState},
+    features::detection::{state_storing::available as state_storing_available, FeatureState},
     result::{
         Error::{self, Unavailable},
         Result,

@@ -46,7 +46,7 @@ static DETECTION_MECHANISM: AtomicBool = AtomicBool::new(false);
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-pub fn detection_mechanism_available() -> Result<FeatureState> {
+pub fn available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
@@ -101,7 +101,7 @@ pub fn detection_mechanism_available() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-pub fn enable_detection_mechanism() -> Result<FeatureState> {
+pub fn enable() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
@@ -132,7 +132,7 @@ pub fn enable_detection_mechanism() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-pub fn disable_detection_mechanism() -> Result<FeatureState> {
+pub fn disable() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
@@ -188,4 +188,5 @@ pub mod simd {
     pub mod simd128;
     pub mod simd64;
 }
+
 pub mod state_storing;

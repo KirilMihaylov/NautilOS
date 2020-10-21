@@ -1,7 +1,7 @@
 //! Provides interface over platform's 128-bit SIMD features.
 
 use crate::{
-    features::detection::{detection_mechanism_available, FeatureState},
+    features::detection::{available as detection_available, FeatureState},
     result::{
         Error::{self, FeatureDisabled},
         Result,
@@ -11,7 +11,7 @@ use crate::{
 /// Checks whether the minimal 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
+/// Returns error value returned by [`detection_available`] when it returns an error.
 pub fn min_available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
@@ -20,7 +20,7 @@ pub fn min_available() -> Result<FeatureState> {
         ["x86"] {
             /* SSE */
 
-            match detection_mechanism_available() {
+            match detection_available() {
                 Ok(Enabled) => {
                     /*
                     SSE: CPUID[1].D[25]
@@ -175,7 +175,7 @@ pub fn min_available() -> Result<FeatureState> {
 /// Checks whether the recommended 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
+/// Returns error value returned by [`detection_available`] when it returns an error.
 pub fn available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
@@ -184,7 +184,7 @@ pub fn available() -> Result<FeatureState> {
         ["x86"] {
             /* SSE2 */
 
-            match detection_mechanism_available() {
+            match detection_available() {
                 Ok(Enabled) => {
                     /*
                     SSE: CPUID[1].D[25]
@@ -341,7 +341,7 @@ pub fn available() -> Result<FeatureState> {
 /// Checks whether the maximal 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
+/// Returns error value returned by [`detection_available`] when it returns an error.
 pub fn max_available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
@@ -350,7 +350,7 @@ pub fn max_available() -> Result<FeatureState> {
         ["x86"] {
             /* SSE4.2 */
 
-            match detection_mechanism_available() {
+            match detection_available() {
                 Ok(Enabled) => {
                     /*
                     SSE: CPUID[1].D[25]

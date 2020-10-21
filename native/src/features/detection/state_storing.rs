@@ -1,7 +1,7 @@
 //! Provides interface over platform's state storing features.
 
 use crate::{
-    features::detection::{detection_mechanism_available, FeatureState},
+    features::detection::{available as detection_available, FeatureState},
     result::{
         Error::{self, FeatureDisabled, Unavailable},
         Result,
@@ -11,8 +11,10 @@ use crate::{
 /// Checks whether extended (feature defined) state storing mechanism is available.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_mechanism_available`] when it returns an error.
-pub fn state_storing_available() -> Result<FeatureState> {
+/// Returns error value returned by [`available`] when it returns an error.
+/// 
+/// [`available`]: fn@detection_available
+pub fn available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
@@ -20,7 +22,7 @@ pub fn state_storing_available() -> Result<FeatureState> {
         ["x86", "x86_64"] {
             /* XSAVE */
 
-            match detection_mechanism_available() {
+            match detection_available() {
                 Ok(Enabled) => {
                     /*
                     XSAVE: CPUID[1].C[26]
@@ -72,13 +74,13 @@ pub fn state_storing_available() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-pub fn enable_state_storing() -> Result<FeatureState> {
+pub fn enable() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
         ["x86", "x86_64"] {
-            match state_storing_available() {
+            match available() {
                 Ok(Enabled) => Ok(Enabled),
                 Ok(Disabled) => {
                     #[cfg(not(feature = "kernel_mode"))]
@@ -111,13 +113,13 @@ pub fn enable_state_storing() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-pub fn disable_state_storing() -> Result<FeatureState> {
+pub fn disable() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
         ["x86", "x86_64"] {
-            match state_storing_available() {
+            match available() {
                 Ok(Enabled) => {
                     #[cfg(not(feature = "kernel_mode"))]
                     { Err(OsInteractionRequired) }

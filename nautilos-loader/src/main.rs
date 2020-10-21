@@ -41,7 +41,7 @@ use {
     },
     efi_defs::OsMemoryType,
     helpers::efi_alloc,
-    native::{features::detection::state_storing::state_storing_available, Error},
+    native::{features::detection::state_storing::available as state_storing_available, Error},
     panic_handling::CON_OUT,
 };
 
@@ -205,7 +205,7 @@ mod stages {
     use crate::{log, warn};
     use crate::{state_storing_available, Error};
     use native::features::detection::{
-        enable_detection_mechanism, state_storing::enable_state_storing, FeatureState,
+        enable as enable_detection, state_storing::enable as enable_state_storing, FeatureState,
     };
 
     pub fn start_up() {
@@ -215,7 +215,7 @@ mod stages {
     }
 
     fn setup_detection_mechanism() {
-        match enable_detection_mechanism() {
+        match enable_detection() {
             Ok(FeatureState::Enabled) => log!("Feature detection mechanism enabled."),
             Ok(FeatureState::Disabled) => {
                 warn!("Feature detection mechanism couldn't be enabled. It may be required later.")
