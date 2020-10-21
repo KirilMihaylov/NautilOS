@@ -64,7 +64,7 @@ impl EfiEventAndTimerRaw {
         };
 
         (self.create_event)(event_type, tpl, notify_function, notify_context, &mut event)
-            .into_enum_data(event)
+            .into_enum_data(|| event)
     }
 
     #[inline(always)]
@@ -81,7 +81,7 @@ impl EfiEventAndTimerRaw {
     pub(super) fn wait_for_event(&self, events: &[EfiEvent]) -> EfiStatusEnum<usize> {
         let mut index: usize = 0;
 
-        (self.wait_for_event)(events.len(), events.as_ptr(), &mut index).into_enum_data(index)
+        (self.wait_for_event)(events.len(), events.as_ptr(), &mut index).into_enum_data(|| index)
     }
 
     #[inline(always)]

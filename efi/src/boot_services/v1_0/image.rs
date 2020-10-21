@@ -49,7 +49,7 @@ impl EfiImageRaw {
             source_buffer_len,
             &mut image_handle,
         )
-        .into_enum_data(image_handle)
+        .into_enum_data(|| image_handle)
     }
 
     #[inline(always)]
@@ -87,7 +87,7 @@ impl EfiImageRaw {
                 unsafe { from_raw_parts(exit_data as _, exit_data_size - utf_16_data_length) };
         }
 
-        efi_status.into_enum_data((utf_16_data, raw_data))
+        efi_status.into_enum_data(|| (utf_16_data, raw_data))
     }
 
     #[inline(always)]

@@ -127,7 +127,7 @@ impl EfiProtocolHandlerRaw {
         let mut interface: VoidPtr = 0 as _;
 
         (self.handle_protocol)(handle, protocol_guid, &mut interface as *mut _ as _).into_enum_data(
-            EfiProtocolBinding {
+            || EfiProtocolBinding {
                 pointer: interface,
                 guid: *protocol_guid,
             },
@@ -143,7 +143,7 @@ impl EfiProtocolHandlerRaw {
         let mut registration: VoidPtr = 0 as _;
 
         (self.register_protocol_notify)(protocol_guid, event, &mut registration)
-            .into_enum_data(registration)
+            .into_enum_data(|| registration)
     }
 
     #[inline(always)]
@@ -178,16 +178,10 @@ impl EfiProtocolHandlerRaw {
             buffer.as_mut_ptr(),
         );
 
-        let success_data: &'a [EfiHandle];
-
-        if result.is_error() {
-            success_data = &[];
-        } else {
-            success_data =
-                unsafe { from_raw_parts(buffer.as_ptr(), buffer_size / EFI_HANDLE_SIZE) };
-        }
-
-        result.into_enum_data_error(success_data, buffer_size)
+        result.into_enum_data_error(
+            || unsafe { from_raw_parts(buffer.as_ptr(), buffer_size / EFI_HANDLE_SIZE) },
+            || buffer_size,
+        )
     }
 
     #[inline(always)]
@@ -199,7 +193,7 @@ impl EfiProtocolHandlerRaw {
         let mut handle: EfiHandle = 0 as _;
 
         (self.locate_device_path)(protocol_guid, &mut device_path as *mut _ as _, &mut handle)
-            .into_enum_data(handle)
+            .into_enum_data(|| handle)
     }
 
     #[inline(always)]

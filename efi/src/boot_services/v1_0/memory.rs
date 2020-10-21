@@ -116,20 +116,15 @@ impl EfiMemoryRaw {
             &mut descriptor_version,
         );
 
-        /* Skip heavy contruction procedures when error is returned */
-        if result.is_error() {
-            return EfiStatusEnum::Error(result.into(), allocation_size);
-        }
-
         result.into_enum_data_error(
-            EfiMemoryDescriptors {
+            || EfiMemoryDescriptors {
                 memory_map_key,
                 memory_map_size: allocation_size,
                 descriptor_size,
                 descriptor_version,
                 descriptors_array: memory_map.as_ptr(),
             },
-            allocation_size,
+            || allocation_size,
         )
     }
 
@@ -140,7 +135,7 @@ impl EfiMemoryRaw {
     ) -> EfiStatusEnum<VoidPtr> {
         let mut buffer: VoidPtr = 0 as VoidPtr;
 
-        (self.allocate_pool)(pool_type, pool_size, &mut buffer).into_enum_data(buffer)
+        (self.allocate_pool)(pool_type, pool_size, &mut buffer).into_enum_data(|| buffer)
     }
 
     pub(super) fn free_pool(&self, buffer: VoidPtr) -> EfiStatusEnum {

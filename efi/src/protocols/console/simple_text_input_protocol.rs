@@ -23,7 +23,7 @@ impl EfiSimpleTextInputProtocol {
             unicode_char: 0,
         };
 
-        (self.read_key_stroke)(self, &mut key).into_enum_data(key)
+        (self.read_key_stroke)(self, &mut key).into_enum_data(|| key)
     }
 
     pub fn wait_for_key(&self) -> &EfiEvent {

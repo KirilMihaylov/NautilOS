@@ -16,8 +16,7 @@ use task_priority::*;
 use crate::protocols::device_path::EfiDevicePathProcotol;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-pub(super) struct EfiBootServicesRevision1_0_Raw {
+pub(super) struct EfiBootServicesRevision1x0Raw {
     task_priority: EfiTaskPriorityRaw,
     memory: EfiMemoryRaw,
     event_and_timer: EfiEventAndTimerRaw,
@@ -26,14 +25,14 @@ pub(super) struct EfiBootServicesRevision1_0_Raw {
     miscellaneous: EfiMiscellaneousRaw,
 }
 
-pub trait EfiBootServicesRevision1_0:
+pub trait EfiBootServicesRevision1x0:
     EfiEventAndTimer + EfiImage + EfiMemory + EfiMiscellaneous + EfiProtocolHandler + EfiTaskPriority
 {
 }
 
-impl EfiBootServicesRevision1_0 for EfiBootServicesRevision1_0_Raw {}
+impl EfiBootServicesRevision1x0 for EfiBootServicesRevision1x0Raw {}
 
-impl EfiEventAndTimer for EfiBootServicesRevision1_0_Raw {
+impl EfiEventAndTimer for EfiBootServicesRevision1x0Raw {
     fn create_event(
         &self,
         event_type: EfiEventType,
@@ -70,7 +69,7 @@ impl EfiEventAndTimer for EfiBootServicesRevision1_0_Raw {
     }
 }
 
-impl EfiImage for EfiBootServicesRevision1_0_Raw {
+impl EfiImage for EfiBootServicesRevision1x0Raw {
     fn load_image(
         &self,
         boot_policy: bool,
@@ -108,7 +107,7 @@ impl EfiImage for EfiBootServicesRevision1_0_Raw {
     }
 }
 
-impl EfiMemory for EfiBootServicesRevision1_0_Raw {
+impl EfiMemory for EfiBootServicesRevision1x0Raw {
     fn allocate_pages(
         &self,
         allocation_type: EfiAllocateType,
@@ -145,7 +144,7 @@ impl EfiMemory for EfiBootServicesRevision1_0_Raw {
     }
 }
 
-impl EfiMiscellaneous for EfiBootServicesRevision1_0_Raw {
+impl EfiMiscellaneous for EfiBootServicesRevision1x0Raw {
     fn get_next_monotonic_count(&self) -> EfiStatusEnum<(u32, u32)> {
         self.miscellaneous.get_next_monotonic_count()
     }
@@ -165,7 +164,7 @@ impl EfiMiscellaneous for EfiBootServicesRevision1_0_Raw {
     }
 }
 
-impl EfiProtocolHandler for EfiBootServicesRevision1_0_Raw {
+impl EfiProtocolHandler for EfiBootServicesRevision1x0Raw {
     fn install_protocol_interface(
         &self,
         handle: &mut EfiHandle,
@@ -253,7 +252,7 @@ impl EfiProtocolHandler for EfiBootServicesRevision1_0_Raw {
     }
 }
 
-impl EfiTaskPriority for EfiBootServicesRevision1_0_Raw {
+impl EfiTaskPriority for EfiBootServicesRevision1x0Raw {
     fn raise_priority_level(&self, new_priority_level: EfiTaskPriorityLevel) -> EfiStatusEnum {
         self.task_priority.raise_priority_level(new_priority_level)
     }

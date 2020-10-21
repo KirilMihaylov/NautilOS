@@ -1,73 +1,79 @@
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
+
 use crate::types::EfiStatusRaw;
 
 #[repr(transparent)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct EfiStatus(EfiStatusRaw);
 
 impl EfiStatus {
-    pub fn success() -> Self {
+    pub const fn success() -> Self {
         Self(0)
     }
 
-    pub fn warning(code: EfiStatusRaw) -> Self {
+    pub const fn warning(code: EfiStatusRaw) -> Self {
         Self((code << 1) >> 1)
     }
 
-    pub fn error(code: EfiStatusRaw) -> Self {
+    pub const fn error(code: EfiStatusRaw) -> Self {
         Self(1usize.rotate_right(1) | code)
     }
 
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         /* 0 => Success */
         /* _ => Warning or Error */
         self.0 == 0
     }
 
-    pub fn is_warning(&self) -> bool {
+    pub const fn is_warning(&self) -> bool {
         !(self.is_success() || self.is_error())
     }
 
-    pub fn is_error(&self) -> bool {
+    pub const fn is_error(&self) -> bool {
         self.0.leading_zeros() == 0
     }
 
-    pub fn into_enum(self) -> EfiStatusEnum {
+    pub const fn into_enum(self) -> EfiStatusEnum {
         use EfiStatusEnum::*;
 
         if self.is_success() {
             Success(())
         } else if self.is_warning() {
-            Warning(self.0, ())
+            Warning(self.get_warning(), ())
         } else {
-            Error(self.0, ())
+            Error(self.get_error(), ())
         }
     }
 
-    pub fn into_enum_data<S>(self, data: S) -> EfiStatusEnum<S> {
+    pub fn into_enum_data<S, F: FnOnce() -> S>(self, data: F) -> EfiStatusEnum<S> {
         use EfiStatusEnum::*;
 
         if self.is_success() {
-            Success(data)
+            Success(data())
         } else if self.is_warning() {
-            Warning(self.0, data)
+            Warning(self.get_warning(), data())
         } else {
-            Error(self.0, ())
+            Error(self.get_error(), ())
         }
     }
 
-    pub fn into_enum_data_error<S, E>(self, data: S, error_data: E) -> EfiStatusEnum<S, E> {
+    pub fn into_enum_data_error<S, Fs: FnOnce() -> S, E, Fe: FnOnce() -> E>(
+        self,
+        success: Fs,
+        error: Fe,
+    ) -> EfiStatusEnum<S, E> {
         use EfiStatusEnum::*;
 
         if self.is_success() {
-            Success(data)
+            Success(success())
         } else if self.is_warning() {
-            Warning(self.0, data)
+            Warning(self.get_warning(), success())
         } else {
-            Error(self.0, error_data)
+            Error(self.get_error(), error())
         }
     }
 
-    pub fn get_warning(&self) -> EfiStatusWarning {
+    pub const fn get_warning(&self) -> EfiStatusWarning {
         use EfiStatusWarning::*;
 
         if self.is_warning() {
@@ -80,14 +86,14 @@ impl EfiStatus {
                 6 => EfiWarnFileSystem,
                 7 => EfiWarnResetRequired,
 
-                _ => UnknownWarning,
+                _ => UnknownWarning(self.0),
             }
         } else {
             NoWarning
         }
     }
 
-    pub fn get_error(&self) -> EfiStatusError {
+    pub const fn get_error(&self) -> EfiStatusError {
         use EfiStatusError::*;
 
         if self.is_error() {
@@ -126,11 +132,17 @@ impl EfiStatus {
                 34 => EfiIpAddressConflict,
                 35 => EfiHttpError,
 
-                _ => UnknownError,
+                _ => UnknownError(self.0),
             }
         } else {
             NoError
         }
+    }
+}
+
+impl Display for EfiStatus {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        write!(f, "{}", self.into_enum(),)
     }
 }
 
@@ -147,58 +159,57 @@ impl From<EfiStatus> for EfiStatusRaw {
 }
 
 #[must_use = "this type's value may contain information about an error that occured"]
+#[derive(Debug, Copy)]
 pub enum EfiStatusEnum<T = (), E = ()> {
     Success(T),
-    Warning(EfiStatusRaw, T),
-    Error(EfiStatusRaw, E),
+    Warning(EfiStatusWarning, T),
+    Error(EfiStatusError, E),
 }
 
 impl<T, E> EfiStatusEnum<T, E> {
-    pub fn is_success(&self) -> bool {
+    pub const fn is_success(&self) -> bool {
         matches!(self, Self::Success(_))
     }
 
-    pub fn is_warning(&self) -> bool {
+    pub const fn is_warning(&self) -> bool {
         matches!(self, Self::Warning(_, _))
     }
 
-    pub fn is_error(&self) -> bool {
+    pub const fn is_error(&self) -> bool {
         matches!(self, Self::Error(_, _))
     }
 
-    pub fn map(&self) -> Result<(EfiStatusWarning, &T), (EfiStatusError, &E)> {
+    pub fn map<U, F: FnOnce(T) -> U>(self, f: F) -> EfiStatusEnum<U, E> {
         match self {
-            Self::Success(data) => Ok((EfiStatusWarning::NoWarning, data)),
-            Self::Warning(status, data) => Ok((EfiStatus::from(*status).get_warning(), data)),
-            Self::Error(status, data) => Err((EfiStatus::from(*status).get_error(), data)),
+            Self::Success(data) => EfiStatusEnum::Success(f(data)),
+            Self::Warning(status, data) => EfiStatusEnum::Warning(status, f(data)),
+            Self::Error(status, data) => EfiStatusEnum::Error(status, data),
         }
     }
 
-    /// Strips status code and returns `Success` and `Warning` as `Ok` and `Error` as `Err`.
-    pub fn map_result(self) -> Result<T, E> {
+    pub fn map_error<U, F: FnOnce(E) -> U>(self, f: F) -> EfiStatusEnum<T, U> {
         match self {
-            Self::Success(data) | Self::Warning(_, data) => Ok(data),
-            Self::Error(_, data) => Err(data),
+            Self::Success(data) => EfiStatusEnum::Success(data),
+            Self::Warning(status, data) => EfiStatusEnum::Warning(status, data),
+            Self::Error(status, data) => EfiStatusEnum::Error(status, f(data)),
+        }
+    }
+
+    pub fn unfold(self) -> Result<(EfiStatusWarning, T), (EfiStatusError, E)> {
+        match self {
+            Self::Success(data) => Ok((EfiStatusWarning::NoWarning, data)),
+            Self::Warning(status, data) => Ok((status, data)),
+            Self::Error(status, data) => Err((status, data)),
         }
     }
 }
 
-impl<T: core::fmt::Debug, E: core::fmt::Debug> core::fmt::Debug for EfiStatusEnum<T, E> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<T, E> Display for EfiStatusEnum<T, E> {
+    default fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
-            Self::Success(data) => write!(f, "Success({:?})", data),
-            Self::Warning(status, data) => write!(
-                f,
-                "Warning({:?}, {:?})",
-                EfiStatus::from(*status).get_warning(),
-                data
-            ),
-            Self::Error(status, data) => write!(
-                f,
-                "Error({:?}, {:?})",
-                EfiStatus::from(*status).get_error(),
-                data
-            ),
+            Self::Success(_) => write!(f, "Success"),
+            Self::Warning(status, _) => write!(f, "Warning ({:?})", status,),
+            Self::Error(status, _) => write!(f, "Error ({:?})", status,),
         }
     }
 }
@@ -212,8 +223,6 @@ impl<T: Clone, E: Clone> Clone for EfiStatusEnum<T, E> {
         }
     }
 }
-
-impl<T: Copy, E: Copy> Copy for EfiStatusEnum<T, E> {}
 
 impl<T: PartialEq, E: PartialEq> PartialEq<Self> for EfiStatusEnum<T, E> {
     default fn eq(&self, other: &Self) -> bool {
@@ -249,8 +258,8 @@ impl PartialEq<Self> for EfiStatusEnum<(), ()> {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Success(_), Self::Success(_)) => true,
-            (Self::Warning(status, _), Self::Warning(other_status, _))
-            | (Self::Error(status, _), Self::Error(other_status, _)) => status == other_status,
+            (Self::Warning(status, _), Self::Warning(other_status, _)) => status == other_status,
+            (Self::Error(status, _), Self::Error(other_status, _)) => status == other_status,
             _ => false,
         }
     }
@@ -263,7 +272,7 @@ impl<T: Eq, E: Eq> Eq for EfiStatusEnum<T, E> {}
 pub enum EfiStatusWarning {
     NoWarning,
 
-    UnknownWarning,
+    UnknownWarning(EfiStatusRaw),
 
     EfiWarnUnknownGlyph,
     EfiWarnDeleteFailure,
@@ -279,7 +288,7 @@ pub enum EfiStatusWarning {
 pub enum EfiStatusError {
     NoError,
 
-    UnknownError,
+    UnknownError(EfiStatusRaw),
 
     EfiLoadError,
     EfiInvalidParameter,

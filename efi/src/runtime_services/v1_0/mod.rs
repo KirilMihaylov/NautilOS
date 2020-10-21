@@ -13,22 +13,21 @@ use virtual_memory::*;
 use crate::boot_services::memory::EfiMemoryDescriptors;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
-pub struct EfiRuntimeServicesRevision_1_0_Raw {
+pub struct EfiRuntimeServicesRevision1x0Raw {
     time: EfiTimeRaw,
-    variable: EfiVariableRaw,
     virtual_memory: EfiVirtualMemoryRaw,
+    variable: EfiVariableRaw,
     miscellaneous: EfiMiscellaneousRaw,
 }
 
-#[allow(non_camel_case_types)]
-pub trait EfiRuntimeServicesRevision_1_0:
+pub trait EfiRuntimeServicesRevision1x0:
     EfiTime + EfiVariable + EfiVirtualMemory + EfiMiscellaneous
 {
 }
-impl EfiRuntimeServicesRevision_1_0 for EfiRuntimeServicesRevision_1_0_Raw {}
 
-impl EfiMiscellaneous for EfiRuntimeServicesRevision_1_0_Raw {
+impl EfiRuntimeServicesRevision1x0 for EfiRuntimeServicesRevision1x0Raw {}
+
+impl EfiMiscellaneous for EfiRuntimeServicesRevision1x0Raw {
     fn get_next_high_monotonic_count(&self) -> EfiStatusEnum<u32> {
         self.miscellaneous.get_next_high_monotonic_count()
     }
@@ -38,7 +37,7 @@ impl EfiMiscellaneous for EfiRuntimeServicesRevision_1_0_Raw {
     }
 }
 
-impl EfiTime for EfiRuntimeServicesRevision_1_0_Raw {
+impl EfiTime for EfiRuntimeServicesRevision1x0Raw {
     fn get_time(&self) -> EfiStatusEnum<(EfiTimeRepresentation, EfiTimeCapabilities)> {
         self.time.get_time()
     }
@@ -56,7 +55,7 @@ impl EfiTime for EfiRuntimeServicesRevision_1_0_Raw {
     }
 }
 
-impl EfiVariable for EfiRuntimeServicesRevision_1_0_Raw {
+impl EfiVariable for EfiRuntimeServicesRevision1x0Raw {
     fn get_variable(
         &self,
         variable_name: &[u16],
@@ -87,7 +86,7 @@ impl EfiVariable for EfiRuntimeServicesRevision_1_0_Raw {
     }
 }
 
-impl EfiVirtualMemory for EfiRuntimeServicesRevision_1_0_Raw {
+impl EfiVirtualMemory for EfiRuntimeServicesRevision1x0Raw {
     fn set_virtual_address_map(&self, memory_map: EfiMemoryDescriptors) -> EfiStatusEnum {
         self.virtual_memory.set_virtual_address_map(memory_map)
     }

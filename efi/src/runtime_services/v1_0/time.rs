@@ -17,13 +17,7 @@ impl EfiTimeRaw {
             EfiTimeCapabilities::zeroed(),
         );
 
-        let result: EfiStatus = (self.get_time)(&mut time, &mut capabilities);
-
-        if result.is_error() {
-            return EfiStatusEnum::Error(result.into(), ());
-        }
-
-        result.into_enum_data((time, capabilities))
+        (self.get_time)(&mut time, &mut capabilities).into_enum_data(|| (time, capabilities))
     }
 
     pub(super) fn set_time(&self, time: &EfiTimeRepresentation) -> EfiStatusEnum {
@@ -38,7 +32,7 @@ impl EfiTimeRaw {
             &mut wakeup_time.pending,
             &mut wakeup_time.time,
         )
-        .into_enum_data(wakeup_time)
+        .into_enum_data(|| wakeup_time)
     }
 
     pub(super) fn set_wakeup_time(

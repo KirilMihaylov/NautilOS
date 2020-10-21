@@ -41,23 +41,26 @@ impl EfiVariableRaw {
         };
 
         if let Some(data) = data {
-            data_len = data.len();
             data_ptr = data.as_mut_ptr() as VoidMutPtr;
+            data_len = data.len();
         } else {
-            data_len = 0;
             data_ptr = core::ptr::null_mut();
+            data_len = 0;
         }
 
         attributes = EfiVariableAttributes { attributes: 0 };
 
-        (self.get_variable)(
+        let result: EfiStatus = (self.get_variable)(
             variable_name_ptr,
             vendor_guid,
             &mut attributes.attributes as *mut u32,
             &mut data_len,
             data_ptr,
-        )
-        .into_enum_data_error((data_len, attributes), (data_len, attributes))
+        );
+
+        let f = || (data_len, attributes);
+
+        result.into_enum_data_error(f, f)
     }
 
     pub(super) fn get_next_variable_name(
@@ -72,7 +75,7 @@ impl EfiVariableRaw {
             variable_name.as_mut_ptr(),
             vendor_guid,
         )
-        .into_enum_data_error((), variable_name_len)
+        .into_enum_data_error(|| (), || variable_name_len)
     }
 
     pub(super) fn set_variable(

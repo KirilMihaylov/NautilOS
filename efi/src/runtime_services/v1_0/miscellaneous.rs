@@ -21,7 +21,7 @@ impl EfiMiscellaneousRaw {
     pub(super) fn get_next_high_monotonic_count(&self) -> EfiStatusEnum<u32> {
         let mut return_value: u32 = 0;
 
-        (self.get_next_high_monotonic_count)(&mut return_value).into_enum_data(return_value)
+        (self.get_next_high_monotonic_count)(&mut return_value).into_enum_data(|| return_value)
     }
 
     pub(super) fn reset(&self, reset_type: EfiResetType, reset_code: EfiStatus, data: &[u8]) -> ! {

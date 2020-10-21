@@ -2,12 +2,12 @@ mod v1_0;
 
 pub use v1_0::*;
 
-use crate::{runtime_services::EfiRuntimeServicesRevision_1_0_Raw, *};
+use crate::{runtime_services::EfiRuntimeServicesRevision1x0Raw, *};
 
 #[repr(C)]
 pub struct EfiRuntimeServices {
     table_header: EfiTableHeader,
-    v1_0: EfiRuntimeServicesRevision_1_0_Raw,
+    v1_0: EfiRuntimeServicesRevision1x0Raw,
 }
 
 impl EfiRuntimeServices {
@@ -23,7 +23,7 @@ impl EfiRuntimeServices {
         self.table_header.revision()
     }
 
-    pub fn revision_1_0(&self) -> &dyn EfiRuntimeServicesRevision_1_0 {
+    pub fn revision_1_0(&self) -> &dyn EfiRuntimeServicesRevision1x0 {
         &self.v1_0
     }
 }

@@ -13,7 +13,7 @@ impl EfiMiscellaneousRaw {
         let mut count: u64 = 0;
 
         (self.get_next_monotonic_count)(&mut count)
-            .into_enum_data(((count >> 32) as u32, count as u32))
+            .into_enum_data(|| ((count >> 32) as u32, count as u32))
     }
 
     pub(super) fn stall(&self, microseconds: usize) -> EfiStatusEnum {

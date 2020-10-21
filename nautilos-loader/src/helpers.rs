@@ -1,15 +1,25 @@
 use {
-    crate::{efi_defs::OsMemoryType, warn},
+    crate::warn,
     core::{mem::size_of, slice::from_raw_parts_mut},
     efi::{
-        boot_services::{memory::EfiMemoryType, EfiBootServicesRevision1_0},
-        EfiStatus, EfiStatusEnum, VoidMutPtr,
+        boot_services::{
+            memory::{EfiMemoryType, EFI_MEMORY_TYPE_SIZE},
+            EfiBootServicesRevision1x0,
+        },
+        EfiStatusEnum, VoidMutPtr,
     },
 };
 
-pub fn alloc<T>(boot_services: &dyn EfiBootServicesRevision1_0, length: usize) -> &'static mut [T] {
+pub fn efi_alloc<T, U>(
+    boot_services: &dyn EfiBootServicesRevision1x0,
+    length: usize,
+    memory_type: U,
+) -> &'static mut [T]
+where
+    U: Into<[u8; EFI_MEMORY_TYPE_SIZE]>,
+{
     match boot_services.allocate_pool(
-        EfiMemoryType::custom(OsMemoryType::HandlesBuffer.into()),
+        EfiMemoryType::custom(memory_type.into()),
         length * size_of::<T>(),
     ) {
         EfiStatusEnum::Success(ptr) => unsafe {
@@ -18,7 +28,7 @@ pub fn alloc<T>(boot_services: &dyn EfiBootServicesRevision1_0, length: usize) -
         EfiStatusEnum::Warning(status, ptr) => {
             warn!(
                 "(EFI) Warning occured while allocating memory.\tWarning: {:?}",
-                EfiStatus::from(status).get_warning()
+                status
             );
 
             unsafe { from_raw_parts_mut(ptr as VoidMutPtr as *mut T, length) }
@@ -26,7 +36,7 @@ pub fn alloc<T>(boot_services: &dyn EfiBootServicesRevision1_0, length: usize) -
         EfiStatusEnum::Error(status, _) => {
             panic!(
                 "(EFI) Error occured while allocating memory!\nError: {:?}",
-                EfiStatus::from(status).get_error()
+                status
             );
         }
     }

@@ -106,23 +106,23 @@ impl EfiSystemTable {
         }
     }
 
-    pub fn runtime_services(&self) -> &EfiRuntimeServices {
+    pub fn runtime_services(&self) -> &'static EfiRuntimeServices {
         unsafe { &*self.runtime_services }
     }
 
-    pub fn runtime_services_mut(&mut self) -> &mut EfiRuntimeServices {
+    pub fn runtime_services_mut(&mut self) -> &'static mut EfiRuntimeServices {
         unsafe { &mut *self.runtime_services }
     }
 
-    pub fn boot_services(&self) -> &EfiBootServices {
+    pub fn boot_services(&self) -> &'static EfiBootServices {
         unsafe { &*self.boot_services }
     }
 
-    pub fn boot_services_mut(&mut self) -> &mut EfiBootServices {
+    pub fn boot_services_mut(&mut self) -> &'static mut EfiBootServices {
         unsafe { &mut *self.boot_services }
     }
 
-    pub fn configuration_tables<'a>(&self) -> EfiConfigurationTable<'a> {
+    pub fn configuration_tables(&self) -> EfiConfigurationTable {
         unsafe {
             EfiConfigurationTable::new(self.configuration_tables, self.configuration_tables_count)
         }

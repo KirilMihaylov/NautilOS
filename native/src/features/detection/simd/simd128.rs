@@ -310,7 +310,7 @@ pub fn available() -> Result<FeatureState> {
                         return Ok(Enabled);
                     }
                 }
-                
+
                 Err(OsInteractionRequired)
             }
 

@@ -19,20 +19,18 @@
 #![feature(panic_info_message)]
 #![forbid(warnings, clippy::pedantic)]
 
-mod panic_handling;
-
-mod macros;
-
 mod efi_defs;
-
 mod helpers;
+mod macros;
+mod panic_handling;
 
 use {
     core::{mem::size_of, sync::atomic::Ordering},
     efi::{
+        EfiGuid,
         boot_services::{
             protocol_handler::{EfiLocateSearchType, EfiProtocolBinding},
-            EfiBootServicesRevision1_0,
+            EfiBootServicesRevision1x0,
         },
         protocols::{
             media::{EfiBlockIOProtocol, EfiDiskIOProtocol},
@@ -40,6 +38,8 @@ use {
         },
         EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
     },
+    efi_defs::OsMemoryType,
+    helpers::efi_alloc,
     native::{features::detection::state_storing::state_storing_available, Error},
     panic_handling::CON_OUT,
 };
@@ -59,16 +59,13 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         CON_OUT.store(con_out, Ordering::Relaxed);
 
         if let efi::EfiStatusEnum::Error(status, _) = con_out.clear_screen() {
-            efi_warn!(
-                "Clearing screen failed with error: {:?}",
-                EfiStatus::from(status).get_error()
-            );
+            efi_warn!("Clearing screen failed with error: {:?}", status);
         }
     }
 
     stages::start_up();
 
-    let boot_services: &mut dyn EfiBootServicesRevision1_0 =
+    let boot_services: &mut dyn EfiBootServicesRevision1x0 =
         system_table.boot_services_mut().revision_1_0_mut();
 
     let (mut handles_slice, mut handles_buffer): (&[EfiHandle], &mut [EfiHandle]);
@@ -80,7 +77,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         let mut length: usize = 32;
 
         for attempt in 1..=MAX_ATTEMPT_COUNT {
-            handles_buffer = helpers::alloc(boot_services, length);
+            handles_buffer = efi_alloc(boot_services, length, OsMemoryType::HandlesBuffer);
 
             let result: EfiStatusEnum<&[EfiHandle], usize> = boot_services.locate_handle(
                 EfiLocateSearchType::ByProtocol,
@@ -92,7 +89,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
             if let EfiStatusEnum::Warning(status, _) = result {
                 efi_warn!(
 					"Warning status returned while retrieving disk I/O device handles.\tWarning: {:?}",
-					EfiStatus::from(status).get_warning()
+					status
 				);
             }
 
@@ -115,7 +112,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
                     efi_assert!(
                         !boot_services
                             .free_pool(handles_buffer.as_ptr() as efi::VoidPtr)
-                            .map_result()
+                            .unfold()
                             .is_err(),
                         "Error occured while freeing memory pool!"
                     );
@@ -123,7 +120,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
                     efi_assert!(
                         attempt != MAX_ATTEMPT_COUNT,
                         "Error occured while retrieving disk I/O device handles!\nError: {:?}",
-                        EfiStatus::from(status).get_error()
+                        status
                     );
                 }
             };
@@ -144,7 +141,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         if let EfiStatusEnum::Warning(status, _) = result {
             efi_warn!(
                 "Warning status returned while getting block I/O protocol.\tWarning: {:?}",
-                EfiStatus::from(status).get_warning()
+                status,
             );
         }
 
@@ -158,15 +155,47 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
                     let media: &dyn efi::protocols::media::EfiBlockIOMediaRevision1 =
                         block_io.media_revision_1();
 
-                    debug_info!("Media:\n{:?}", media);
+                    debug_info!("Media: {:?}", media);
                 }
             }
             EfiStatusEnum::Error(status, _) => efi_panic!(
                 "Error occured while getting block I/O protocol.\nError: {:?}",
-                EfiStatus::from(status).get_error()
+                status,
             ),
         }
     });
+
+    const BOOT_ORDER_VARIABLE_NAME: &[u16] = &utf16_str::c_utf16!("BootOrder");
+
+    const VENDOR_GUID: EfiGuid = EfiGuid::from_tuple((
+        0x8BE4DF61,
+        0x93CA,
+        0x11D2,
+        [0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C],
+    ));
+
+    let mut variable_data: [u8; 0x1000] = [0; 0x1000];
+
+    match system_table
+        .runtime_services()
+        .revision_1_0()
+        .get_variable(
+            BOOT_ORDER_VARIABLE_NAME,
+            &VENDOR_GUID,
+            Some(&mut variable_data),
+        )
+        .unfold()
+    {
+        Ok((status, (length, _))) => {
+            debug_info!(
+                "{:?} -> Length = {}, Data: {:?}",
+                status,
+                length,
+                &variable_data[..length]
+            );
+        }
+        Err((status, _)) => efi_panic!("Couldn't read \"BootOrder\" variable with: {:?}!", status),
+    }
 
     loop {}
 }
