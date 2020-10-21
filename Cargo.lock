@@ -36,4 +36,9 @@ dependencies = [
  "acpi",
  "efi",
  "native",
+ "utf16-str",
 ]
+
+[[package]]
+name = "utf16-str"
+version = "0.1.0"

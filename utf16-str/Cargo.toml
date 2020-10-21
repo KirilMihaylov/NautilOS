@@ -1,0 +1,10 @@
+[package]
+name = "utf16-str"
+version = "0.1.0"
+authors = ["Dark-Legion <Kiril195@hotmail.com>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]

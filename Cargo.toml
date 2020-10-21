@@ -6,6 +6,7 @@ members = [
 	"efi",
 	"efi_interops",
 	"acpi",
+	"utf16-str",
 ]
 
 [profile.release]

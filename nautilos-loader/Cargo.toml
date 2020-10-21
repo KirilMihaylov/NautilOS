@@ -10,6 +10,9 @@ name = "nautilos-loader"
 [package.metadata.docs.rs]
 all-features = true
 
+[dependencies.utf16-str]
+path = "../utf16-str"
+
 [dependencies.native]
 path = "../native"
 features = [
