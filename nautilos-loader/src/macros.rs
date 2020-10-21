@@ -1,5 +1,8 @@
 /// Macro for printing formatted strings on the general console output.
 /// It uses [`panic_handling`]'s [`CON_OUT`] to acquire pointer to the console output protocol's interface.
+/// 
+/// [`panic_handling`]: module@crate::panic_handling
+/// [`CON_OUT`]: static@crate::panic_handling::CON_OUT
 #[macro_export]
 macro_rules! print {
 	($($args:tt)+) => {

@@ -22,7 +22,8 @@
 mod efi_defs;
 mod helpers;
 mod macros;
-mod panic_handling;
+
+pub mod panic_handling;
 
 use {
     core::{mem::size_of, sync::atomic::Ordering},
