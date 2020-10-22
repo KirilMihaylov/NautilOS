@@ -32,16 +32,18 @@ use {
             protocol_handler::{EfiLocateSearchType, EfiProtocolBinding},
             EfiBootServicesRevision1x0,
         },
+        guids::EFI_GLOBAL_VARIABLE,
         protocols::{
             media::{EfiBlockIOProtocol, EfiDiskIOProtocol},
             EfiProtocol,
         },
-        EfiGuid, EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
+        EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
     },
     efi_defs::OsMemoryType,
     helpers::efi_alloc,
     native::{features::detection::state_storing::available as state_storing_available, Error},
     panic_handling::CON_OUT,
+    utf16_str::c_utf16,
 };
 
 /// Loader's main function.
@@ -165,23 +167,14 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         }
     });
 
-    const BOOT_ORDER_VARIABLE_NAME: &[u16] = &utf16_str::c_utf16!("BootOrder");
-
-    const VENDOR_GUID: EfiGuid = EfiGuid::from_tuple((
-        0x8BE4DF61,
-        0x93CA,
-        0x11D2,
-        [0xAA, 0x0D, 0x00, 0xE0, 0x98, 0x03, 0x2B, 0x8C],
-    ));
-
     let mut variable_data: [u8; 0x1000] = [0; 0x1000];
 
     match system_table
         .runtime_services()
         .revision_1_0()
         .get_variable(
-            BOOT_ORDER_VARIABLE_NAME,
-            &VENDOR_GUID,
+            &c_utf16!("BootCurrent"),
+            &EFI_GLOBAL_VARIABLE,
             Some(&mut variable_data),
         )
         .unfold()

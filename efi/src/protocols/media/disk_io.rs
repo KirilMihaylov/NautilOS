@@ -43,12 +43,6 @@ impl EfiDiskIOProtocol {
 
 impl EfiProtocol for EfiDiskIOProtocol {
     fn guid() -> EfiGuid {
-        (
-            0xCE345171,
-            0xBA0B,
-            0x11D2,
-            [0x8E, 0x4F, 0x00, 0xA0, 0xC9, 0x69, 0x72, 0x3B],
-        )
-            .into()
+        crate::guids::EFI_DISK_IO_PROTOCOL
     }
 }

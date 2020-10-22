@@ -30,5 +30,6 @@ mod system_table;
 pub use system_table::*;
 
 pub mod boot_services;
+pub mod guids;
 pub mod protocols;
 pub mod runtime_services;
