@@ -12,7 +12,9 @@ pub fn utf16(item: TokenStream) -> TokenStream {
         panic!("Expected string literal!");
     }
 
-    convert_to_utf16(&literal[1..literal.len() - 1]).parse().unwrap()
+    convert_to_utf16(&literal[1..literal.len() - 1])
+        .parse()
+        .unwrap()
 }
 
 /// Function-like macro for converting Rust's UTF-8 string literals into UTF-16 encoded `u16` arrays with a terminating null (`\0`).
@@ -24,7 +26,9 @@ pub fn c_utf16(item: TokenStream) -> TokenStream {
         panic!("Expected string literal!");
     }
 
-    convert_to_utf16(&format!("{}\0", &literal[1..literal.len() - 1])).parse().unwrap()
+    convert_to_utf16(&format!("{}\0", &literal[1..literal.len() - 1]))
+        .parse()
+        .unwrap()
 }
 
 fn convert_to_utf16(s: &str) -> String {
@@ -78,11 +82,10 @@ fn convert_to_utf16(s: &str) -> String {
                             }
                         }
 
-                        for value in char::from_u32(
-                            u32::from_str_radix(&code, 16).expect(PANIC_MESSAGE),
-                        )
-                        .expect(PANIC_MESSAGE)
-                        .encode_utf16(&mut [0; 2])
+                        for value in
+                            char::from_u32(u32::from_str_radix(&code, 16).expect(PANIC_MESSAGE))
+                                .expect(PANIC_MESSAGE)
+                                .encode_utf16(&mut [0; 2])
                         {
                             return_str += &format!("{}u16,", value);
                         }

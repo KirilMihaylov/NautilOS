@@ -28,7 +28,6 @@ pub mod panic_handling;
 use {
     core::{mem::size_of, sync::atomic::Ordering},
     efi::{
-        EfiGuid,
         boot_services::{
             protocol_handler::{EfiLocateSearchType, EfiProtocolBinding},
             EfiBootServicesRevision1x0,
@@ -37,7 +36,7 @@ use {
             media::{EfiBlockIOProtocol, EfiDiskIOProtocol},
             EfiProtocol,
         },
-        EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
+        EfiGuid, EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
     },
     efi_defs::OsMemoryType,
     helpers::efi_alloc,

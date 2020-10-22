@@ -12,7 +12,7 @@ use crate::{
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`available`] when it returns an error.
-/// 
+///
 /// [`available`]: fn@detection_available
 pub fn available() -> Result<FeatureState> {
     use Error::*;
