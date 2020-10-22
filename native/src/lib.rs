@@ -18,7 +18,7 @@
 #![doc(html_no_source)]
 /* For platform-specific operations */
 #![feature(asm)]
-#![forbid(warnings, clippy::pedantic)]
+#![forbid(warnings)]
 
 #[macro_use]
 mod macros;
