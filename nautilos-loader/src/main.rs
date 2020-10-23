@@ -17,7 +17,7 @@
 #![cfg_attr(not(doc), no_main)]
 #![doc(html_no_source)]
 #![feature(panic_info_message)]
-#![forbid(warnings, clippy::pedantic)]
+#![forbid(warnings, missing_docs, clippy::pedantic)]
 
 mod efi_defs;
 mod helpers;
@@ -43,7 +43,7 @@ use {
     helpers::efi_alloc,
     native::{features::detection::state_storing::available as state_storing_available, Error},
     panic_handling::CON_OUT,
-    utf16_str::c_utf16,
+    utf16_utils::{c_utf16, ArrayEncoder},
 };
 
 /// Loader's main function.
@@ -167,27 +167,66 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         }
     });
 
-    let mut variable_data: [u8; 0x1000] = [0; 0x1000];
-
-    match system_table
-        .runtime_services()
-        .revision_1_0()
-        .get_variable(
-            &c_utf16!("BootCurrent"),
-            &EFI_GLOBAL_VARIABLE,
-            Some(&mut variable_data),
-        )
-        .unfold()
     {
-        Ok((status, (length, _))) => {
-            debug_info!(
-                "{:?} -> Length = {}, Data: {:?}",
-                status,
-                length,
-                &variable_data[..length]
-            );
+        let boot_device_number: &mut [u8] = &mut [0; 2];
+
+        let mut variable_data: &mut [u8] = &mut [0; 0x1000];
+
+        match system_table
+            .runtime_services()
+            .revision_1_0()
+            .get_variable(
+                &c_utf16!("BootCurrent"),
+                &EFI_GLOBAL_VARIABLE,
+                Some(boot_device_number),
+            )
+            .unfold()
+        {
+            Ok((status, (length, _))) => {
+                debug_info!(
+                    "{:?} -> Length = {}, Data: {:?}",
+                    status,
+                    length,
+                    &variable_data[..length]
+                );
+            }
+            Err((status, _)) => {
+                efi_panic!("Couldn't read \"BootCurrent\" variable with: {:?}!", status)
+            }
         }
-        Err((status, _)) => efi_panic!("Couldn't read \"BootOrder\" variable with: {:?}!", status),
+
+        let boot_xxxx: &mut [u16] = &mut [0; 9];
+
+        ArrayEncoder::new(&mut boot_xxxx[..8])
+            .write_formatted(format_args!(
+                "Boot{:0>2X}{:0>2X}",
+                boot_device_number[1], boot_device_number[0],
+            ))
+            .unwrap();
+
+        match system_table
+            .runtime_services()
+            .revision_1_0()
+            .get_variable(boot_xxxx, &EFI_GLOBAL_VARIABLE, Some(variable_data))
+            .unfold()
+        {
+            Ok((status, (length, _))) => {
+                variable_data = &mut variable_data[..length];
+
+                debug_info!(
+                    "{:?} -> Length = {}, Data: {:0>2X?}",
+                    status,
+                    length,
+                    variable_data,
+                );
+            }
+            Err((status, _)) => efi_panic!(
+                "Couldn't read \"Boot{:0>2X}{:0>2X}\" variable with: {:?}!",
+                boot_device_number[1],
+                boot_device_number[0],
+                status
+            ),
+        }
     }
 
     loop {}

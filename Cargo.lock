@@ -19,6 +19,10 @@ name = "efi_interops"
 version = "0.1.0"
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+
+[[package]]
 name = "native"
 version = "0.1.0"
 dependencies = [
@@ -36,9 +40,12 @@ dependencies = [
  "acpi",
  "efi",
  "native",
- "utf16-str",
+ "utf16-utils",
 ]
 
 [[package]]
-name = "utf16-str"
+name = "utf16-utils"
 version = "0.1.0"
+dependencies = [
+ "macros",
+]
