@@ -3,14 +3,14 @@ pub mod time;
 pub mod variable;
 pub mod virtual_memory;
 
-use crate::*;
+use crate::{EfiGuid, EfiStatus, EfiStatusEnum, VoidPtr};
 
-use miscellaneous::*;
-use time::*;
-use variable::*;
-use virtual_memory::*;
+use miscellaneous::{EfiMiscellaneous, EfiMiscellaneousRaw, EfiResetType};
+use time::{EfiTime, EfiTimeCapabilities, EfiTimeRaw, EfiTimeRepresentation, EfiWakeupTime};
+use variable::{EfiVariable, EfiVariableAttributes, EfiVariableRaw};
+use virtual_memory::{EfiConvertPointerFlagsBuilder, EfiVirtualMemory, EfiVirtualMemoryRaw};
 
-use crate::boot_services::memory::EfiMemoryDescriptors;
+use crate::boot_services::types::memory::EfiMemoryDescriptors;
 
 #[repr(C)]
 pub struct EfiRuntimeServicesRevision1x0Raw {

@@ -34,12 +34,17 @@ name = "native_macros"
 version = "0.1.0"
 
 [[package]]
+name = "nautilos-allocator"
+version = "0.1.0"
+
+[[package]]
 name = "nautilos-loader"
 version = "0.1.0"
 dependencies = [
  "acpi",
  "efi",
  "native",
+ "nautilos-allocator",
  "utf16-utils",
 ]
 

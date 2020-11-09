@@ -42,7 +42,14 @@ impl EfiDiskIOProtocol {
 }
 
 impl EfiProtocol for EfiDiskIOProtocol {
+    type Parsed = &'static Self;
+    type Error = !;
+
     fn guid() -> EfiGuid {
         crate::guids::EFI_DISK_IO_PROTOCOL
+    }
+
+    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
+        Ok(&*(ptr as *const Self))
     }
 }

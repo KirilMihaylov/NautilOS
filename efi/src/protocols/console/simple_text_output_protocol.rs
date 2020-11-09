@@ -1,9 +1,11 @@
-use core::fmt::{Error, Write};
-
-use crate::{
-    guid::EfiGuid,
-    protocols::EfiProtocol,
-    status::{EfiStatus, EfiStatusEnum},
+use {
+    crate::{
+        guid::EfiGuid,
+        protocols::EfiProtocol,
+        status::{EfiStatus, EfiStatusEnum},
+        VoidPtr,
+    },
+    core::fmt::{Error, Write},
 };
 
 #[repr(C)]
@@ -195,8 +197,15 @@ impl EfiSimpleTextOutputProtocol {
 }
 
 impl EfiProtocol for EfiSimpleTextOutputProtocol {
+    type Parsed = &'static Self;
+    type Error = !;
+
     fn guid() -> EfiGuid {
         crate::guids::EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL
+    }
+
+    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
+        Ok(&*(ptr as *const Self))
     }
 }
 

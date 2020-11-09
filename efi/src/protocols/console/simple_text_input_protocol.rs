@@ -3,6 +3,7 @@ use crate::{
     protocols::EfiProtocol,
     status::{EfiStatus, EfiStatusEnum},
     types::EfiEvent,
+    VoidPtr,
 };
 
 #[repr(C)]
@@ -36,8 +37,15 @@ impl EfiSimpleTextInputProtocol {
 }
 
 impl EfiProtocol for EfiSimpleTextInputProtocol {
+    type Parsed = &'static Self;
+    type Error = !;
+
     fn guid() -> EfiGuid {
         crate::guids::EFI_SIMPLE_TEXT_INPUT_PROTOCOL
+    }
+
+    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
+        Ok(&*(ptr as *const Self))
     }
 }
 

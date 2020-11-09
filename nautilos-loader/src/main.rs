@@ -16,34 +16,24 @@
 #![no_std]
 #![cfg_attr(not(doc), no_main)]
 #![doc(html_no_source)]
-#![feature(panic_info_message)]
+#![feature(panic_info_message, never_type)]
 #![forbid(warnings, missing_docs, clippy::pedantic)]
 
-mod efi_defs;
-mod helpers;
+extern crate alloc;
+
+mod defs;
+// mod helpers;
 mod macros;
 
 pub mod panic_handling;
 
 use {
-    core::{mem::size_of, sync::atomic::Ordering},
+    core::sync::atomic::Ordering,
     efi::{
-        boot_services::{
-            protocol_handler::{EfiLocateSearchType, EfiProtocolBinding},
-            EfiBootServicesRevision1x0,
-        },
-        guids::EFI_GLOBAL_VARIABLE,
-        protocols::{
-            media::{EfiBlockIOProtocol, EfiDiskIOProtocol},
-            EfiProtocol,
-        },
-        EfiHandle, EfiStatus, EfiStatusEnum, EfiSystemTable,
+        boot_services::EfiBootServices, runtime_services::EfiRuntimeServices, EfiHandle, EfiStatus,
+        EfiSystemTable,
     },
-    efi_defs::OsMemoryType,
-    helpers::efi_alloc,
-    native::{features::detection::state_storing::available as state_storing_available, Error},
     panic_handling::CON_OUT,
-    utf16_utils::{c_utf16, ArrayEncoder},
 };
 
 /// Loader's main function.
@@ -65,188 +55,37 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         }
     }
 
-    stages::start_up();
+    let boot_services: &mut EfiBootServices = system_table.boot_services_mut();
+    let runtime_services: &mut EfiRuntimeServices = system_table.runtime_services_mut();
 
-    let boot_services: &mut dyn EfiBootServicesRevision1x0 =
-        system_table.boot_services_mut().revision_1_0_mut();
+    stages::start_up(boot_services);
 
-    let (mut handles_slice, mut handles_buffer): (&[EfiHandle], &mut [EfiHandle]);
-    handles_slice = &[];
+    let boot_device_handle: EfiHandle = stages::get_boot_device_handle(boot_services, runtime_services);
 
-    {
-        const MAX_ATTEMPT_COUNT: u8 = 2;
-
-        let mut length: usize = 32;
-
-        for attempt in 1..=MAX_ATTEMPT_COUNT {
-            handles_buffer = efi_alloc(boot_services, length, OsMemoryType::HandlesBuffer);
-
-            let result: EfiStatusEnum<&[EfiHandle], usize> = boot_services.locate_handle(
-                EfiLocateSearchType::ByProtocol,
-                Some(&EfiDiskIOProtocol::guid()),
-                None,
-                handles_buffer,
-            );
-
-            if let EfiStatusEnum::Warning(status, _) = result {
-                efi_warn!(
-					"Warning status returned while retrieving disk I/O device handles.\tWarning: {:?}",
-					status
-				);
-            }
-
-            match result {
-                EfiStatusEnum::Success(handles) | EfiStatusEnum::Warning(_, handles) => {
-                    handles_slice = handles;
-
-                    break;
-                }
-                EfiStatusEnum::Error(status, required_bytes) => {
-                    length = required_bytes / size_of::<EfiHandle>()
-                        + if required_bytes % size_of::<EfiHandle>() == 0 {
-                            0
-                        } else {
-                            1
-                        };
-
-                    handles_slice = &[];
-
-                    efi_assert!(
-                        !boot_services
-                            .free_pool(handles_buffer.as_ptr() as efi::VoidPtr)
-                            .unfold()
-                            .is_err(),
-                        "Error occured while freeing memory pool!"
-                    );
-
-                    efi_assert!(
-                        attempt != MAX_ATTEMPT_COUNT,
-                        "Error occured while retrieving disk I/O device handles!\nError: {:?}",
-                        status
-                    );
-                }
-            };
-        }
-    }
-
-    efi_assert!(
-        !handles_slice.is_empty(),
-        "No devices that implement disk I/O protocol found!"
-    );
-
-    handles_slice.iter().for_each(|&handle| {
-        debug_info!("Handle pointer: {:?}", handle);
-
-        let result: EfiStatusEnum<EfiProtocolBinding> =
-            boot_services.handle_protocol(handles_slice[0], &EfiBlockIOProtocol::guid());
-
-        if let EfiStatusEnum::Warning(status, _) = result {
-            efi_warn!(
-                "Warning status returned while getting block I/O protocol.\tWarning: {:?}",
-                status,
-            );
-        }
-
-        match result {
-            EfiStatusEnum::Success(block_io_binding)
-            | EfiStatusEnum::Warning(_, block_io_binding) => {
-                let block_io: &EfiBlockIOProtocol =
-                    block_io_binding.resolve().expect("Internal error occured!");
-
-                {
-                    let media: &dyn efi::protocols::media::EfiBlockIOMediaRevision1 =
-                        block_io.media_revision_1();
-
-                    debug_info!("Media: {:?}", media);
-                }
-            }
-            EfiStatusEnum::Error(status, _) => efi_panic!(
-                "Error occured while getting block I/O protocol.\nError: {:?}",
-                status,
-            ),
-        }
-    });
-
-    {
-        let boot_device_number: &mut [u8] = &mut [0; 2];
-
-        let mut variable_data: &mut [u8] = &mut [0; 0x1000];
-
-        match system_table
-            .runtime_services()
-            .revision_1_0()
-            .get_variable(
-                &c_utf16!("BootCurrent"),
-                &EFI_GLOBAL_VARIABLE,
-                Some(boot_device_number),
-            )
-            .unfold()
-        {
-            Ok((status, (length, _))) => {
-                debug_info!(
-                    "{:?} -> Length = {}, Data: {:?}",
-                    status,
-                    length,
-                    &variable_data[..length]
-                );
-            }
-            Err((status, _)) => {
-                efi_panic!("Couldn't read \"BootCurrent\" variable with: {:?}!", status)
-            }
-        }
-
-        let boot_xxxx: &mut [u16] = &mut [0; 9];
-
-        ArrayEncoder::new(&mut boot_xxxx[..8])
-            .write_formatted(format_args!(
-                "Boot{:0>2X}{:0>2X}",
-                boot_device_number[1], boot_device_number[0],
-            ))
-            .unwrap();
-
-        match system_table
-            .runtime_services()
-            .revision_1_0()
-            .get_variable(boot_xxxx, &EFI_GLOBAL_VARIABLE, Some(variable_data))
-            .unfold()
-        {
-            Ok((status, (length, _))) => {
-                variable_data = &mut variable_data[..length];
-
-                debug_info!(
-                    "{:?} -> Length = {}, Data: {:0>2X?}",
-                    status,
-                    length,
-                    variable_data,
-                );
-            }
-            Err((status, _)) => efi_panic!(
-                "Couldn't read \"Boot{:0>2X}{:0>2X}\" variable with: {:?}!",
-                boot_device_number[1],
-                boot_device_number[0],
-                status
-            ),
-        }
-    }
+    debug_info!("Boot Device Handle: 0x{:0>width$X}", boot_device_handle as usize, width = core::mem::size_of::<usize>() * 2);
 
     loop {}
 }
 
 mod stages {
-    use crate::{log, warn};
-    use crate::{state_storing_available, Error};
-    use native::features::detection::{
-        enable as enable_detection, state_storing::enable as enable_state_storing, FeatureState,
-    };
+    #[allow(unused_imports)]
+    use crate::{debug_info, efi_panic, efi_warn, log, print, println, warn};
 
-    pub fn start_up() {
+    pub fn start_up(boot_services: &mut efi::boot_services::EfiBootServices1x0) {
         setup_detection_mechanism();
 
         setup_state_storing();
+
+        setup_allocator(boot_services);
     }
 
     fn setup_detection_mechanism() {
-        match enable_detection() {
+        use native::{
+            features::detection::{enable, FeatureState},
+            Error,
+        };
+
+        match enable() {
             Ok(FeatureState::Enabled) => log!("Feature detection mechanism enabled."),
             Ok(FeatureState::Disabled) => {
                 warn!("Feature detection mechanism couldn't be enabled. It may be required later.")
@@ -262,13 +101,21 @@ mod stages {
     }
 
     fn setup_state_storing() {
+        use native::{
+            features::detection::{
+                state_storing::{available, enable},
+                FeatureState,
+            },
+            Error,
+        };
+
         /* Requirement: State storing mechanism */
-        match state_storing_available() {
+        match available() {
             Ok(FeatureState::Enabled) => log!("State storing mechanism available."),
             Ok(FeatureState::Disabled) => {
                 warn!("State storing mechanism available but is disabled.");
                 log!("Enabling state storing mechanism...");
-                match enable_state_storing() {
+                match enable() {
                     Ok(FeatureState::Enabled) => log!("State storing mechanism enabled."),
                     Ok(FeatureState::Disabled) => panic!("State storing mechanism couldn't be enabled!"),
                     Err(error) => panic!("Error occured while enabling feature detection mechanism!\nError: {:?}", error),
@@ -277,6 +124,151 @@ mod stages {
             Err(Error::Unavailable) => panic!("State storing mechanism unavailable!"),
             Err(Error::FeatureDisabled) => panic!("Feature detection mechanism required to determine whether state storing is available, but is disabled!"),
             Err(error) => panic!("Error occured while testing for state storing mechanism!\nError: {:?}", error),
+        }
+    }
+
+    fn setup_allocator(boot_services: &efi::boot_services::EfiBootServices1x0) {
+        use {
+            crate::defs::OsMemoryType,
+            core::slice::from_raw_parts_mut,
+            efi::{
+                boot_services::types::memory::{EfiAllocateType, EfiMemoryType},
+                EfiPhysicalAddress, EfiStatusEnum,
+            },
+            nautilos_allocator::initialize as initialize_allocator,
+        };
+
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        mod consts {
+            pub const PAGE_SIZE: usize = 4096;
+            pub const HEAP_PAGE_COUNT: usize = 4096;
+        }
+
+        const PAGE_SIZE: usize = consts::PAGE_SIZE;
+
+        const HEAP_MEMORY: usize = PAGE_SIZE * consts::HEAP_PAGE_COUNT;
+
+        let mut address: EfiPhysicalAddress = 0;
+
+        let result: EfiStatusEnum = boot_services.allocate_pages(
+            EfiAllocateType::AllocateAnyPages,
+            EfiMemoryType::custom(OsMemoryType::LoaderHeap.into()),
+            PAGE_SIZE,
+            &mut address,
+        );
+
+        match result {
+            EfiStatusEnum::Success(_) => (),
+            EfiStatusEnum::Warning(status, _) => efi_warn!(
+                "Warning status returned while allocating memory pages.\tWarning: {:?}",
+                status
+            ),
+            EfiStatusEnum::Error(status, _) => efi_panic!(
+                "Error occured while retrieving disk I/O device handles!\nError: {:?}",
+                status
+            ),
+        }
+
+        if let Err(error) =
+            initialize_allocator(unsafe { from_raw_parts_mut(address as *mut u8, HEAP_MEMORY) })
+        {
+            panic!("Error occured while initializing heap!\nError: {:?}", error);
+        }
+    }
+
+    pub fn get_boot_device_handle(
+        boot_services: &efi::boot_services::EfiBootServices1x0,
+        runtime_services: &efi::runtime_services::EfiRuntimeServices,
+    ) -> efi::EfiHandle {
+        use {
+            alloc::vec::Vec,
+            efi::{
+                guids::{EFI_DISK_IO_PROTOCOL, EFI_GLOBAL_VARIABLE},
+                EfiStatusError,
+                protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
+                structures::load_option::EfiLoadOption,
+                EfiStatusEnum, VoidPtr,
+            },
+            utf16_utils::{c_utf16, ArrayEncoder},
+        };
+
+        let boot_device_number: &mut [u8] = &mut [0; 2];
+
+        match runtime_services.revision_1_0().get_variable(
+            &c_utf16!("BootCurrent\0"),
+            &EFI_GLOBAL_VARIABLE,
+            Some(boot_device_number),
+        ) {
+            EfiStatusEnum::Success(_) => (),
+            EfiStatusEnum::Warning(status, _) => efi_warn!(
+                "Reading \"BootCurrent\" returned with warning status: {:?}",
+                status
+            ),
+            EfiStatusEnum::Error(status, _) => {
+                efi_panic!("Couldn't read \"BootCurrent\" variable with: {:?}!", status)
+            }
+        }
+
+        let boot_xxxx: &mut [u16] = &mut [0; 9];
+
+        ArrayEncoder::new(&mut boot_xxxx[..8])
+            .write_formatted(format_args!(
+                "Boot{:0>2X}{:0>2X}",
+                boot_device_number[1], boot_device_number[0],
+            ))
+            .expect("Internal error occured while formatting boot device's variable name!");
+
+        let mut variable_data: Vec<u8> = Vec::new();
+
+        for z in 0..2 {
+            match runtime_services
+                .revision_1_0()
+                .get_variable(
+                    boot_xxxx,
+                    &EFI_GLOBAL_VARIABLE,
+                    if z == 0 {
+                        None
+                    } else {
+                        Some(&mut variable_data)
+                    },
+                )
+                .unfold()
+            {
+                Ok((_, (length, _))) => variable_data.truncate(length),
+                Err((EfiStatusError::EfiBufferTooSmall, (length, _))) if z == 0 => variable_data.resize(length, 0),
+                Err((status, _)) => efi_panic!(
+                    "Couldn't read \"Boot{:0>2X}{:0>2X}\" variable with: {:?}!",
+                    boot_device_number[1],
+                    boot_device_number[0],
+                    status
+                ),
+            }
+        }
+
+        if let Some(load_option) = EfiLoadOption::parse(&variable_data) {
+            if let Ok(mut device_path) =
+                EfiDevicePathProtocolRaw::parse(load_option.file_path_list().as_ptr() as VoidPtr)
+            {
+                match boot_services.locate_device_path(&EFI_DISK_IO_PROTOCOL, &mut device_path) {
+                    EfiStatusEnum::Success(handle) => handle,
+                    EfiStatusEnum::Warning(status, handle) => {
+                        efi_warn!(
+                            "Retrieving handle from device path returned with warning status: {:?}",
+                            status
+                        );
+
+                        handle
+                    }
+                    EfiStatusEnum::Error(status, _) => efi_panic!(
+                        "Error occured while retrieving handle from device path! Error: {:?}",
+                        status
+                    ),
+                }
+            } else {
+                unreachable!();
+            }
+        } else {
+            efi_panic!("Error occured while parsing the boot device's load option!");
         }
     }
 }

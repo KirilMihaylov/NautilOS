@@ -10,21 +10,9 @@ name = "nautilos-loader"
 [package.metadata.docs.rs]
 all-features = true
 
-[dependencies.utf16-utils]
-path = "../utf16-utils"
-
-[dependencies.native]
-path = "../native"
-features = [
-	"memory_c",
-	"kernel_mode",
-]
-
-[dependencies.acpi]
-path = "../acpi"
-features = [
-	"efi_interops",
-]
-
-[dependencies.efi]
-path = "../efi"
+[dependencies]
+acpi = { path = "../acpi", features = ["efi_interops"] }
+efi = { path = "../efi" }
+native = { path = "../native", features = ["memory_c", "kernel_mode"] }
+nautilos-allocator = { path = "../nautilos-allocator", features = ["alloc_impl"] }
+utf16-utils = { path = "../utf16-utils" }

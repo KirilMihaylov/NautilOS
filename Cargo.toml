@@ -1,11 +1,12 @@
 [workspace]
 members = [
-	"nautilos-loader",
-	"native",
-	"native/native_macros",
+	"acpi",
 	"efi",
 	"efi_interops",
-	"acpi",
+	"native",
+	"native/native_macros",
+	"nautilos-loader",
+	"nautilos-allocator",
 	"utf16-utils",
 ]
 

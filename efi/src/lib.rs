@@ -8,6 +8,8 @@
 #![feature(min_specialization)]
 /* Enables usage of "core::mem::transmute" in "const fn"s */
 #![feature(const_fn_transmute)]
+/* Enables "!" (never) type */
+#![feature(never_type)]
 
 pub mod utilities;
 
@@ -33,3 +35,4 @@ pub mod boot_services;
 pub mod guids;
 pub mod protocols;
 pub mod runtime_services;
+pub mod structures;

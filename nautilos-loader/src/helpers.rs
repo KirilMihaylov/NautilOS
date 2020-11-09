@@ -3,15 +3,15 @@ use {
     core::{mem::size_of, slice::from_raw_parts_mut},
     efi::{
         boot_services::{
-            memory::{EfiMemoryType, EFI_MEMORY_TYPE_SIZE},
-            EfiBootServicesRevision1x0,
+            types::memory::{EfiMemoryType, EFI_MEMORY_TYPE_SIZE},
+            EfiBootServices1x0,
         },
         EfiStatusEnum, VoidMutPtr,
     },
 };
 
 pub fn efi_alloc<T, U>(
-    boot_services: &dyn EfiBootServicesRevision1x0,
+    boot_services: &EfiBootServices1x0,
     length: usize,
     memory_type: U,
 ) -> &'static mut [T]

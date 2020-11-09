@@ -1,6 +1,6 @@
 use crate::{
-    boot_services::memory::{EfiMemoryDescriptor, EfiMemoryDescriptors},
-    *,
+    boot_services::types::memory::{EfiMemoryDescriptor, EfiMemoryDescriptors},
+    EfiStatus, EfiStatusEnum, VoidMutPtrPtr, VoidPtr,
 };
 
 #[repr(C)]
@@ -14,15 +14,18 @@ pub(super) struct EfiVirtualMemoryRaw {
 impl EfiVirtualMemoryRaw {
     pub(super) fn set_virtual_address_map(
         &self,
-        memory_map: EfiMemoryDescriptors,
+        _memory_map: EfiMemoryDescriptors,
     ) -> EfiStatusEnum {
-        (self.set_virtual_address_map)(
-            memory_map.memory_map_size(),
-            memory_map.descriptor_size(),
-            memory_map.descriptor_version(),
-            memory_map.as_ptr(),
-        )
-        .into_enum()
+        // TODO
+
+        // (self.set_virtual_address_map)(
+        //     memory_map.memory_map_size(),
+        //     memory_map.descriptor_size(),
+        //     memory_map.descriptor_version(),
+        //     memory_map.as_ptr(),
+        // )
+        // .into_enum()
+        EfiStatus::success().into_enum()
     }
 
     pub(super) fn convert_pointer(

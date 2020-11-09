@@ -58,26 +58,34 @@ impl ArrayEncoder<'_> {
     }
 
     /// "Prints" a formatted string created by the [`format_args`] macro to the buffer.
+    /// # Errors
+    /// Forwards the errors, if any, originating from [`write_fmt`](core::fmt::Write::write_fmt).
     pub fn write_formatted(&mut self, args: Arguments) -> Result {
         self.write_fmt(args)
     }
 
     /// Formats the argument through the [`Display`] trait and "prints" the string to the buffer.
+    /// # Errors
+    /// Forwards the errors, if any, originating from [`write_fmt`](core::fmt::Write::write_fmt).
     pub fn write<T: Display>(&mut self, arg: T) -> Result {
         self.write_fmt(format_args!("{}", arg))
     }
 
     /// Formats the argument through the [`Debug`] trait and "prints" the string to the buffer.
+    /// # Errors
+    /// Forwards the errors, if any, originating from [`write_fmt`](core::fmt::Write::write_fmt).
     pub fn write_debug<T: Debug>(&mut self, arg: T) -> Result {
         self.write_fmt(format_args!("{:?}", arg))
     }
 
     /// Returns immutable reference to the buffer with which the instance was created.
+    #[must_use]
     pub fn get_buffer(&self) -> &[u16] {
         &self.buffer[..self.index]
     }
 
     /// Returns mutable reference to the buffer with which the instance was created.
+    #[must_use]
     pub fn get_buffer_mut(&mut self) -> &mut [u16] {
         &mut self.buffer[..self.index]
     }
@@ -101,7 +109,7 @@ impl Write for ArrayEncoder<'_> {
         } else {
             for (element, unit) in buffer
                 .iter_mut()
-                .zip(s.chars().flat_map(|ch: char| EncoderIterator::new(ch)))
+                .zip(s.chars().flat_map(EncoderIterator::new))
             {
                 *element = unit;
             }

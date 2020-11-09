@@ -2,8 +2,8 @@ use crate::{
     boot_services::EfiBootServices,
     protocols::console::{EfiSimpleTextInputProtocol, EfiSimpleTextOutputProtocol},
     runtime_services::EfiRuntimeServices,
-    utilities::string_from_raw,
-    *,
+    utilities::{string_from_raw, RawUtf16StringError},
+    EfiConfigurationTable, EfiConfigurationTableEntry, EfiHandle, EfiTableHeader, Void,
 };
 
 #[repr(C)]
@@ -26,7 +26,7 @@ pub struct EfiSystemTable {
 impl EfiSystemTable {
     pub fn verify_table(&self) -> bool {
         self.table_header.verify_table()
-            && self.boot_services().verify_table()
+            && self.boot_services().header().verify_table()
             && self.runtime_services().verify_table()
     }
 
@@ -38,7 +38,7 @@ impl EfiSystemTable {
         self.table_header.revision()
     }
 
-    pub fn firmware_vendor(&self) -> Result<&[u16], ()> {
+    pub fn firmware_vendor(&self) -> Result<&[u16], RawUtf16StringError> {
         unsafe { string_from_raw(self.firmware_vendor) }
     }
 
