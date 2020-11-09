@@ -44,7 +44,9 @@ impl EfiProtocol for EfiSimpleTextInputProtocol {
         crate::guids::EFI_SIMPLE_TEXT_INPUT_PROTOCOL
     }
 
-    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
+    unsafe fn parse(
+        ptr: VoidPtr,
+    ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
         Ok(&*(ptr as *const Self))
     }
 }

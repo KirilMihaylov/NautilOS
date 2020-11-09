@@ -14,5 +14,7 @@ pub trait EfiProtocol {
 
     fn guid() -> EfiGuid;
 
-    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error>;
+    unsafe fn parse(
+        ptr: VoidPtr,
+    ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error>;
 }

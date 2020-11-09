@@ -84,7 +84,9 @@ impl EfiProtocol for EfiBlockIOProtocol {
         crate::guids::EFI_BLOCK_IO_PROTOCOL
     }
 
-    unsafe fn parse(ptr: VoidPtr) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
+    unsafe fn parse(
+        ptr: VoidPtr,
+    ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
         Ok(&*(ptr as *const Self))
     }
 }

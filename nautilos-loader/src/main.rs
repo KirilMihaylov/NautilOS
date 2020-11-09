@@ -60,9 +60,14 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 
     stages::start_up(boot_services);
 
-    let boot_device_handle: EfiHandle = stages::get_boot_device_handle(boot_services, runtime_services);
+    let boot_device_handle: EfiHandle =
+        stages::get_boot_device_handle(boot_services, runtime_services);
 
-    debug_info!("Boot Device Handle: 0x{:0>width$X}", boot_device_handle as usize, width = core::mem::size_of::<usize>() * 2);
+    debug_info!(
+        "Boot Device Handle: 0x{:0>width$X}",
+        boot_device_handle as usize,
+        width = core::mem::size_of::<usize>() * 2
+    );
 
     loop {}
 }
@@ -184,10 +189,9 @@ mod stages {
             alloc::vec::Vec,
             efi::{
                 guids::{EFI_DISK_IO_PROTOCOL, EFI_GLOBAL_VARIABLE},
-                EfiStatusError,
                 protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
                 structures::load_option::EfiLoadOption,
-                EfiStatusEnum, VoidPtr,
+                EfiStatusEnum, EfiStatusError, VoidPtr,
             },
             utf16_utils::{c_utf16, ArrayEncoder},
         };
@@ -235,7 +239,9 @@ mod stages {
                 .unfold()
             {
                 Ok((_, (length, _))) => variable_data.truncate(length),
-                Err((EfiStatusError::EfiBufferTooSmall, (length, _))) if z == 0 => variable_data.resize(length, 0),
+                Err((EfiStatusError::EfiBufferTooSmall, (length, _))) if z == 0 => {
+                    variable_data.resize(length, 0)
+                }
                 Err((status, _)) => efi_panic!(
                     "Couldn't read \"Boot{:0>2X}{:0>2X}\" variable with: {:?}!",
                     boot_device_number[1],
