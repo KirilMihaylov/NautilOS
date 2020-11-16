@@ -17,7 +17,7 @@ impl Heap {
                 },
             ),
         )
-        .map_or(Err(HeapError::OutOfMemory), Ok)
+        .ok_or(HeapError::OutOfMemory)
     }
 
     #[must_use = "Dropping this value may cause a memory leak."]

@@ -18,8 +18,6 @@ impl Heap {
     /// * Returned in case of malfunction of the function or it's logic's components.
     /// ### [`Not Enough Initialization Memory`](variant@InitializationError::NotEnoughInitMemory)
     /// * Returned when the provided memory buffer is too small to hold the preallocated heap entries.
-    /// ### [`Double Initialization`](variant@InitializationError::DoubleInitialization)
-    /// * Returned when [`init_in_place`]()
     pub fn init_in_place(
         memory: &'static mut [u8],
     ) -> Result<&'static mut Self, InitializationError> {

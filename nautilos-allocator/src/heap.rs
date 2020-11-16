@@ -1,4 +1,5 @@
 mod alloc;
+mod dealloc;
 mod find_best_fit;
 mod find_range_from_address;
 pub(crate) mod init_in_place;
@@ -8,10 +9,10 @@ mod reallocate_self;
 mod zero_out;
 
 use {
-    crate::{heap_error::HeapError, memory_range::MemoryRange, sorted_list::SortedList},
+    crate::{memory_range::MemoryRange, sorted_list::SortedList},
     core::{
-        alloc::Layout,
         fmt::{Debug, Formatter, Result as FmtResult},
+        mem::{align_of, size_of},
     },
     list_debug_formatter::ListDebugFormatter,
 };
@@ -31,54 +32,18 @@ impl Heap {
 
     const REALLOCATION_COEFFICIENT: usize = 4;
 
-    const REALLOCATION_ADDITIONAL_LENGTH: usize =
+    const REALLOCATION_ADDITIONAL_SIZE: usize =
         Self::REALLOCATION_THRESHOLD * Self::REALLOCATION_COEFFICIENT;
+
+    pub const UNALIGNED_REQUIRED_INITIAL_SIZE: usize = size_of::<Self>()
+        + align_of::<SortedList<HeapEntry>>()
+        + (size_of::<HeapEntry>() * Self::PREALLOCATED_ENTRIES_COUNT);
+
+    pub const ALIGNED_REQUIRED_INITIAL_SIZE: usize =
+        Self::UNALIGNED_REQUIRED_INITIAL_SIZE - align_of::<Self>();
 
     fn new(entries: SortedList<'static, HeapEntry>) -> Self {
         Self { entries }
-    }
-
-    /// # Errors
-    /// TODO
-    pub fn dealloc_from_layout(
-        &mut self,
-        address: *mut u8,
-        _layout: Layout,
-    ) -> Result<(), HeapError> {
-        let (index, range): (usize, MemoryRange) = self
-            .find_range_from_address(address as usize)
-            .and_then(
-                |(index, (free, range)): (usize, HeapEntry)| {
-                    if free {
-                        None
-                    } else {
-                        Some((index, range))
-                    }
-                },
-            )
-            .ok_or(HeapError::NoSuchMemoryRange)?;
-
-        unsafe {
-            Self::zero_out(address as usize, range.len());
-        }
-
-        self.entries
-            .get_mut(index)
-            .ok_or(HeapError::InternalError)?
-            .0 = true;
-
-        // TODO: Combine free ranges
-
-        self.reallocate_self()?;
-
-        Ok(())
-    }
-
-    /// # Errors
-    /// TODO
-    #[must_use = "Return error may indicate that the heap is poisoned!"]
-    pub fn dealloc<T>(&mut self, address: *mut T) -> Result<(), HeapError> {
-        self.dealloc_from_layout(address as *mut u8, Layout::new::<T>())
     }
 }
 

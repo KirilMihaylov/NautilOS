@@ -13,7 +13,7 @@ impl Heap {
 
     pub(super) fn reallocate_self(&mut self) -> Result<(), HeapError> {
         if self.needs_reallocation() {
-            let new_size: usize = self.entries.capacity() + Self::REALLOCATION_ADDITIONAL_LENGTH;
+            let new_size: usize = self.entries.capacity() + Self::REALLOCATION_ADDITIONAL_SIZE;
 
             unsafe {
                 let mut address: *mut HeapEntry = self.entries.internal_buffer();
@@ -23,10 +23,10 @@ impl Heap {
                         address as usize,
                         Layout::array::<HeapEntry>(self.entries.capacity())
                             .ok()
-                            .map_or(Err(HeapError::InternalError), Ok)?,
+                            .ok_or(HeapError::InternalError)?,
                         Layout::array::<HeapEntry>(new_size)
                             .ok()
-                            .map_or(Err(HeapError::InternalError), Ok)?,
+                            .ok_or(HeapError::InternalError)?,
                     )?
                     .cast()
                     .as_ptr();

@@ -80,6 +80,11 @@ impl MemoryRange {
     }
 
     #[must_use]
+    pub const fn is_overlapped(&self, other: MemoryRange) -> bool {
+        self.contains(other.start()) || self.contains(other.end())
+    }
+
+    #[must_use]
     pub const fn overlapped(&self, other: MemoryRange) -> Option<MemoryRange> {
         match (self.contains(other.start()), self.contains(other.end())) {
             (true, true) => Some(other),
@@ -107,12 +112,12 @@ impl MemoryRange {
 
     #[must_use]
     pub const fn overlapped_or_ajasoned(&self, other: MemoryRange) -> bool {
-        self.overlapped(other).is_some() || self.ajasoned(other)
+        self.is_overlapped(other) || self.ajasoned(other)
     }
 
     #[must_use]
     pub const fn add(&self, other: MemoryRange) -> Option<MemoryRange> {
-        if self.overlapped(other).is_some() {
+        if self.is_overlapped(other) {
             Self::new(
                 if self.start() < other.start() {
                     self.start()

@@ -1,5 +1,7 @@
 mod core_mutex;
 
+extern crate alloc;
+
 use {
     crate::{
         heap::{init_in_place::initialization_error::InitializationError, Heap},
@@ -9,6 +11,7 @@ use {
         alloc::{GlobalAlloc, Layout},
         ptr::{null_mut, NonNull},
     },
+    alloc::alloc::handle_alloc_error,
     core_mutex::{CoreMutex, Lock},
 };
 
@@ -87,6 +90,8 @@ unsafe impl GlobalAlloc for Allocator {
                     Err(error) => {
                         if let HeapError::InternalError = error {
                             state.poisoned = true;
+
+                            handle_alloc_error(layout);
                         }
 
                         null_mut()
@@ -121,6 +126,8 @@ unsafe impl GlobalAlloc for Allocator {
                     Err(error) => {
                         if let HeapError::InternalError = error {
                             state.poisoned = true;
+
+                            handle_alloc_error(layout);
                         }
 
                         null_mut()
@@ -147,6 +154,8 @@ unsafe impl GlobalAlloc for Allocator {
 
                 if let Err(HeapError::InternalError) = result {
                     state.poisoned = true;
+
+                    handle_alloc_error(layout);
                 }
             }
             None => (),
@@ -162,7 +171,7 @@ unsafe impl Sync for Allocator {}
 #[cfg_attr(test, allow(dead_code))]
 fn alloc_error_handler(layout: Layout) -> ! {
     panic!(
-        "Error occured while allocating memory!\nLayout: {:?}",
+        "Error occured while allocating memory!\nLayout passed as an argument: {:?}",
         layout
     );
 }
