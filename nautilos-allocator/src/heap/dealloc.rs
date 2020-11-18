@@ -52,7 +52,7 @@ impl Heap {
                     .entries
                     .get_mut(index)
                     .ok_or(HeapError::InternalError)?;
-                let ref mut left_entry: HeapEntry = *left_entry;
+                let left_entry: &mut HeapEntry = &mut *left_entry;
 
                 // "entry" already checked in the ".and_then" call
                 if left_entry.0 {
