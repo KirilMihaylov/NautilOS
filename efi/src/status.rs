@@ -36,25 +36,17 @@ impl EfiStatus {
     pub const fn into_enum(self) -> EfiStatusEnum {
         use EfiStatusEnum::*;
 
-        if self.is_success() {
-            Success(())
-        } else if self.is_warning() {
-            Warning(self.get_warning(), ())
+        if let Some(status) = self.get_warning() {
+            Warning(status, ())
+        } else if let Some(status) = self.get_error() {
+            Error(status, ())
         } else {
-            Error(self.get_error(), ())
+            Success(())
         }
     }
 
     pub fn into_enum_data<S, F: FnOnce() -> S>(self, data: F) -> EfiStatusEnum<S> {
-        use EfiStatusEnum::*;
-
-        if self.is_success() {
-            Success(data())
-        } else if self.is_warning() {
-            Warning(self.get_warning(), data())
-        } else {
-            Error(self.get_error(), ())
-        }
+        self.into_enum().map(|(): ()| data())
     }
 
     pub fn into_enum_data_error<S, Fs: FnOnce() -> S, E, Fe: FnOnce() -> E>(
@@ -62,22 +54,14 @@ impl EfiStatus {
         success: Fs,
         error: Fe,
     ) -> EfiStatusEnum<S, E> {
-        use EfiStatusEnum::*;
-
-        if self.is_success() {
-            Success(success())
-        } else if self.is_warning() {
-            Warning(self.get_warning(), success())
-        } else {
-            Error(self.get_error(), error())
-        }
+        self.into_enum_data(success).map_error(|(): ()| error())
     }
 
-    pub const fn get_warning(&self) -> EfiStatusWarning {
+    pub const fn get_warning(&self) -> Option<EfiStatusWarning> {
         use EfiStatusWarning::*;
 
         if self.is_warning() {
-            match self.0 {
+            Some(match self.0 {
                 1 => EfiWarnUnknownGlyph,
                 2 => EfiWarnDeleteFailure,
                 3 => EfiWarnWriteFailure,
@@ -86,18 +70,18 @@ impl EfiStatus {
                 6 => EfiWarnFileSystem,
                 7 => EfiWarnResetRequired,
 
-                _ => UnknownWarning(self.0),
-            }
+                status => UnknownWarning(status),
+            })
         } else {
-            NoWarning
+            None
         }
     }
 
-    pub const fn get_error(&self) -> EfiStatusError {
+    pub const fn get_error(&self) -> Option<EfiStatusError> {
         use EfiStatusError::*;
 
         if self.is_error() {
-            match (self.0 << 1) >> 1 {
+            Some(match (self.0 << 1) >> 1 {
                 1 => EfiLoadError,
                 2 => EfiInvalidParameter,
                 3 => EfiUnsupported,
@@ -132,10 +116,10 @@ impl EfiStatus {
                 34 => EfiIpAddressConflict,
                 35 => EfiHttpError,
 
-                _ => UnknownError(self.0),
-            }
+                status => UnknownError(status),
+            })
         } else {
-            NoError
+            None
         }
     }
 }
@@ -195,10 +179,10 @@ impl<T, E> EfiStatusEnum<T, E> {
         }
     }
 
-    pub fn unfold(self) -> Result<(EfiStatusWarning, T), (EfiStatusError, E)> {
+    pub fn unfold(self) -> Result<(Option<EfiStatusWarning>, T), (EfiStatusError, E)> {
         match self {
-            Self::Success(data) => Ok((EfiStatusWarning::NoWarning, data)),
-            Self::Warning(status, data) => Ok((status, data)),
+            Self::Success(data) => Ok((None, data)),
+            Self::Warning(status, data) => Ok((Some(status), data)),
             Self::Error(status, data) => Err((status, data)),
         }
     }
@@ -270,8 +254,6 @@ impl<T: Eq, E: Eq> Eq for EfiStatusEnum<T, E> {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum EfiStatusWarning {
-    NoWarning,
-
     UnknownWarning(EfiStatusRaw),
 
     EfiWarnUnknownGlyph,
@@ -286,8 +268,6 @@ pub enum EfiStatusWarning {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum EfiStatusError {
-    NoError,
-
     UnknownError(EfiStatusRaw),
 
     EfiLoadError,
