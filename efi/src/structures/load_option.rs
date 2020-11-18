@@ -7,8 +7,8 @@ pub struct EfiLoadOption<'a> {
     optional_data: &'a [u8],
 }
 
-impl EfiLoadOption<'_> {
-    pub fn parse(data: &[u8]) -> Option<Self> {
+impl<'a> EfiLoadOption<'a> {
+    pub fn parse(data: &'a [u8]) -> Option<Self> {
         if data.len() < 7 {
             None
         } else {

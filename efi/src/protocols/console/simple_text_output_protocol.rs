@@ -3,7 +3,7 @@ use {
         guid::EfiGuid,
         protocols::EfiProtocol,
         status::{EfiStatus, EfiStatusEnum},
-        VoidPtr,
+        types::NonNullVoidPtr,
     },
     core::fmt::{Error, Write},
 };
@@ -205,9 +205,9 @@ impl EfiProtocol for EfiSimpleTextOutputProtocol {
     }
 
     unsafe fn parse(
-        ptr: VoidPtr,
+        ptr: NonNullVoidPtr,
     ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
-        Ok(&*(ptr as *const Self))
+        Ok(&*ptr.cast().as_ptr())
     }
 }
 

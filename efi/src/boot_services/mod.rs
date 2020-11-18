@@ -2,14 +2,15 @@ pub mod types;
 
 use {
     crate::{
-        protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
+        protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol, ParseResult},
         EfiEvent, EfiGuid, EfiHandle, EfiPhysicalAddress, EfiStatus, EfiStatusEnum, EfiTableHeader,
-        Void, VoidPtr,
+        types::{Void, VoidPtr, VoidMutPtr, NonNullVoidPtr, EfiFirmwareFault},
     },
     core::{
         mem::size_of,
         ops::{Deref, DerefMut},
         slice::from_raw_parts,
+        ptr::null_mut,
     },
     types::{
         event_and_timer::{EfiEventNotifyCallback, EfiEventType, EfiTimerDelay},
@@ -96,7 +97,7 @@ pub struct EfiBootServices1x0 {
         extern "efiapi" fn(*mut EfiHandle, *const EfiGuid, VoidPtr, VoidPtr) -> EfiStatus,
     uninstall_protocol_interface:
         extern "efiapi" fn(*mut EfiHandle, *const EfiGuid, VoidPtr) -> EfiStatus,
-    handle_protocol: extern "efiapi" fn(EfiHandle, *const EfiGuid, *mut VoidPtr) -> EfiStatus,
+    handle_protocol: extern "efiapi" fn(EfiHandle, *const EfiGuid, *mut VoidMutPtr) -> EfiStatus,
     _reserved: VoidPtr,
     register_protocol_notify: extern "efiapi" fn(&EfiGuid, EfiEvent, *mut VoidPtr) -> EfiStatus,
     locate_handle: extern "efiapi" fn(
@@ -341,14 +342,19 @@ impl EfiBootServices1x0 {
     pub fn handle_protocol<T>(
         &self,
         handle: EfiHandle,
-    ) -> EfiStatusEnum<Result<T::Parsed, T::Error>>
+    ) -> Result<EfiStatusEnum<<T as ParseResult>::Result>, EfiFirmwareFault>
     where
-        T: EfiProtocol + ?Sized,
+        T: EfiProtocol +
+            ParseResult<Result = core::result::Result<<T as EfiProtocol>::Parsed, <T as EfiProtocol>::Error>> +
+            ?Sized,
     {
-        let mut interface: VoidPtr = 0 as _;
+        let mut interface: VoidMutPtr = null_mut();
 
-        (self.handle_protocol)(handle, &T::guid(), &mut interface as *mut _ as _)
-            .into_enum_data(|| unsafe { T::parse(interface) })
+        let result: EfiStatus = (self.handle_protocol)(handle, &T::guid(), &mut interface);
+
+        NonNullVoidPtr::new(interface)
+            .ok_or(EfiFirmwareFault)
+            .map(|interface: NonNullVoidPtr| result.into_enum_data(|| unsafe { T::parse(interface) }))
     }
 
     #[inline(always)]

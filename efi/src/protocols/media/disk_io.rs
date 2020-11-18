@@ -2,7 +2,7 @@ use crate::{
     guid::EfiGuid,
     protocols::EfiProtocol,
     status::{EfiStatus, EfiStatusEnum},
-    types::{VoidMutPtr, VoidPtr},
+    types::{VoidMutPtr, VoidPtr, NonNullVoidPtr},
 };
 
 /// Implementation of EFI's `EFI_DISK_IO_PROTOCOL`.
@@ -50,8 +50,9 @@ impl EfiProtocol for EfiDiskIOProtocol {
     }
 
     unsafe fn parse(
-        ptr: VoidPtr,
+        ptr: NonNullVoidPtr,
     ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
-        Ok(&*(ptr as *const Self))
+        
+        Ok(&*ptr.cast().as_ptr())
     }
 }

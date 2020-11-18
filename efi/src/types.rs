@@ -1,3 +1,5 @@
+use core::ptr::NonNull;
+
 pub type EfiStatusRaw = usize;
 pub type EfiHandle = *const ();
 pub type EfiEvent = *const ();
@@ -10,3 +12,7 @@ pub type VoidPtr = *const Void;
 pub type VoidMutPtr = *mut Void;
 pub type VoidPtrPtr = *const VoidPtr;
 pub type VoidMutPtrPtr = *mut VoidPtr;
+pub type NonNullVoidPtr = NonNull<Void>;
+
+#[derive(Debug)]
+pub struct EfiFirmwareFault;

@@ -2,7 +2,7 @@ use crate::{
     guid::EfiGuid,
     protocols::EfiProtocol,
     status::{EfiStatus, EfiStatusEnum},
-    types::{EfiLBA, VoidMutPtr, VoidPtr},
+    types::{EfiLBA, VoidMutPtr, VoidPtr, NonNullVoidPtr},
 };
 
 /// Implementation of EFI's `EFI_BLOCK_IO_PROTOCOL`.
@@ -85,9 +85,9 @@ impl EfiProtocol for EfiBlockIOProtocol {
     }
 
     unsafe fn parse(
-        ptr: VoidPtr,
+        ptr: NonNullVoidPtr,
     ) -> Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error> {
-        Ok(&*(ptr as *const Self))
+        Ok(&*ptr.cast().as_ptr())
     }
 }
 
