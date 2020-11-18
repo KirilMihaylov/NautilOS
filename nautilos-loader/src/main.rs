@@ -136,45 +136,45 @@ mod stages {
             crate::defs::OsMemoryType,
             core::slice::from_raw_parts_mut,
             efi::{
-                boot_services::types::memory::{EfiAllocateType, EfiMemoryType},
-                EfiPhysicalAddress, EfiStatusEnum,
+                boot_services::types::memory::EfiMemoryType, EfiPhysicalAddress, EfiStatusError,
+                EfiStatusWarning, VoidPtr,
             },
-            nautilos_allocator::initialize as initialize_allocator,
+            nautilos_allocator::{initialize as initialize_allocator, Heap},
         };
 
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        mod consts {
-            pub const PAGE_SIZE: usize = 4096;
-            pub const HEAP_PAGE_COUNT: usize = 4096;
-        }
+        const REQUIRED_HEAP_SIZE: usize = Heap::UNALIGNED_REQUIRED_INITIAL_SIZE;
+        const ADDITIONAL_HEAP_SIZE: usize = 0x0010_0000; // 1 MB
+        const TOTAL_HEAP_SIZE: usize = REQUIRED_HEAP_SIZE + ADDITIONAL_HEAP_SIZE;
 
-        const PAGE_SIZE: usize = consts::PAGE_SIZE;
+        let address: EfiPhysicalAddress;
 
-        const HEAP_MEMORY: usize = PAGE_SIZE * consts::HEAP_PAGE_COUNT;
-
-        let mut address: EfiPhysicalAddress = 0;
-
-        let result: EfiStatusEnum = boot_services.allocate_pages(
-            EfiAllocateType::AllocateAnyPages,
-            EfiMemoryType::custom(OsMemoryType::LoaderHeap.into()),
-            PAGE_SIZE,
-            &mut address,
-        );
+        let result: Result<(Option<EfiStatusWarning>, VoidPtr), (EfiStatusError, ())> =
+            boot_services
+                .allocate_pool(
+                    EfiMemoryType::custom(OsMemoryType::LoaderHeap.into()),
+                    TOTAL_HEAP_SIZE,
+                )
+                .unfold();
 
         match result {
-            EfiStatusEnum::Success(_) => (),
-            EfiStatusEnum::Warning(status, _) => efi_warn!(
-                "Warning status returned while allocating memory pages.\tWarning: {:?}",
-                status
-            ),
-            EfiStatusEnum::Error(status, _) => efi_panic!(
+            Ok((status, allocation_address)) => {
+                if let Some(status) = status {
+                    efi_warn!(
+                        "Warning status returned while allocating memory pages.\tWarning: {:?}",
+                        status
+                    );
+                }
+
+                address = allocation_address as u64;
+            }
+            Err((status, ())) => efi_panic!(
                 "Error occured while retrieving disk I/O device handles!\nError: {:?}",
                 status
             ),
         }
 
         if let Err(error) =
-            initialize_allocator(unsafe { from_raw_parts_mut(address as *mut u8, HEAP_MEMORY) })
+            initialize_allocator(unsafe { from_raw_parts_mut(address as *mut u8, TOTAL_HEAP_SIZE) })
         {
             panic!("Error occured while initializing heap!\nError: {:?}", error);
         }
@@ -190,7 +190,8 @@ mod stages {
                 guids::{EFI_DISK_IO_PROTOCOL, EFI_GLOBAL_VARIABLE},
                 protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
                 structures::load_option::EfiLoadOption,
-                EfiStatusEnum, EfiStatusError, VoidPtr,
+                EfiStatusEnum, EfiStatusError,
+                NonNullVoidPtr, VoidMutPtr,
             },
             utf16_utils::{c_utf16, ArrayEncoder},
         };
@@ -251,9 +252,11 @@ mod stages {
         }
 
         if let Some(load_option) = EfiLoadOption::parse(&variable_data) {
-            if let Ok(mut device_path) =
-                EfiDevicePathProtocolRaw::parse(load_option.file_path_list().as_ptr() as VoidPtr)
-            {
+            if let Ok(mut device_path) = unsafe {
+                let ptr: VoidMutPtr = load_option.file_path_list().as_ptr() as VoidMutPtr;
+                let ptr: NonNullVoidPtr = NonNullVoidPtr::new(ptr).expect("Internal error occured!");
+                EfiDevicePathProtocolRaw::parse(ptr)
+            } {
                 match boot_services.locate_device_path(&EFI_DISK_IO_PROTOCOL, &mut device_path) {
                     EfiStatusEnum::Success(handle) => handle,
                     EfiStatusEnum::Warning(status, handle) => {
