@@ -8,14 +8,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"build",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--package",
-				"nautilos-loader",
-				"--release",
+				"build_uefi",
 				"--target=i686-unknown-uefi"
 			],
 			"group": "build",
@@ -28,12 +21,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--release",
+				"doc_uefi",
 				"--target=i686-unknown-uefi"
 			],
 			"problemMatcher": [
@@ -45,14 +33,9 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc",
-				"--open",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--release",
-				"--target=i686-unknown-uefi"
+				"doc_uefi",
+				"--target=i686-unknown-uefi",
+				"--open"
 			],
 			"problemMatcher": [
 				"$rustc"
@@ -63,14 +46,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"clippy",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--package",
-				"nautilos-loader",
-				"--release",
+				"clippy_uefi",
 				"--target=i686-unknown-uefi"
 			],
 			"group": "build",
@@ -83,17 +59,12 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"build",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--package",
-				"nautilos-loader",
-				"--release",
-				"--target=x86_64-unknown-uefi"
+				"build_uefi"
 			],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"problemMatcher": [
 				"$rustc"
 			],
@@ -103,13 +74,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--release",
-				"--target=x86_64-unknown-uefi"
+				"doc_uefi"
 			],
 			"problemMatcher": [
 				"$rustc"
@@ -120,14 +85,8 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc",
-				"--open",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--release",
-				"--target=x86_64-unknown-uefi"
+				"doc_uefi",
+				"--open"
 			],
 			"problemMatcher": [
 				"$rustc"
@@ -138,15 +97,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"clippy",
-				"-Z",
-				"unstable-options",
-				"-Z",
-				"build-std=core,alloc",
-				"--package",
-				"nautilos-loader",
-				"--release",
-				"--target=x86_64-unknown-uefi"
+				"clippy_uefi"
 			],
 			"group": "build",
 			"problemMatcher": [

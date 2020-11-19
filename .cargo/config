@@ -1,0 +1,7 @@
+[alias]
+build_uefi = ["build", "-Z", "unstable-options", "-Z", "build-std=core,alloc", "--package", "nautilos-loader", "--release"]
+doc_uefi = ["doc", "-Z", "unstable-options", "-Z", "build-std=core,alloc", "--package", "nautilos-loader", "--release"]
+clippy_uefi = ["clippy", "-Z", "unstable-options", "-Z", "build-std=core,alloc", "--package", "nautilos-loader", "--release"]
+
+[build]
+target = "x86_64-unknown-uefi"
