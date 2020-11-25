@@ -111,7 +111,7 @@ impl MemoryRange {
     }
 
     #[must_use]
-    pub const fn overlapped_or_ajasoned(&self, other: MemoryRange) -> bool {
+    pub const fn is_overlapped_or_ajasoned(&self, other: MemoryRange) -> bool {
         self.is_overlapped(other) || self.ajasoned(other)
     }
 
@@ -137,7 +137,7 @@ impl MemoryRange {
 
     #[must_use]
     pub const fn add_loose(&self, other: MemoryRange) -> Option<MemoryRange> {
-        if self.overlapped_or_ajasoned(other) {
+        if self.is_overlapped_or_ajasoned(other) {
             Self::new(
                 if self.start() < other.start() {
                     self.start()
