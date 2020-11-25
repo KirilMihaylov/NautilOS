@@ -15,51 +15,50 @@ pub(crate) struct MemoryRange {
 impl MemoryRange {
     #[must_use]
     pub const fn new(start: usize, end: usize) -> Option<Self> {
+        if start > end {
+            return None;
+        }
+
+        let (non_zero_start, non_zero_end): (NonZeroUsize, NonZeroUsize);
+
+        match NonZeroUsize::new(start) {
+            Some(start) => non_zero_start = start,
+            None => return None,
+        }
+
+        match NonZeroUsize::new(end) {
+            Some(end) => non_zero_end = end,
+            None => return None,
+        }
+
         Some(Self {
-            start: if let Some(start) = if start <= end {
-                NonZeroUsize::new(start)
-            } else {
-                None
-            } {
-                start
-            } else {
-                return None;
-            },
-            end: if let Some(end) = if start <= end {
-                NonZeroUsize::new(end)
-            } else {
-                None
-            } {
-                end
-            } else {
-                return None;
-            },
+            start: non_zero_start,
+            end: non_zero_end,
         })
     }
 
     #[must_use]
     pub const fn new_with_length(start: usize, length: usize) -> Option<Self> {
-        Self::new(
-            start,
-            if let Some(end) = start.checked_add(if let Some(offset) = length.checked_sub(1) {
-                offset
-            } else {
-                return None;
-            }) {
-                end
-            } else {
-                return None;
-            },
-        )
+        let length: usize;
+        
+        match length.checked_sub(1) {
+            Some(calculated_length) => length = calculated_length,
+            None => return None,
+        }
+
+        match start.checked_add(length) {
+            Some(end) => Self::new(start, end),
+            None => return None,
+        }
     }
 
     #[must_use]
     pub const fn len(&self) -> usize {
         // Safety:
-        // Will not overflow because "end" is bigger than "start" by definition and the minimal value of "start" is 1.
+        // Will not overflow because "end" is strongly bigger than "start" by definition and the minimal value of "start" is 1.
         // Border case:
-        //     max(end) = max(usize)
         //     min(start) = 1
+        //     max(end) = max(usize)
         //     ===> max(usize) - min(start) + 1 = max(usize) - 1 + 1 = max(usize)
         self.end.get() - self.start.get() + 1
     }
@@ -96,23 +95,23 @@ impl MemoryRange {
     }
 
     #[must_use]
-    pub const fn ajasoned_left(&self, other: MemoryRange) -> bool {
+    pub const fn is_ajasoned_on_left(&self, other: MemoryRange) -> bool {
         other.end() == self.start() - 1
     }
 
     #[must_use]
-    pub const fn ajasoned_right(&self, other: MemoryRange) -> bool {
+    pub const fn is_ajasoned_on_right(&self, other: MemoryRange) -> bool {
         self.end() == other.start() - 1
     }
 
     #[must_use]
-    pub const fn ajasoned(&self, other: MemoryRange) -> bool {
-        self.ajasoned_left(other) || self.ajasoned_right(other)
+    pub const fn is_ajasoned(&self, other: MemoryRange) -> bool {
+        self.is_ajasoned_on_left(other) || self.is_ajasoned_on_right(other)
     }
 
     #[must_use]
     pub const fn is_overlapped_or_ajasoned(&self, other: MemoryRange) -> bool {
-        self.is_overlapped(other) || self.ajasoned(other)
+        self.is_overlapped(other) || self.is_ajasoned(other)
     }
 
     #[must_use]
@@ -138,17 +137,23 @@ impl MemoryRange {
     #[must_use]
     pub const fn add_loose(&self, other: MemoryRange) -> Option<MemoryRange> {
         if self.is_overlapped_or_ajasoned(other) {
-            Self::new(
-                if self.start() < other.start() {
-                    self.start()
-                } else {
-                    other.start()
-                },
-                if self.end() < other.end() {
+            let (start, end): (usize, usize);
+
+            start = if self.start() < other.start() {
+                self.start()
+            } else {
+                other.start()
+            };
+
+            end = if self.end() < other.end() {
                     other.end()
                 } else {
                     self.end()
-                },
+                };
+
+            Self::new(
+                start,
+                end,
             )
         } else {
             None
@@ -159,18 +164,10 @@ impl MemoryRange {
     pub fn subtract(&self, other: MemoryRange) -> (Option<MemoryRange>, Option<MemoryRange>) {
         self.overlapped(other).map_or_else(
             || (Some(*self), None),
-            |overlap| {
+            |overlap: MemoryRange| {
                 (
-                    if self.start() < overlap.start() {
-                        MemoryRange::new(self.start(), overlap.start() - 1)
-                    } else {
-                        None
-                    },
-                    if overlap.end() < self.end() {
-                        MemoryRange::new(overlap.end() + 1, self.end())
-                    } else {
-                        None
-                    },
+                    MemoryRange::new(self.start(), overlap.start() - 1),
+                    MemoryRange::new(overlap.end() + 1, self.end()),
                 )
             },
         )
