@@ -1,7 +1,9 @@
 # NautilOS
 UEFI-compatible Operating System written in Rust.
-### Note
-The default target of the project is `x86_64-unknown-uefi`.
+### Notes
+* The default target of the project is `x86_64-unknown-uefi`.
+* The recommended editor is Visual Studio Code as this project comes with configuration for it.
+* The recommended assisting tool is `rust-analyzer` as it is configured through Visual Studio Code's configuration file.
 ## Building
 To build the project, run:
 ```
