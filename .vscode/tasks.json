@@ -8,7 +8,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"build_uefi",
+				"build",
 				"--target=i686-unknown-uefi"
 			],
 			"group": "build",
@@ -21,7 +21,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc_uefi",
+				"doc",
 				"--target=i686-unknown-uefi"
 			],
 			"problemMatcher": [
@@ -33,7 +33,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc_uefi",
+				"doc",
 				"--target=i686-unknown-uefi",
 				"--open"
 			],
@@ -46,7 +46,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"clippy_uefi",
+				"clippy",
 				"--target=i686-unknown-uefi"
 			],
 			"group": "build",
@@ -59,7 +59,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"build_uefi"
+				"build"
 			],
 			"group": {
 				"kind": "build",
@@ -74,7 +74,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc_uefi"
+				"doc"
 			],
 			"problemMatcher": [
 				"$rustc"
@@ -85,7 +85,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"doc_uefi",
+				"doc",
 				"--open"
 			],
 			"problemMatcher": [
@@ -97,7 +97,7 @@
 			"type": "process",
 			"command": "cargo",
 			"args": [
-				"clippy_uefi"
+				"clippy"
 			],
 			"group": "build",
 			"problemMatcher": [

@@ -8,7 +8,6 @@ edition = "2018"
 all-features = true
 
 [features]
-memory_c = []
 kernel_mode = []
 
 [dependencies.native_macros]

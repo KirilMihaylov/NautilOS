@@ -35,9 +35,6 @@ supported_targets! {
     [target_arch="x86_64"]
 }
 
-#[cfg(all(feature = "memory_c", not(doc)))]
-mod memory_c;
-
 mod result;
 
 #[doc(inline)]
