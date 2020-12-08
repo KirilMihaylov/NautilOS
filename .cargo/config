@@ -3,5 +3,4 @@ target = "x86_64-unknown-uefi"
 
 [unstable]
 build-std = ["compiler_builtins", "core", "alloc"]
-# Doesn't work! Using "memory_c" feature of "native" instead.
 build-std-features = ["compiler-builtins-mem"]

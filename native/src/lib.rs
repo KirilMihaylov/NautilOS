@@ -1,9 +1,6 @@
 //! This crate provides abstraction interface over the platform allowing more portability.
 //! # Features
 //! This crate provides the following features:
-//! * `memory_c`
-//!     
-//!     Defines memory operation primitives (e.g.: `memcpy`, `memset`, etc.) required by "bare metal" environments.
 //! * `kernel_mode`
 //!     
 //!     This mode is recommended on "bare metal" environments and when it will be running with supervisor permissions.
