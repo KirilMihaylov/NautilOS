@@ -20,15 +20,7 @@
 //!         * Feature is unavailable.
 //!             * Return `Err` with [`Unavailable`].
 
-#![allow(unused_imports)]
-
-use {
-    crate::result::{
-        Error::{self, Unavailable},
-        Result,
-    },
-    core::sync::atomic::{AtomicBool, Ordering::Relaxed},
-};
+use crate::result::Result;
 
 /// Defines feature states.
 #[derive(Debug)]
@@ -39,7 +31,9 @@ pub enum FeatureState {
     Enabled,
 }
 
-static DETECTION_MECHANISM: AtomicBool = AtomicBool::new(false);
+global_target_arch! {
+    ["x86"] #[doc(hidden)] static DETECTION_MECHANISM: AtomicBool = AtomicBool::new(false);
+}
 
 /// Checks whether there is available feature detection mechanism.
 ///
@@ -47,7 +41,6 @@ static DETECTION_MECHANISM: AtomicBool = AtomicBool::new(false);
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn available() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
@@ -102,7 +95,6 @@ pub fn available() -> Result<FeatureState> {
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn enable() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     not_target_arch! {
@@ -113,7 +105,7 @@ pub fn enable() -> Result<FeatureState> {
 
     target_arch_else_unimplemented_error! {
         ["x86"] {
-            if detection_mechanism_available().is_ok() {
+            if available().is_ok() {
                 DETECTION_MECHANISM.store(true, Relaxed);
 
                 Ok(Enabled)
@@ -133,7 +125,6 @@ pub fn enable() -> Result<FeatureState> {
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn disable() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     not_target_arch! {
@@ -144,7 +135,7 @@ pub fn disable() -> Result<FeatureState> {
 
     target_arch_else_unimplemented_error! {
         ["x86"] {
-            if detection_mechanism_available().is_ok() {
+            if available().is_ok() {
                 DETECTION_MECHANISM.store(true, Relaxed);
 
                 Ok(Enabled)
@@ -164,12 +155,11 @@ pub fn disable() -> Result<FeatureState> {
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn cpu_vendor_id_available() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
         ["x86"] {
-            detection_mechanism_available()
+            available()
                 .map(
                     |_| Enabled
                 )

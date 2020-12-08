@@ -72,8 +72,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
 }
 
 mod stages {
-    #[allow(unused_imports)]
-    use crate::{debug_info, efi_panic, efi_warn, log, print, println, warn};
+    use crate::{efi_panic, efi_warn, log, warn};
 
     pub fn start_up(boot_services: &mut efi::boot_services::EfiBootServices1x0) {
         setup_detection_mechanism();
@@ -190,10 +189,9 @@ mod stages {
                 guids::{EFI_DISK_IO_PROTOCOL, EFI_GLOBAL_VARIABLE},
                 protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
                 structures::load_option::EfiLoadOption,
-                EfiStatusEnum, EfiStatusError,
-                NonNullVoidPtr, VoidMutPtr,
+                EfiStatusEnum, EfiStatusError, NonNullVoidPtr, VoidMutPtr,
             },
-            utf16_utils::{c_utf16, ArrayEncoder},
+            utf16_utils::{macros::c_utf16, ArrayEncoder},
         };
 
         let boot_device_number: &mut [u8] = &mut [0; 2];
@@ -254,7 +252,8 @@ mod stages {
         if let Some(load_option) = EfiLoadOption::parse(&variable_data) {
             if let Ok(mut device_path) = unsafe {
                 let ptr: VoidMutPtr = load_option.file_path_list().as_ptr() as VoidMutPtr;
-                let ptr: NonNullVoidPtr = NonNullVoidPtr::new(ptr).expect("Internal error occured!");
+                let ptr: NonNullVoidPtr =
+                    NonNullVoidPtr::new(ptr).expect("Internal error occured!");
                 EfiDevicePathProtocolRaw::parse(ptr)
             } {
                 match boot_services.locate_device_path(&EFI_DISK_IO_PROTOCOL, &mut device_path) {

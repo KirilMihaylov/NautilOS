@@ -2,7 +2,7 @@ use crate::{
     guid::EfiGuid,
     protocols::EfiProtocol,
     status::{EfiStatus, EfiStatusEnum},
-    types::{EfiLBA, VoidMutPtr, VoidPtr, NonNullVoidPtr},
+    types::{EfiLBA, NonNullVoidPtr, VoidMutPtr, VoidPtr},
 };
 
 /// Implementation of EFI's `EFI_BLOCK_IO_PROTOCOL`.

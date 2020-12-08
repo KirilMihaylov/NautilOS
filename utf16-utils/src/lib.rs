@@ -5,7 +5,7 @@
 
 use core::fmt::{Arguments, Debug, Display, Error, Result, Write};
 
-pub use macros::*;
+pub use macros;
 
 enum EncoderIterator {
     Exhausted,

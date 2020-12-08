@@ -67,7 +67,13 @@ pub unsafe fn string_from_raw<'a>(string: *const u16) -> Result<&'a [u16], RawUt
         return Err(RawUtf16StringError);
     }
 
-    let string: &'a [u16] = from_raw_parts(string, string_length(string)?);
+    let string: &'a [u16] = from_raw_parts(
+        string,
+        match string_length(string) {
+            Ok(data) => data,
+            Err(error) => return Err(error),
+        },
+    );
 
     if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
         Err(RawUtf16StringError)
@@ -86,7 +92,13 @@ pub unsafe fn string_from_raw_mut<'a>(
     if string.is_null() {
         Err(RawUtf16StringError)
     } else {
-        let string: &'a mut [u16] = from_raw_parts_mut(string, string_length(string)?);
+        let string: &'a mut [u16] = from_raw_parts_mut(
+            string,
+            match string_length(string) {
+                Ok(data) => data,
+                Err(error) => return Err(error),
+            },
+        );
 
         if decode_utf16(string.iter().cloned()).any(|c| c.is_err()) {
             Err(RawUtf16StringError)

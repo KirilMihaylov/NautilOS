@@ -20,8 +20,7 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 /// It checks whether the pointer is non-null & properly aligned.
 ///
 /// **Note**: Since dangling pointers **can not** be validated, so setting to a null pointer while doing any memory map changes is mandatory.
-#[cfg_attr(not(test), panic_handler)]
-#[cfg_attr(test, allow(dead_code))]
+#[panic_handler]
 fn panic_handler(panic_info: &PanicInfo) -> ! {
     /* Stops recursive panics and allows multi-threading */
     while !IN_PANIC.compare_and_swap(false, true, Relaxed) {}

@@ -3,14 +3,14 @@ pub mod types;
 use {
     crate::{
         protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol, ParseResult},
+        types::{EfiFirmwareFault, NonNullVoidPtr, Void, VoidMutPtr, VoidPtr},
         EfiEvent, EfiGuid, EfiHandle, EfiPhysicalAddress, EfiStatus, EfiStatusEnum, EfiTableHeader,
-        types::{Void, VoidPtr, VoidMutPtr, NonNullVoidPtr, EfiFirmwareFault},
     },
     core::{
         mem::size_of,
         ops::{Deref, DerefMut},
-        slice::from_raw_parts,
         ptr::null_mut,
+        slice::from_raw_parts,
     },
     types::{
         event_and_timer::{EfiEventNotifyCallback, EfiEventType, EfiTimerDelay},
@@ -344,9 +344,13 @@ impl EfiBootServices1x0 {
         handle: EfiHandle,
     ) -> Result<EfiStatusEnum<<T as ParseResult>::Result>, EfiFirmwareFault>
     where
-        T: EfiProtocol +
-            ParseResult<Result = core::result::Result<<T as EfiProtocol>::Parsed, <T as EfiProtocol>::Error>> +
-            ?Sized,
+        T: EfiProtocol
+            + ParseResult<
+                Result = core::result::Result<
+                    <T as EfiProtocol>::Parsed,
+                    <T as EfiProtocol>::Error,
+                >,
+            > + ?Sized,
     {
         let mut interface: VoidMutPtr = null_mut();
 
@@ -354,7 +358,9 @@ impl EfiBootServices1x0 {
 
         NonNullVoidPtr::new(interface)
             .ok_or(EfiFirmwareFault)
-            .map(|interface: NonNullVoidPtr| result.into_enum_data(|| unsafe { T::parse(interface) }))
+            .map(|interface: NonNullVoidPtr| {
+                result.into_enum_data(|| unsafe { T::parse(interface) })
+            })
     }
 
     #[inline(always)]

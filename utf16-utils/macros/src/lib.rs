@@ -1,3 +1,4 @@
+#![allow(deprecated)]
 #![forbid(warnings, clippy::pedantic)]
 #![feature(assoc_char_funcs)]
 

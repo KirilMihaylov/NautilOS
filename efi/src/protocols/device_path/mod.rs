@@ -1,4 +1,6 @@
-use crate::{guid::EfiGuid, guids::EFI_DEVICE_PATH_PROTOCOL, protocols::EfiProtocol, types::NonNullVoidPtr};
+use crate::{
+    guid::EfiGuid, guids::EFI_DEVICE_PATH_PROTOCOL, protocols::EfiProtocol, types::NonNullVoidPtr,
+};
 
 #[repr(transparent)]
 pub struct EfiDevicePathProtocolRaw {

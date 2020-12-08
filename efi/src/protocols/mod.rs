@@ -23,11 +23,15 @@ pub trait EfiProtocol {
 }
 
 pub trait ParseResult
-where Self: EfiProtocol {
+where
+    Self: EfiProtocol,
+{
     type Result;
 }
 
 impl<T> ParseResult for T
-where T: EfiProtocol + ?Sized {
+where
+    T: EfiProtocol + ?Sized,
+{
     type Result = Result<<Self as EfiProtocol>::Parsed, <Self as EfiProtocol>::Error>;
 }

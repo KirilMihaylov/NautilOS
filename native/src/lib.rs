@@ -11,11 +11,11 @@
 //! When used in kernel mode, this crate will assume supervisor permissions.
 
 #![no_std]
-#![allow(dead_code)]
 #![doc(html_no_source)]
+#![allow(unused_macros)]
+#![forbid(warnings)]
 /* For platform-specific operations */
 #![feature(asm)]
-#![forbid(warnings)]
 
 #[macro_use]
 mod macros;

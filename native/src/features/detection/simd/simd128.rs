@@ -1,11 +1,8 @@
 //! Provides interface over platform's 128-bit SIMD features.
 
 use crate::{
-    features::detection::{available as detection_available, FeatureState},
-    result::{
-        Error::{self, FeatureDisabled},
-        Result,
-    },
+    features::detection::FeatureState,
+    result::{Error, Result},
 };
 
 /// Checks whether the minimal 128-bit SIMD instructions are supported.
@@ -13,7 +10,6 @@ use crate::{
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`detection_available`] when it returns an error.
 pub fn min_available() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
@@ -177,7 +173,6 @@ pub fn min_available() -> Result<FeatureState> {
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`detection_available`] when it returns an error.
 pub fn available() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {

@@ -1,5 +1,3 @@
-#![allow(unused_macros)]
-
 macro_rules! supported_targets {
 	($([$($($condition:tt)+),+]),+) => {
 		#[cfg(not(any($(all($($($condition)+),+)),+)))]

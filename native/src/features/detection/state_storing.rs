@@ -2,10 +2,7 @@
 
 use crate::{
     features::detection::{available as detection_available, FeatureState},
-    result::{
-        Error::{self, FeatureDisabled, Unavailable},
-        Result,
-    },
+    result::{Error, Result},
 };
 
 /// Checks whether extended (feature defined) state storing mechanism is available.
@@ -75,7 +72,6 @@ pub fn available() -> Result<FeatureState> {
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn enable() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {
@@ -114,7 +110,6 @@ pub fn enable() -> Result<FeatureState> {
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
 pub fn disable() -> Result<FeatureState> {
-    use Error::*;
     use FeatureState::*;
 
     target_arch_else_unimplemented_error! {

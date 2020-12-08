@@ -1,11 +1,7 @@
 //! Provides interface over platform's state storing features.
 
 use crate::{
-    features::detection::{state_storing::available as state_storing_available, FeatureState},
-    result::{
-        Error::{self, Unavailable},
-        Result,
-    },
+    features::detection::state_storing::available as state_storing_available, result::Result,
 };
 
 /// Contains information about the state storing mechanism.
@@ -44,9 +40,6 @@ impl StateStoringInfo {
 /// Depending on the platform the architectural state storing and the extended state storing *may or may not* be separable.
 /// In case they are not, this function will return `Err` with [`Unavailable`], even when [`state_storing_available`] returns value indicating the mechanism itself is.
 pub fn extended_state_storing_info() -> Result<StateStoringInfo> {
-    use Error::*;
-    use FeatureState::*;
-
     match state_storing_available() {
         Ok(_feature_state) => {
             target_arch_else_unimplemented_error! {
@@ -88,9 +81,6 @@ pub fn extended_state_storing_info() -> Result<StateStoringInfo> {
 /// This function does **not** store the current page map (when paging is used) nor pointer to the page map (when the platform uses such to perform paging).
 #[cfg(any(feature = "kernel_mode", doc))]
 pub fn state_storing_info() -> Result<StateStoringInfo> {
-    use Error::*;
-    use FeatureState::*;
-
     match state_storing_available() {
         Ok(_feature_state) => {
             target_arch_else_unimplemented_error! {
