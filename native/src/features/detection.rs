@@ -19,6 +19,8 @@
 //!             * Return `Ok` with respective [`FeatureState`] value.
 //!         * Feature is unavailable.
 //!             * Return `Err` with [`Unavailable`].
+//! 
+//! [`Unavailable`]: variant@crate::result::Error::Unavailable
 
 use crate::result::Result;
 
@@ -40,6 +42,9 @@ global_target_arch! {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn available() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -94,6 +99,9 @@ pub fn available() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn enable() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -124,6 +132,9 @@ pub fn enable() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn disable() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -154,6 +165,9 @@ pub fn disable() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn cpu_vendor_id_available() -> Result<FeatureState> {
     use FeatureState::*;
 

@@ -10,7 +10,8 @@ use crate::{
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`available`] when it returns an error.
 ///
-/// [`available`]: fn@detection_available
+/// [`FeatureDisabled`]: variant@crate::features::detection::FeatureState::FeatureDisabled
+/// [`available`]: fn@crate::features::detection::available
 pub fn available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
@@ -71,6 +72,9 @@ pub fn available() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn enable() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -109,6 +113,9 @@ pub fn enable() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
+/// 
+/// [`Unavailable`]: variant@crate::result::Error::Unavailable
+/// [`Error`]: enum@crate::result::Error
 pub fn disable() -> Result<FeatureState> {
     use FeatureState::*;
 

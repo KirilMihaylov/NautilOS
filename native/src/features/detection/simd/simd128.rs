@@ -8,7 +8,10 @@ use crate::{
 /// Checks whether the minimal 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_available`] when it returns an error.
+/// Returns error value returned by [`available`] when it returns an error.
+/// 
+/// [`available`]: fn@crate::features::detection::available
+/// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 pub fn min_available() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -171,7 +174,10 @@ pub fn min_available() -> Result<FeatureState> {
 /// Checks whether the recommended 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_available`] when it returns an error.
+/// Returns error value returned by [`available`] when it returns an error.
+/// 
+/// [`available`]: fn@crate::features::detection::available
+/// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 pub fn available() -> Result<FeatureState> {
     use FeatureState::*;
 
@@ -336,7 +342,10 @@ pub fn available() -> Result<FeatureState> {
 /// Checks whether the maximal 128-bit SIMD instructions are supported.
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
-/// Returns error value returned by [`detection_available`] when it returns an error.
+/// Returns error value returned by [`available`] when it returns an error.
+/// 
+/// [`available`]: fn@crate::features::detection::available
+/// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 pub fn max_available() -> Result<FeatureState> {
     use Error::*;
     use FeatureState::*;
