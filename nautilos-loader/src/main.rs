@@ -14,7 +14,7 @@
 //! 1. Transfering control to the kernel initializer.
 
 #![no_std]
-#![cfg_attr(not(doc), no_main)]
+#![no_main]
 #![doc(html_no_source)]
 #![feature(panic_info_message, never_type)]
 #![forbid(warnings, missing_docs, clippy::pedantic)]
