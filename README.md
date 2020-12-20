@@ -22,5 +22,5 @@ cargo doc [--target <target triple>] [<additional arguments>] [--release]
 ## Clippy
 To run `clippy`, run:
 ```
-cargo doc [--target <target triple>] [<additional arguments>] [--release]
+cargo clippy [--target <target triple>] [<additional arguments>] [--release]
 ```
