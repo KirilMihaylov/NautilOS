@@ -15,4 +15,5 @@ acpi = { path = "../acpi", features = ["efi_interops"] }
 efi = { path = "../efi" }
 native = { path = "../native", features = ["kernel_mode"] }
 nautilos-allocator = { path = "../nautilos-allocator", features = ["alloc_impl"] }
+nautilos-async = { path = "../nautilos-async" }
 utf16-utils = { path = "../utf16-utils" }

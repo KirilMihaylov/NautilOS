@@ -5,6 +5,7 @@ members = [
 	"efi_interops",
 	"native",
 	"native/native_macros",
+	"nautilos-async",
 	"nautilos-loader",
 	"nautilos-allocator",
 	"utf16-utils",
