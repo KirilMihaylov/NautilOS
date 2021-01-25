@@ -3,7 +3,7 @@
 use core::{
     mem::align_of,
     panic::{Location, PanicInfo},
-    sync::atomic::{AtomicBool, AtomicPtr, Ordering::Relaxed},
+    sync::atomic::{AtomicBool, AtomicPtr, Ordering},
 };
 
 use efi::protocols::console::EfiSimpleTextOutputProtocol;
@@ -23,9 +23,9 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 #[panic_handler]
 fn panic_handler(panic_info: &PanicInfo) -> ! {
     /* Stops recursive panics and allows multi-threading */
-    while !IN_PANIC.compare_and_swap(false, true, Relaxed) {}
+    while let Err(_) = IN_PANIC.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {}
 
-    let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Relaxed);
+    let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Ordering::SeqCst);
 
     if con_out.align_offset(align_of::<EfiSimpleTextOutputProtocol>()) == 0 {
         if let Some(con_out) = unsafe { con_out.as_mut() } {
@@ -54,7 +54,7 @@ fn panic_handler(panic_info: &PanicInfo) -> ! {
     }
 
     /* Reset state in case of multithreading */
-    IN_PANIC.store(false, Relaxed);
+    IN_PANIC.store(false, Ordering::SeqCst);
 
     loop {}
 }
