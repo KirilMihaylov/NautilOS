@@ -68,13 +68,17 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
         width = core::mem::size_of::<usize>() * 2
     );
 
-    loop {}
+    loop {
+        core::hint::spin_loop();
     }
+}
 
 mod stages {
+    use efi::{boot_services::EfiBootServices1x0, runtime_services::EfiRuntimeServices};
+
     use crate::{efi_panic, efi_warn, log, warn};
 
-    pub fn start_up(boot_services: &mut efi::boot_services::EfiBootServices1x0) {
+    pub fn start_up(boot_services: &mut EfiBootServices1x0) {
         setup_detection_mechanism();
 
         setup_state_storing();
@@ -130,7 +134,7 @@ mod stages {
         }
     }
 
-    fn setup_allocator(boot_services: &efi::boot_services::EfiBootServices1x0) {
+    fn setup_allocator(boot_services: &EfiBootServices1x0) {
         use {
             crate::defs::OsMemoryType,
             core::slice::from_raw_parts_mut,
@@ -180,8 +184,8 @@ mod stages {
     }
 
     pub fn get_boot_device_handle(
-        boot_services: &efi::boot_services::EfiBootServices1x0,
-        runtime_services: &efi::runtime_services::EfiRuntimeServices,
+        boot_services: &EfiBootServices1x0,
+        runtime_services: &EfiRuntimeServices,
     ) -> efi::EfiHandle {
         use {
             alloc::vec::Vec,
