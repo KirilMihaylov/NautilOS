@@ -10,5 +10,15 @@ members = [
 	"utf16-utils",
 ]
 
+[profile.bench]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+
 [profile.release]
+panic = "abort"
 lto = "fat"
+
+[profile.test]
+panic = "abort"
