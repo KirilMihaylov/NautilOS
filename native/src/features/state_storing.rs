@@ -39,7 +39,7 @@ impl StateStoringInfo {
 /// # Notes
 /// Depending on the platform the architectural state storing and the extended state storing *may or may not* be separable.
 /// In case they are not, this function will return `Err` with [`Unavailable`], even when [`available`] returns value indicating the mechanism itself is.
-/// 
+///
 /// [`Unavailable`]: variant@crate::result::Error::Unavailable
 /// [`available`]: fn@crate::features::detection::state_storing::available
 pub fn extended_state_storing_info() -> Result<StateStoringInfo> {

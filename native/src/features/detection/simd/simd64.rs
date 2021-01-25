@@ -104,7 +104,7 @@ global_target_arch! {
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`available`] when it returns an error.
-/// 
+///
 /// [`available`]: fn@crate::features::detection::available
 /// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 #[cfg_attr(
@@ -123,7 +123,7 @@ pub fn min_available() -> Result<FeatureState> {
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`available`] when it returns an error.
-/// 
+///
 /// [`available`]: fn@crate::features::detection::available
 /// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 #[cfg_attr(
@@ -142,7 +142,7 @@ pub fn available() -> Result<FeatureState> {
 ///
 /// Returns `Err` with [`FeatureDisabled`] when feature detection mechanism is required but is disabled.
 /// Returns error value returned by [`available`] when it returns an error.
-/// 
+///
 /// [`available`]: fn@crate::features::detection::available
 /// [`FeatureDisabled`]: enum@crate::features::detection::FeatureState
 #[cfg_attr(

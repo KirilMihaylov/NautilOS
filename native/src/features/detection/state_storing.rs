@@ -72,7 +72,7 @@ pub fn available() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
+///
 /// [`Unavailable`]: variant@crate::result::Error::Unavailable
 /// [`Error`]: enum@crate::result::Error
 pub fn enable() -> Result<FeatureState> {
@@ -113,7 +113,7 @@ pub fn enable() -> Result<FeatureState> {
 /// It returns `Ok` when mechanism is available.
 /// Returns `Err` with [`Unavailable`] when mechanism is unavailable.
 /// Returns `Err` with respective [`Error`] value when an error occured while checking.
-/// 
+///
 /// [`Unavailable`]: variant@crate::result::Error::Unavailable
 /// [`Error`]: enum@crate::result::Error
 pub fn disable() -> Result<FeatureState> {
