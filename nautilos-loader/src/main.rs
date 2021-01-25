@@ -27,7 +27,7 @@ mod macros;
 pub mod panic_handling;
 
 use {
-    core::sync::atomic::Ordering,
+    core::{sync::atomic::Ordering, mem::size_of},
     efi::{
         boot_services::EfiBootServices, runtime_services::EfiRuntimeServices, EfiHandle, EfiStatus,
         EfiSystemTable,
@@ -65,7 +65,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
     debug_info!(
         "Boot Device Handle: 0x{:0>width$X}",
         boot_device_handle as usize,
-        width = core::mem::size_of::<usize>() * 2
+        width = size_of::<usize>() * 2
     );
 
     loop {
