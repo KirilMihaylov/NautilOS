@@ -36,3 +36,4 @@ pub mod guids;
 pub mod protocols;
 pub mod runtime_services;
 pub mod structures;
+pub mod variables;

@@ -69,7 +69,7 @@ fn efi_main(_image_handle: EfiHandle, system_table: &mut EfiSystemTable) -> EfiS
     );
 
     loop {}
-}
+    }
 
 mod stages {
     use crate::{efi_panic, efi_warn, log, warn};
@@ -189,15 +189,16 @@ mod stages {
                 guids::{EFI_DISK_IO_PROTOCOL, EFI_GLOBAL_VARIABLE},
                 protocols::{device_path::EfiDevicePathProtocolRaw, EfiProtocol},
                 structures::load_option::EfiLoadOption,
+                variables::EFI_BOOT_CURRENT_VARIABLE_NAME,
                 EfiStatusEnum, EfiStatusError, NonNullVoidPtr, VoidMutPtr,
             },
-            utf16_utils::{macros::c_utf16, ArrayEncoder},
+            utf16_utils::ArrayEncoder,
         };
 
         let boot_device_number: &mut [u8] = &mut [0; 2];
 
         match runtime_services.revision_1_0().get_variable(
-            &c_utf16!("BootCurrent\0"),
+            EFI_BOOT_CURRENT_VARIABLE_NAME,
             &EFI_GLOBAL_VARIABLE,
             Some(boot_device_number),
         ) {
