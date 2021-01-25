@@ -146,7 +146,7 @@ mod stages {
         };
 
         const REQUIRED_HEAP_SIZE: usize = Heap::UNALIGNED_REQUIRED_INITIAL_SIZE;
-        const ADDITIONAL_HEAP_SIZE: usize = 0x0010_0000; // 1 MB
+        const ADDITIONAL_HEAP_SIZE: usize = 0x0100_0000; // 16 MB
         const TOTAL_HEAP_SIZE: usize = REQUIRED_HEAP_SIZE + ADDITIONAL_HEAP_SIZE;
 
         let address: EfiPhysicalAddress;
