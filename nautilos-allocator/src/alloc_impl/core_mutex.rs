@@ -20,7 +20,10 @@ impl<T> CoreMutex<T> {
     }
 
     pub fn lock(&self) -> Lock<T> {
-        while self.lock.compare_and_swap(false, true, Ordering::SeqCst) {}
+        while let Err(_) =
+            self.lock
+                .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        {}
 
         Lock::new(self)
     }
@@ -47,10 +50,10 @@ impl<'a, T> Lock<'a, T> {
 impl<T> Drop for Lock<'_, T> {
     #[track_caller]
     fn drop(&mut self) {
-        if !self
-            .mutex
-            .lock
-            .compare_and_swap(true, false, Ordering::SeqCst)
+        if let Err(false) =
+            self.mutex
+                .lock
+                .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
         {
             panic!("Internal error occured while unlocking CoreMutex! Mutex already unlocked!");
         }
