@@ -7,11 +7,11 @@ use {
         heap::{init_in_place::initialization_error::InitializationError, Heap},
         heap_error::HeapError,
     },
+    alloc::alloc::handle_alloc_error,
     core::{
         alloc::{GlobalAlloc, Layout},
         ptr::{null_mut, NonNull},
     },
-    alloc::alloc::handle_alloc_error,
     core_mutex::{CoreMutex, Lock},
 };
 
@@ -20,7 +20,7 @@ static ALLOC_IMPL: Allocator = Allocator::new();
 
 struct HeapState {
     poisoned: bool,
-    heap: &'static mut Heap,
+    heap: &'static mut Heap<'static>,
 }
 
 impl HeapState {
@@ -58,10 +58,10 @@ impl Allocator {
             return Err(AllocatorInitializationError::DoubleInitialization);
         }
 
-        *lock = Some(HeapState::new(
-            Heap::init_in_place(memory)
-                .map_err(AllocatorInitializationError::InitializationError)?,
-        ));
+        *lock = Some(HeapState::new(match Heap::init_in_place(memory) {
+            Ok(data) => data,
+            Err(error) => return Err(AllocatorInitializationError::InitializationError(error)),
+        }));
 
         Ok(())
     }
@@ -109,11 +109,6 @@ unsafe impl GlobalAlloc for Allocator {
             Some(state) => {
                 let result: Result<NonNull<u8>, HeapError> = state.heap.realloc_from_layout(
                     address,
-                    if let Ok(layout) = Layout::from_size_align(layout.size(), layout.align()) {
-                        layout
-                    } else {
-                        return null_mut();
-                    },
                     if let Ok(layout) = Layout::from_size_align(new_size, layout.align()) {
                         layout
                     } else {
@@ -141,24 +136,21 @@ unsafe impl GlobalAlloc for Allocator {
     unsafe fn dealloc(&self, address: *mut u8, layout: Layout) {
         let mut lock: Lock<Option<HeapState>> = self.mutex.lock();
 
-        match &mut *lock {
-            Some(state) => {
-                let result: Result<(), HeapError> = state.heap.dealloc_from_layout(
-                    address,
-                    if let Ok(layout) = Layout::from_size_align(layout.size(), layout.align()) {
-                        layout
-                    } else {
-                        return;
-                    },
-                );
+        if let Some(state) = &mut *lock {
+            let result: Result<(), HeapError> = state.heap.dealloc_from_layout(
+                address,
+                if let Ok(layout) = Layout::from_size_align(layout.size(), layout.align()) {
+                    layout
+                } else {
+                    return;
+                },
+            );
 
-                if let Err(HeapError::InternalError) = result {
-                    state.poisoned = true;
+            if let Err(HeapError::InternalError) = result {
+                state.poisoned = true;
 
-                    handle_alloc_error(layout);
-                }
+                handle_alloc_error(layout);
             }
-            None => (),
         }
     }
 }

@@ -1,205 +1,131 @@
 use {
     crate::{
-        heap::{Heap, HeapEntry},
+        heap::{fold_elements::FoldElements, Heap},
         heap_error::HeapError,
         memory_range::MemoryRange,
     },
     core::{
         alloc::Layout,
-        iter::{from_fn, FromFn},
+        ops::RangeInclusive,
         ptr::{copy, write_bytes, NonNull},
     },
 };
 
-impl Heap {
+impl Heap<'_> {
     fn find_reallocation_address(
         &self,
-        range_index: usize,
-        layout: Layout,
-    ) -> Result<MemoryRange, HeapError> {
-        let mut iter = self
-            .entries
-            .iter()
-            .enumerate()
-            .filter(|&(index, (free, _)): &(usize, &HeapEntry)| *free || index == range_index)
-            .peekable();
-
-        let iter: FromFn<_> = from_fn(move || -> Option<MemoryRange> {
-            let (index, (_, mut range)): (usize, HeapEntry) = iter
-                .next()
-                .map(|(index, &entry): (usize, &HeapEntry)| (index, entry))?;
-
-            'sum_ranges_loop: while let Some(&(next_index, (free, next_range))) = iter.peek() {
-                if next_index == range_index || (*free && index == range_index) {
-                    if let Some(new_range) = range.add_loose(*next_range) {
-                        range = new_range;
-
-                        let _: Option<(usize, &(bool, MemoryRange))> = iter.next();
-                    } else {
-                        break 'sum_ranges_loop;
-                    }
-                } else {
-                    break 'sum_ranges_loop;
-                }
-            }
-
-            Some(range)
-        });
-
-        Self::find_best_fit(layout, iter).ok_or(HeapError::OutOfMemory)
-    }
-
-    fn update_ranges(
-        &mut self,
-        range_index: usize,
         old_range: MemoryRange,
-        new_range: MemoryRange,
-    ) -> Result<(), HeapError> {
-        let mut remove_range: bool = false;
-        let mut add_range: Option<MemoryRange> = None;
-
-        {
-            let ranges: &mut [HeapEntry] = {
-                let end_index: usize = self.entries.len().min(range_index + 2);
-
-                &mut self.entries.buffer_mut()[range_index..end_index]
-            };
-
-            match ranges {
-                [(_, range), (true, next_range)] => {
-                    *range = new_range;
-
-                    match next_range.subtract(new_range) {
-                        (Some(_), _) => return Err(HeapError::InternalError),
-                        (None, Some(range)) => *next_range = range,
-                        (None, None) => remove_range = true,
-                    }
-                }
-                [(_, range)] | [(_, range), _] if new_range.len() <= old_range.len() => {
-                    *range = new_range;
-
-                    match old_range.subtract(new_range) {
-                        (Some(_), _) => return Err(HeapError::InternalError),
-                        (None, range @ Some(_)) => add_range = range,
-                        (None, None) => (),
-                    }
-                }
-                _ => return Err(HeapError::InternalError),
-            }
-        }
-
-        match (remove_range, add_range) {
-            (true, Some(range)) => {
-                if let Some(mut entry) = self.entries.get_mut(range_index + 1) {
-                    *entry = (true, range);
-                } else {
-                    return Err(HeapError::InternalError);
-                }
-            }
-            (true, None) => self.entries.remove(range_index + 1),
-            (false, Some(range)) => {
-                if self.entries.insert((true, range)).is_err() {
-                    return Err(HeapError::InternalError);
-                }
-            }
-            _ => (),
-        }
-
-        Ok(())
+        layout: Layout,
+    ) -> Result<(RangeInclusive<usize>, MemoryRange), HeapError> {
+        Self::find_best_fit(
+            layout,
+            self.free
+                .iter()
+                .enumerate()
+                .map(|(index, &range): (usize, &MemoryRange)| {
+                    (
+                        index..=index,
+                        range
+                            .add_loose(old_range)
+                            .map_or(range, |range: MemoryRange| range),
+                    )
+                })
+                .fold_elements(
+                    |cumulative: (RangeInclusive<usize>, MemoryRange),
+                     element: (RangeInclusive<usize>, MemoryRange)| {
+                        cumulative.1.add_loose(element.1).map(|range: MemoryRange| {
+                            (*cumulative.0.start()..=*element.0.end(), range)
+                        })
+                    },
+                ),
+        )
+        .ok_or(HeapError::OutOfMemory)
     }
 
     unsafe fn zero_out_delta(old_range: MemoryRange, new_range: MemoryRange) {
-        let (min_end, min_len, max_len): (usize, usize, usize) = (
-            old_range.end().min(new_range.end()) + 1,
-            old_range.len().min(new_range.len()),
-            old_range.len().max(new_range.len()),
-        );
-
-        write_bytes(min_end as *mut u8, 0, max_len - min_len);
+        match old_range.subtract(new_range) {
+            (Some(left), Some(right)) => {
+                write_bytes(left.start() as *mut u8, 0, left.len());
+                write_bytes(right.start() as *mut u8, 0, right.len());
+            }
+            (Some(range), None) | (None, Some(range)) => {
+                write_bytes(range.start() as *mut u8, 0, range.len());
+            }
+            (None, None) => (),
+        }
     }
 
     #[must_use = "Dropping this value may cause a memory leak."]
     pub(super) fn realloc_inner(
         &mut self,
         address: usize,
-        old_layout: Layout,
-        new_layout: Layout,
+        layout: Layout,
     ) -> Result<NonNull<u8>, HeapError> {
-        if old_layout.align() != new_layout.align() {
-            return Err(HeapError::DifferentAlignment);
-        }
-
         if address == 0 {
-            return self.alloc_from_layout(new_layout);
+            return self.alloc_from_layout(layout);
         }
 
-        let (range_index, old_range) = self
-            .find_range_from_address(address as usize)
-            .and_then(
-                |(index, (free, range)): (usize, HeapEntry)| {
-                    if free {
-                        None
-                    } else {
-                        Some((index, range))
-                    }
-                },
+        let (store_index, range_index, old_range): (usize, usize, MemoryRange) =
+            if let Some(range) = self.find_range_from_address(layout.align(), address as usize) {
+                range.unzip()
+            } else {
+                return Err(HeapError::NoSuchMemoryRange);
+            };
+
+        let (indexes_range, new_range): (RangeInclusive<usize>, MemoryRange) =
+            match self.find_reallocation_address(old_range, layout) {
+                Ok(data) => data,
+                Err(error) => return Err(error),
+            };
+
+        let (left_free_range, right_free_range): (Option<MemoryRange>, Option<MemoryRange>) =
+            MemoryRange::new(
+                self.free[*indexes_range.start()].start(),
+                self.free[*indexes_range.end()].end(),
             )
-            .ok_or(HeapError::NoSuchMemoryRange)?;
+            .map_or((None, None), |range: MemoryRange| range.subtract(new_range));
 
-        let new_range: MemoryRange = self.find_reallocation_address(range_index, new_layout)?;
+        self.free.remove_range(indexes_range);
 
-        if old_range.start() == new_range.start() {
-            if old_range != new_range {
-                self.update_ranges(range_index, old_range, new_range)?;
-
-                // Safety: Both ranges are checked and guaranteed to be valid.
-                unsafe {
-                    Self::zero_out_delta(old_range, new_range);
-                }
+        if let Some(range) = left_free_range {
+            if self.free.insert(range).is_err() {
+                return Err(HeapError::InternalError);
             }
-
-            NonNull::new(new_range.start() as *mut u8).ok_or(HeapError::InternalError)
-        } else {
-            let pointer: NonNull<u8> = self.allocate_memory(new_range)?;
-
-            unsafe {
-                copy(
-                    old_range.start() as *const u8,
-                    pointer.as_ptr(),
-                    old_range.len().min(new_range.len()),
-                );
-
-                match old_range.overlapped(new_range) {
-                    Some(overlapped_range) => {
-                        let ranges: [Option<MemoryRange>; 2] = {
-                            let (left, right): (Option<MemoryRange>, Option<MemoryRange>) =
-                                old_range.subtract(overlapped_range);
-
-                            [left, right]
-                        };
-
-                        for range in &ranges {
-                            if let Some(range) = range {
-                                write_bytes(range.start() as *mut u8, 0, range.len());
-                            }
-                        }
-                    }
-                    None => write_bytes(old_range.start() as *mut u8, 0, old_range.len()),
-                }
-
-                if old_range.len() < new_range.len() {
-                    write_bytes(
-                        (new_range.end() + 1) as *mut u8,
-                        0,
-                        new_range.len() - old_range.len(),
-                    );
-                }
-            }
-
-            self.dealloc_from_layout(address as *mut u8, old_layout)?;
-
-            Ok(pointer)
         }
+
+        if let Some(range) = right_free_range {
+            if self.free.insert(range).is_err() {
+                return Err(HeapError::InternalError);
+            }
+        }
+
+        if let Some(mut store) = self.allocated.get_mut(store_index) {
+            if let Some(mut range) = store.1.get_mut(range_index) {
+                *range = new_range;
+            } else {
+                return Err(HeapError::InternalError);
+            }
+        } else {
+            return Err(HeapError::InternalError);
+        }
+
+        unsafe {
+            copy(
+                old_range.start() as *const u8,
+                new_range.start() as *mut u8,
+                old_range.len().min(new_range.len()),
+            );
+
+            Self::zero_out_delta(old_range, new_range);
+        }
+
+        Ok(
+            if let Some(ptr) = NonNull::new(new_range.start() as *mut u8) {
+                ptr
+            } else {
+                return Err(HeapError::InternalError);
+            },
+        )
     }
 
     /// # Errors
@@ -208,19 +134,26 @@ impl Heap {
     pub fn realloc_from_layout(
         &mut self,
         address: *mut u8,
-        old_layout: Layout,
-        new_layout: Layout,
+        layout: Layout,
     ) -> Result<NonNull<u8>, HeapError> {
-        self.reallocate_self()?;
+        if let Err(error) = self.reallocate_self() {
+            return Err(error);
+        }
 
-        self.realloc_inner(address as usize, old_layout, new_layout)
+        self.realloc_inner(address as usize, layout)
     }
 
     /// # Errors
     /// TODO
     #[must_use = "Dropping this value may cause a memory leak."]
-    pub fn realloc<T, U>(&mut self, address: *mut U) -> Result<NonNull<T>, HeapError> {
-        self.realloc_from_layout(address as *mut u8, Layout::new::<U>(), Layout::new::<U>())
+    pub fn realloc<T, U>(&mut self, address: *mut T) -> Result<NonNull<U>, HeapError> {
+        let layout: Layout = Layout::new::<U>();
+
+        if layout.align() != Layout::new::<T>().align() {
+            return Err(HeapError::DifferentAlignment);
+        }
+
+        self.realloc_from_layout(address as *mut u8, layout)
             .map(NonNull::cast)
     }
 }

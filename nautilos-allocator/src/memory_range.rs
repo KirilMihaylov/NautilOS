@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use core::{
     fmt::{Debug, Formatter, Result as FmtResult},
     num::NonZeroUsize,
@@ -38,9 +36,7 @@ impl MemoryRange {
     }
 
     #[must_use]
-    pub const fn new_with_length(start: usize, length: usize) -> Option<Self> {
-        let length: usize;
-        
+    pub const fn new_with_length(start: usize, mut length: usize) -> Option<Self> {
         match length.checked_sub(1) {
             Some(calculated_length) => length = calculated_length,
             None => return None,
@@ -48,7 +44,7 @@ impl MemoryRange {
 
         match start.checked_add(length) {
             Some(end) => Self::new(start, end),
-            None => return None,
+            None => None,
         }
     }
 
@@ -115,26 +111,6 @@ impl MemoryRange {
     }
 
     #[must_use]
-    pub const fn add(&self, other: MemoryRange) -> Option<MemoryRange> {
-        if self.is_overlapped(other) {
-            Self::new(
-                if self.start() < other.start() {
-                    self.start()
-                } else {
-                    other.start()
-                },
-                if other.end() < self.end() {
-                    self.end()
-                } else {
-                    other.end()
-                },
-            )
-        } else {
-            None
-        }
-    }
-
-    #[must_use]
     pub const fn add_loose(&self, other: MemoryRange) -> Option<MemoryRange> {
         if self.is_overlapped_or_ajasoned(other) {
             let (start, end): (usize, usize);
@@ -146,15 +122,12 @@ impl MemoryRange {
             };
 
             end = if self.end() < other.end() {
-                    other.end()
-                } else {
-                    self.end()
-                };
+                other.end()
+            } else {
+                self.end()
+            };
 
-            Self::new(
-                start,
-                end,
-            )
+            Self::new(start, end)
         } else {
             None
         }

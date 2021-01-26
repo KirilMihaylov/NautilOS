@@ -1,8 +1,8 @@
 use core::{
     cmp::Ordering,
     fmt::{Debug, Formatter, Result as FmtResult},
-    ops::{Deref, DerefMut, Index, IndexMut},
-    ptr::{read, write},
+    ops::{Bound, Deref, DerefMut, Index, IndexMut, RangeBounds},
+    ptr::{drop_in_place, read, write},
 };
 
 pub struct List<'a, T> {
@@ -13,13 +13,6 @@ pub struct List<'a, T> {
 impl<'a, T> List<'a, T> {
     pub const fn new(buffer: &'a mut [T]) -> Self {
         Self { buffer, length: 0 }
-    }
-
-    pub const fn empty() -> Self {
-        Self {
-            buffer: &mut [],
-            length: 0,
-        }
     }
 
     pub const fn is_empty(&self) -> bool {
@@ -72,7 +65,7 @@ impl<'a, T> List<'a, T> {
         }
 
         unsafe {
-            read(&self.buffer()[index]);
+            drop_in_place(&mut self.buffer_mut()[index]);
         }
 
         for index in index..self.len() {
@@ -82,6 +75,48 @@ impl<'a, T> List<'a, T> {
         }
 
         self.length -= 1;
+    }
+
+    pub fn remove_range<R>(&mut self, range: R)
+    where
+        R: RangeBounds<usize>,
+    {
+        if self.is_empty() {
+            return;
+        }
+
+        let left: usize = match range.start_bound() {
+            Bound::Excluded(&start) => start.saturating_add(1),
+            Bound::Included(&start) => start,
+            Bound::Unbounded => 0,
+        };
+
+        let right: usize = match range.end_bound() {
+            Bound::Excluded(&end) => end.max(self.len()),
+            Bound::Included(&end) => end.saturating_add(1).max(self.len()),
+            Bound::Unbounded => self.len(),
+        };
+
+        if right <= left {
+            return;
+        }
+
+        for index in left..right {
+            unsafe {
+                drop_in_place(&mut self.buffer_mut()[index]);
+            }
+        }
+
+        for index in 0..(right - left) {
+            unsafe {
+                write(
+                    &mut self.buffer[left + index],
+                    read(&self.buffer[right + index]),
+                );
+            }
+        }
+
+        self.length -= right - left;
     }
 
     pub const fn get(&self, index: usize) -> Option<&T> {

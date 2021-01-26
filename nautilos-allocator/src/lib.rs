@@ -1,4 +1,4 @@
-#![cfg_attr(not(test), no_std)]
+#![no_std]
 #![allow(clippy::question_mark)]
 #![forbid(warnings, clippy::pedantic)]
 #![feature(const_alloc_layout, const_fn_fn_ptr_basics, const_mut_refs)]

@@ -1,15 +1,14 @@
-#![allow(dead_code)]
-
 use core::{
     cmp::Ordering,
     fmt::{Debug, Formatter, Result as FmtResult},
-    ops::{Deref, DerefMut, Index, IndexMut},
+    ops::{Deref, DerefMut, Index, IndexMut, RangeBounds},
     ptr::{read_unaligned, write_unaligned},
     slice::Iter,
 };
 
 use crate::list::List;
 
+#[repr(transparent)]
 struct Wrapper<T>(T);
 
 impl<T> Wrapper<T> {
@@ -61,24 +60,6 @@ impl<'a, T> SortedList<'a, T> {
         }
     }
 
-    pub const fn empty(sort_fn: SortFn<T>) -> Self {
-        Self {
-            buffer: List::empty(),
-            sort_fn: Wrapper::new(sort_fn),
-        }
-    }
-
-    pub fn from_list(buffer: List<'a, T>, sort_fn: SortFn<T>) -> Self {
-        Self {
-            buffer,
-            sort_fn: sort_fn.into(),
-        }
-    }
-
-    pub const fn is_empty(&self) -> bool {
-        self.buffer.is_empty()
-    }
-
     pub const fn len(&self) -> usize {
         self.buffer.len()
     }
@@ -99,12 +80,8 @@ impl<'a, T> SortedList<'a, T> {
         Range::new(self.buffer.buffer())
     }
 
-    pub fn buffer_mut(&mut self) -> RangeMut<'a, '_, T> {
-        RangeMut::new(self, ..)
-    }
-
     fn sort_list(&mut self) {
-        for index in 0..(self.len() - 1) {
+        for index in 0..self.len().saturating_sub(1) {
             let mut min_value_index: usize = index;
 
             for index in (index + 1)..self.len() {
@@ -128,12 +105,6 @@ impl<'a, T> SortedList<'a, T> {
         }
     }
 
-    pub fn set_sort_fn(&mut self, sort_fn: fn(&T, &T) -> Ordering) {
-        self.sort_fn = sort_fn.into();
-
-        self.sort_list();
-    }
-
     pub fn insert(&mut self, value: T) -> Result<(), T> {
         if let error @ Err(_) = self.buffer.insert(value) {
             return error;
@@ -150,6 +121,15 @@ impl<'a, T> SortedList<'a, T> {
         self.sort_list();
     }
 
+    pub fn remove_range<R>(&mut self, range: R)
+    where
+        R: RangeBounds<usize>,
+    {
+        self.buffer.remove_range(range);
+
+        self.sort_list();
+    }
+
     pub const fn get(&self, index: usize) -> Option<&T> {
         self.buffer.get(index)
     }
@@ -160,13 +140,6 @@ impl<'a, T> SortedList<'a, T> {
 
     pub fn iter(&'a self) -> Iter<'a, T> {
         self.buffer.buffer().iter()
-    }
-
-    pub fn binary_search(&self, x: &T) -> Result<usize, usize>
-    where
-        T: Ord,
-    {
-        self.buffer.binary_search_by(|p: &T| p.cmp(x))
     }
 
     pub fn binary_search_by<F>(&'a self, f: F) -> Result<usize, usize>
@@ -309,14 +282,17 @@ pub struct RangeMut<'a, 'b, T> {
     elements: *mut [T],
 }
 
-impl<'a, 'b, T> RangeMut<'a, 'b, T> {
-    #[must_use]
-    pub fn new<U>(list: &'b mut SortedList<'a, T>, range: U) -> Self
-    where
-        [T]: Index<U, Output = [T]> + IndexMut<U>,
-    {
-        let elements: *mut [T] = &mut list.buffer.buffer_mut()[range];
-        Self { list, elements }
+impl<T> Deref for RangeMut<'_, '_, T> {
+    type Target = [T];
+
+    fn deref(&self) -> &<Self as Deref>::Target {
+        unsafe { &*self.elements }
+    }
+}
+
+impl<T> DerefMut for RangeMut<'_, '_, T> {
+    fn deref_mut(&mut self) -> &mut <Self as Deref>::Target {
+        unsafe { &mut *self.elements }
     }
 }
 
