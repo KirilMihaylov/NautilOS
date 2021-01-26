@@ -27,7 +27,7 @@ mod macros;
 pub mod panic_handling;
 
 use {
-    core::{sync::atomic::Ordering, mem::size_of},
+    core::{mem::size_of, sync::atomic::Ordering},
     efi::{
         boot_services::EfiBootServices, runtime_services::EfiRuntimeServices, EfiHandle, EfiStatus,
         EfiSystemTable,
