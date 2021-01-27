@@ -153,7 +153,7 @@ impl Heap<'_> {
             return Err(HeapError::DifferentAlignment);
         }
 
-        self.realloc_from_layout(address as *mut u8, layout)
+        self.realloc_from_layout(address.cast(), layout)
             .map(NonNull::cast)
     }
 }

@@ -48,6 +48,6 @@ impl Heap<'_> {
     /// TODO
     #[must_use = "Return error may indicate that the heap is poisoned!"]
     pub fn dealloc<T>(&mut self, address: *mut T) -> Result<(), HeapError> {
-        self.dealloc_from_layout(address as *mut u8, Layout::new::<T>())
+        self.dealloc_from_layout(address.cast(), Layout::new::<T>())
     }
 }

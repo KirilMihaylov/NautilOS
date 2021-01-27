@@ -20,9 +20,10 @@ impl<T> CoreMutex<T> {
     }
 
     pub fn lock(&self) -> Lock<T> {
-        while let Err(_) =
-            self.lock
-                .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        while self
+            .lock
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
         {}
 
         Lock::new(self)
