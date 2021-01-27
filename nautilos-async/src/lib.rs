@@ -4,9 +4,10 @@
 use core::{
     future::Future,
     lazy::Lazy,
+    marker::PhantomPinned,
     mem::MaybeUninit,
     pin::Pin,
-    ptr::{null, read, write},
+    ptr::{null, read},
     task::{Context, Poll, RawWaker, RawWakerVTable, Waker},
 };
 
@@ -101,6 +102,7 @@ pub struct AwaitOnArray<'a, T, const N: usize> {
     futures: [&'a mut dyn Future<Output = T>; N],
     finished: [bool; N],
     results: [T; N],
+    _pinned: PhantomPinned,
 }
 
 impl<'a, T, const N: usize> AwaitOnArray<'a, T, N> {
@@ -109,6 +111,7 @@ impl<'a, T, const N: usize> AwaitOnArray<'a, T, N> {
             futures,
             finished: [false; N],
             results: unsafe { MaybeUninit::uninit().assume_init() },
+            _pinned: PhantomPinned,
         }
     }
 }
@@ -117,30 +120,28 @@ impl<T, const N: usize> Future for AwaitOnArray<'_, T, N> {
     type Output = [T; N];
 
     fn poll(self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<Self::Output> {
-        {
-            while self.finished.iter().any(|finished: &bool| !finished) {
-                for index in 0..N {
-                    if !self.finished[index] {
-                        let pinned: Pin<&mut dyn Future<Output = T>> = unsafe {
-                            Pin::new_unchecked(
-                                &mut *(&*self.futures[index] as *const dyn Future<Output = T>
-                                    as *mut dyn Future<Output = T>),
-                            )
-                        };
+        let this: &mut Self = unsafe { self.get_unchecked_mut() };
 
-                        if let Poll::Ready(result) = pinned.poll(context) {
-                            unsafe {
-                                write(&self.results[index] as *const _ as *mut _, result);
+        while this.finished.iter().any(|finished: &bool| !finished) {
+            for index in 0..N {
+                if !this.finished[index] {
+                    let pinned: Pin<&mut dyn Future<Output = T>> = unsafe {
+                        Pin::new_unchecked(
+                            &mut *(&*this.futures[index] as *const dyn Future<Output = T>
+                                as *mut dyn Future<Output = T>),
+                        )
+                    };
 
-                                write(&self.finished[index] as *const _ as *mut _, true);
-                            }
-                        }
+                    if let Poll::Ready(result) = pinned.poll(context) {
+                        this.results[index] = result;
+
+                        this.finished[index] = true;
                     }
                 }
             }
         }
 
-        Poll::Ready(unsafe { read(&self.results) })
+        Poll::Ready(unsafe { read(&this.results) })
     }
 }
 
