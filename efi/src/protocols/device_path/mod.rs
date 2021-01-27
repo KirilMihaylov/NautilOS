@@ -1,3 +1,5 @@
+use core::ops::{Deref, DerefMut};
+
 use crate::{
     guid::EfiGuid, guids::EFI_DEVICE_PATH_PROTOCOL, protocols::EfiProtocol, types::NonNullVoidPtr,
 };
@@ -10,6 +12,20 @@ pub struct EfiDevicePathProtocolRaw {
 impl EfiDevicePathProtocolRaw {
     pub const fn new(pointer: NonNullVoidPtr) -> Self {
         Self { pointer }
+    }
+}
+
+impl Deref for EfiDevicePathProtocolRaw {
+    type Target = NonNullVoidPtr;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pointer
+    }
+}
+
+impl DerefMut for EfiDevicePathProtocolRaw {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.pointer
     }
 }
 
