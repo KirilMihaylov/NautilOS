@@ -1,9 +1,12 @@
 #![no_std]
-#![feature(once_cell)]
+#![feature(
+    maybe_uninit_uninit_array,
+    maybe_uninit_array_assume_init,
+    maybe_uninit_ref
+)]
 
 use core::{
     future::Future,
-    lazy::Lazy,
     marker::PhantomPinned,
     mem::MaybeUninit,
     pin::Pin,
@@ -35,22 +38,24 @@ pub async fn yield_now() {
     Yield { ready: false }.await
 }
 
-const RAW_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(
-    |data: *const ()| RawWaker::new(data, &RAW_WAKER_VTABLE),
-    |_| (),
-    |_| (),
-    |_| (),
-);
+const NEW_WAKER: fn() -> Waker = || {
+    const RAW_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(
+        |data: *const ()| RawWaker::new(data, &RAW_WAKER_VTABLE),
+        |_| (),
+        |_| (),
+        |_| (),
+    );
 
-const RAW_WAKER: RawWaker = RawWaker::new(null(), &RAW_WAKER_VTABLE);
+    const RAW_WAKER: RawWaker = RawWaker::new(null(), &RAW_WAKER_VTABLE);
 
-const WAKER: Lazy<Waker> = Lazy::new(|| unsafe { Waker::from_raw(RAW_WAKER) });
+    unsafe { Waker::from_raw(RAW_WAKER) }
+};
 
 pub fn block_on<T>(future: T) -> T::Output
 where
     T: Future,
 {
-    block_on_with(&mut Context::from_waker(&WAKER), future)
+    block_on_with(&mut Context::from_waker(&NEW_WAKER()), future)
 }
 
 pub fn block_on_with<T>(context: &mut Context<'_>, mut future: T) -> T::Output
@@ -66,15 +71,39 @@ where
     }
 }
 
-pub fn block_on_array<T, const N: usize>(futures: [&mut dyn Future<Output = T>; N]) -> [T; N] {
-    block_on_array_with(&mut Context::from_waker(&WAKER), futures)
+pub fn block_on_array<T, const N: usize>(futures: [T; N]) -> [T::Output; N]
+where
+    T: Future,
+{
+    block_on_array_with(&mut Context::from_waker(&NEW_WAKER()), futures)
 }
 
 pub fn block_on_array_with<T, const N: usize>(
     context: &mut Context<'_>,
-    futures: [&mut dyn Future<Output = T>; N],
-) -> [T; N] {
-    let mut results: [T; N] = unsafe { MaybeUninit::uninit().assume_init() };
+    mut futures: [T; N],
+) -> [T::Output; N]
+where
+    T: Future,
+{
+    let mut results: [MaybeUninit<T::Output>; N] = MaybeUninit::uninit_array();
+
+    let mut futures: [Pin<&mut T>; N] = unsafe {
+        let mut pinned_futures: [Pin<&mut T>; N] = MaybeUninit::zeroed().assume_init();
+
+        {
+            let mut futures: &mut [T] = &mut futures;
+
+            for future in pinned_futures.iter_mut() {
+                let (left, right): (&mut [T], &mut [T]) = futures.split_at_mut(1);
+
+                futures = right;
+
+                *future = Pin::new_unchecked(&mut left[0]);
+            }
+        }
+
+        pinned_futures
+    };
 
     {
         let mut finished: [bool; N] = [false; N];
@@ -82,11 +111,10 @@ pub fn block_on_array_with<T, const N: usize>(
         while finished.iter().any(|finished: &bool| !finished) {
             for index in 0..N {
                 if !finished[index] {
-                    let pinned: Pin<&mut dyn Future<Output = T>> =
-                        unsafe { Pin::new_unchecked(&mut *futures[index]) };
-
-                    if let Poll::Ready(result) = pinned.poll(context) {
-                        results[index] = result;
+                    if let Poll::Ready(result) = futures[index].as_mut().poll(context) {
+                        unsafe {
+                            *results[index].assume_init_mut() = result;
+                        }
 
                         finished[index] = true;
                     }
@@ -95,22 +123,55 @@ pub fn block_on_array_with<T, const N: usize>(
         }
     }
 
-    results
+    unsafe { MaybeUninit::array_assume_init(results) }
+}
+
+pub fn block_on_array_dyn<T, const N: usize>(
+    futures: [Pin<&mut dyn Future<Output = T>>; N],
+) -> [T; N] {
+    block_on_array_dyn_with(&mut Context::from_waker(&NEW_WAKER()), futures)
+}
+
+pub fn block_on_array_dyn_with<T, const N: usize>(
+    context: &mut Context<'_>,
+    mut futures: [Pin<&mut dyn Future<Output = T>>; N],
+) -> [T; N] {
+    let mut results: [MaybeUninit<T>; N] = MaybeUninit::uninit_array();
+
+    {
+        let mut finished: [bool; N] = [false; N];
+
+        while finished.iter().any(|finished: &bool| !finished) {
+            for index in 0..N {
+                if !finished[index] {
+                    if let Poll::Ready(result) = futures[index].as_mut().poll(context) {
+                        unsafe {
+                            *results[index].assume_init_mut() = result;
+                        }
+
+                        finished[index] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    unsafe { MaybeUninit::array_assume_init(results) }
 }
 
 pub struct AwaitOnArray<'a, T, const N: usize> {
-    futures: [&'a mut dyn Future<Output = T>; N],
+    futures: [Pin<&'a mut dyn Future<Output = T>>; N],
     finished: [bool; N],
-    results: [T; N],
+    results: [MaybeUninit<T>; N],
     _pinned: PhantomPinned,
 }
 
 impl<'a, T, const N: usize> AwaitOnArray<'a, T, N> {
-    pub fn new(futures: [&'a mut dyn Future<Output = T>; N]) -> Self {
+    pub fn new(futures: [Pin<&'a mut dyn Future<Output = T>>; N]) -> Self {
         Self {
             futures,
             finished: [false; N],
-            results: unsafe { MaybeUninit::uninit().assume_init() },
+            results: MaybeUninit::uninit_array(),
             _pinned: PhantomPinned,
         }
     }
@@ -125,42 +186,42 @@ impl<T, const N: usize> Future for AwaitOnArray<'_, T, N> {
         while this.finished.iter().any(|finished: &bool| !finished) {
             for index in 0..N {
                 if !this.finished[index] {
-                    let pinned: Pin<&mut dyn Future<Output = T>> = unsafe {
-                        Pin::new_unchecked(
-                            &mut *(&*this.futures[index] as *const dyn Future<Output = T>
-                                as *mut dyn Future<Output = T>),
-                        )
-                    };
-
-                    if let Poll::Ready(result) = pinned.poll(context) {
-                        this.results[index] = result;
+                    if let Poll::Ready(result) = this.futures[index].as_mut().poll(context) {
+                        unsafe {
+                            *this.results[index].assume_init_mut() = result;
+                        }
 
                         this.finished[index] = true;
+
+                        let _ = unsafe { Pin::new_unchecked(&mut yield_now()) }.poll(context);
                     }
                 }
             }
         }
 
-        Poll::Ready(unsafe { read(&this.results) })
+        Poll::Ready(unsafe { MaybeUninit::array_assume_init(read(&this.results)) })
     }
 }
 
 #[macro_export]
 macro_rules! block_on {
-    ($future: expr $(,)?) => {
-        $crate::block_on($future)
-    };
-    ($future: expr, $($futures: expr),+ $(,)?) => {
-        $crate::block_on_array([&mut future, $(&mut $futures),+])
-    };
+    ($future: expr $(,)?) => {{
+        let mut future: _ = $future;
+
+        $crate::block_on(unsafe { core::pin::Pin::new_unchecked(&mut future) })
+    }};
+    ($future: expr, $($futures: expr),+ $(,)?) => {{
+        let (mut $future_ident, $(mut $future_idents),+): _ = ($future, $($futures),+);
+
+        $crate::block_on_array(unsafe { [core::pin::Pin::new_unchecked(&mut future), $(core::pin::Pin::new_unchecked(&mut $futures)),+] })
+    }};
 }
 
 #[macro_export]
 macro_rules! await_on {
-    ($future: expr $(,)?) => {
-        $future.await
-    };
-    ($future: expr, $($futures: expr),+ $(,)?) => {
-        $crate::AwaitOnArray::new([&mut $future, $(&mut $futures),+]).await
-    };
+    ($future_ident: ident = $future: expr, $($future_idents: ident = $futures: expr),+ $(,)?) => {{
+        let (mut $future_ident, $(mut $future_idents),+): _ = ($future, $($futures),+);
+
+        $crate::AwaitOnArray::new(unsafe { [core::pin::Pin::new_unchecked(&mut $future_ident), $(core::pin::Pin::new_unchecked(&mut $future_idents)),+] }).await
+    }};
 }
