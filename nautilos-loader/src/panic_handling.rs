@@ -23,7 +23,10 @@ static IN_PANIC: AtomicBool = AtomicBool::new(false);
 #[panic_handler]
 fn panic_handler(panic_info: &PanicInfo) -> ! {
     /* Stops recursive panics and allows multi-threading */
-    while let Err(_) = IN_PANIC.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst) {}
+    while IN_PANIC
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {}
 
     let con_out: *mut EfiSimpleTextOutputProtocol = CON_OUT.load(Ordering::SeqCst);
 
