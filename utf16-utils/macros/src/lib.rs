@@ -72,14 +72,14 @@ fn convert_to_utf16(s: &str) -> String {
                                     closing_bracket = true;
                                     break 'code;
                                 }
-                                _ => panic!(PANIC_MESSAGE),
+                                _ => panic!("{}", PANIC_MESSAGE),
                             }
                         }
 
                         if !closing_bracket {
                             match chars.next() {
                                 Some('}') => (),
-                                _ => panic!(PANIC_MESSAGE),
+                                _ => panic!("{}", PANIC_MESSAGE),
                             }
                         }
 
@@ -94,7 +94,7 @@ fn convert_to_utf16(s: &str) -> String {
                         break 'chars;
                     }
 
-                    panic!(PANIC_MESSAGE);
+                    panic!("{}", PANIC_MESSAGE);
                 }
                 _ => panic!("Unknown escape code!"),
             }
